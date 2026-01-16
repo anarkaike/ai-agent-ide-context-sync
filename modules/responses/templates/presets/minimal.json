@@ -1,0 +1,9 @@
+{
+    "QUESTION_SUMMARY": "Resumo da pergunta original.",
+    "ANSWER_PULSE": "Resposta direta em uma frase.",
+    "NEXT_ACTION": "Orientação imediata ou ETA.",
+    "BODY_SNIPPET": "Detalhes adicionais ou links úteis.",
+    "PROGRESS_ITEM_1": "Checklist/ação 1",
+    "PROGRESS_ITEM_2": "Checklist/ação 2",
+    "PROGRESS_ITEM_3": "Checklist/ação 3"
+}

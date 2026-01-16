@@ -1,0 +1,12 @@
+{
+    "SUMMARY_GOAL": "Descrever o objetivo principal da resposta.",
+    "SUMMARY_SCOPE": "Quais partes do sistema/processo foram cobertas.",
+    "SUMMARY_OUTPUT": "Evidências ou entregáveis gerados.",
+    "BODY_CONTENT": "### Ações executadas\n- Passo 1: ...\n- Passo 2: ...\n\n### Evidências\n- @arquivo#L1-L20",
+    "PROGRESS_ITEM_1": "Checklist ou item de progresso 1",
+    "PROGRESS_ITEM_2": "Checklist ou item de progresso 2",
+    "PROGRESS_ITEM_3": "Checklist ou item de progresso 3",
+    "NEXT_STEP_1": "Próximo passo imediato",
+    "NEXT_STEP_2": "Passo subsequente",
+    "NEXT_STEP_3": "Opção futura"
+}

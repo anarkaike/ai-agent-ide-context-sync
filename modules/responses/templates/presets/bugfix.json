@@ -1,0 +1,17 @@
+{
+    "BUG_CONTEXT": "Cenário onde o bug ocorre.",
+    "BUG_SYMPTOM": "Comportamento observado.",
+    "BUG_IMPACT": "Impacto em usuários/processos.",
+    "REPRO_STEP_1": "Passo 1 para reproduzir.",
+    "REPRO_STEP_2": "Passo 2 para reproduzir.",
+    "REPRO_STEP_3": "Passo 3 para reproduzir.",
+    "BUG_EVIDENCE_LINKS": "Logs, prints ou links relevantes.",
+    "FIX_DESCRIPTION": "Resumo da correção aplicada.",
+    "FILES_TOUCHED": "Lista de arquivos alterados.",
+    "TESTS_RUN": "Testes executados e resultado.",
+    "PROGRESS_ITEM_1": "Checklist 1",
+    "PROGRESS_ITEM_2": "Checklist 2",
+    "PROGRESS_ITEM_3": "Checklist 3",
+    "FOLLOWUP_1": "Ação de follow-up 1",
+    "FOLLOWUP_2": "Ação de follow-up 2"
+}

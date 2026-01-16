@@ -1,0 +1,37 @@
+# Otimizações de Prompts
+
+heuristics:
+  - id: task-creation-clarification
+    type: prompt
+    context: "Criação de tasks"
+    original: "Criar task"
+    optimized: "Vou criar uma task. Qual o objetivo principal e contexto?"
+    improvement_metric: "Reduz retrabalho em 30%"
+    confidence: 0.88
+    times_applied: 0
+    created_at: "2026-01-16"
+    
+  - id: service-repository-suggestion
+    type: prompt
+    context: "Criação de Services"
+    original: "Criar Service"
+    optimized: "Vou criar um Service. Precisa de Repository também?"
+    improvement_metric: "Evita criar Repository depois"
+    confidence: 0.85
+    times_applied: 0
+    created_at: "2026-01-16"
+    
+  - id: migration-confirmation
+    type: prompt
+    context: "Criação de migrations"
+    original: "Criar migration"
+    optimized: "Vou criar migration. Confirma campos e tipos antes de gerar?"
+    improvement_metric: "Reduz migrations de correção"
+    confidence: 0.90
+    times_applied: 0
+    created_at: "2026-01-16"
+
+meta:
+  total_heuristics: 3
+  last_updated: "2026-01-16"
+  kernel_version: "2.0.0-alpha.1"

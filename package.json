@@ -1,0 +1,38 @@
+{
+  "name": "@ai-doc/kernel",
+  "version": "2.0.0-alpha.1",
+  "description": "AI Kernel - Sistema Operacional para Agentes de IA",
+  "main": "cli/ai-doc.js",
+  "bin": {
+    "ai-doc": "cli/ai-doc.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Junio",
+  "license": "MIT",
+  "kernel_mode": "global",
+  "modules": [
+    "core",
+    "identity",
+    "memory",
+    "tasks",
+    "analysis",
+    "responses",
+    "templates",
+    "integrations"
+  ],
+  "ide_integrations": [
+    "cursor",
+    "copilot",
+    "windsurf",
+    "trae"
+  ],
+  "auto_evolution": {
+    "enabled": true,
+    "heuristics_path": "heuristics/"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}

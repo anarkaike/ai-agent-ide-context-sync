@@ -1,0 +1,53 @@
+# Heurísticas de Navegação - Vue.js
+
+heuristics:
+  - id: components-location
+    type: navigation
+    stack: vue
+    pattern: "Componentes em resources/js/components ou src/components"
+    confidence: 0.95
+    times_applied: 0
+    learned_from: []
+    created_at: "2026-01-16"
+    last_used: null
+    
+  - id: pages-location
+    type: navigation
+    stack: vue
+    pattern: "Pages/Views em resources/js/pages ou src/views"
+    confidence: 0.90
+    times_applied: 0
+    learned_from: []
+    created_at: "2026-01-16"
+    
+  - id: stores-location
+    type: navigation
+    stack: vue
+    pattern: "Stores (Pinia/Vuex) em resources/js/stores ou src/stores"
+    confidence: 0.90
+    times_applied: 0
+    learned_from: []
+    created_at: "2026-01-16"
+    
+  - id: composables-location
+    type: navigation
+    stack: vue
+    pattern: "Composables em resources/js/composables ou src/composables"
+    confidence: 0.85
+    times_applied: 0
+    learned_from: []
+    created_at: "2026-01-16"
+    
+  - id: types-location
+    type: navigation
+    stack: vue
+    pattern: "Types TypeScript em resources/js/types ou src/types"
+    confidence: 0.85
+    times_applied: 0
+    learned_from: []
+    created_at: "2026-01-16"
+
+meta:
+  total_heuristics: 5
+  last_updated: "2026-01-16"
+  kernel_version: "2.0.0-alpha.1"
