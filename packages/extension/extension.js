@@ -435,8 +435,11 @@ class StatusBarManager {
             vscode.StatusBarAlignment.Left,
             100
         );
-        this.statusBarItem.command = 'ai-agent-sync.quickPicker';
+        this.statusBarItem.command = 'ai-agent-sync.timerMenu';
         this.currentTask = null;
+        this.timerSeconds = 0;
+        this.timerRunning = false;
+        this.timerInterval = null;
     }
 
     show() {
@@ -461,6 +464,68 @@ class StatusBarManager {
 
     getCurrentTask() {
         return this.currentTask;
+    }
+
+    // Pomodoro Timer Methods
+    startTimer(duration = 25 * 60) {
+        this.timerSeconds = duration;
+        this.timerRunning = true;
+
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+
+        this.timerInterval = setInterval(() => {
+            if (this.timerSeconds > 0) {
+                this.timerSeconds--;
+                this.updateDisplay();
+            } else {
+                this.stopTimer();
+                vscode.window.showInformationMessage('⏰ Pomodoro completed! Time for a break! 🎉');
+            }
+        }, 1000);
+
+        this.updateDisplay();
+    }
+
+    stopTimer() {
+        this.timerRunning = false;
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+        this.updateDisplay();
+    }
+
+    resetTimer() {
+        this.timerSeconds = 0;
+        this.timerRunning = false;
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+        this.updateDisplay();
+    }
+
+    updateDisplay() {
+        if (this.currentTask) {
+            let text = `$(checklist) ${this.currentTask.label}`;
+
+            if (this.timerRunning || this.timerSeconds > 0) {
+                const minutes = Math.floor(this.timerSeconds / 60);
+                const seconds = this.timerSeconds % 60;
+                const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                text = `$(watch) ${timeStr} | ${this.currentTask.label}`;
+            }
+
+            this.statusBarItem.text = text;
+            this.statusBarItem.tooltip = `Task: ${this.currentTask.label}\nPersona: ${this.currentTask.persona}\nClick for timer menu`;
+        } else {
+            this.statusBarItem.text = '$(add) Select Task';
+            this.statusBarItem.tooltip = 'Click to select a task';
+        }
+    }
+
+    isTimerRunning() {
+        return this.timerRunning;
     }
 }
 
@@ -1027,6 +1092,149 @@ status: active
             panel.onDidDispose(() => {
                 clearInterval(interval);
             });
+        })
+    );
+
+    // Timer Menu
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.timerMenu', async () => {
+            if (!statusBarManager.getCurrentTask()) {
+                vscode.commands.executeCommand('ai-agent-sync.quickPicker');
+                return;
+            }
+
+            const options = statusBarManager.isTimerRunning()
+                ? ['⏸️ Pause Timer', '🔄 Reset Timer', '🍅 Start 25min Pomodoro', '☕ Start 5min Break']
+                : ['▶️ Start Timer', '🍅 Start 25min Pomodoro', '☕ Start 5min Break', '⏱️ Custom Duration'];
+
+            const selected = await vscode.window.showQuickPick(options, {
+                placeHolder: 'Timer Controls'
+            });
+
+            if (!selected) return;
+
+            if (selected.includes('Pause')) {
+                statusBarManager.stopTimer();
+            } else if (selected.includes('Reset')) {
+                statusBarManager.resetTimer();
+            } else if (selected.includes('25min')) {
+                statusBarManager.startTimer(25 * 60);
+                vscode.window.showInformationMessage('🍅 Pomodoro started! 25 minutes');
+            } else if (selected.includes('5min')) {
+                statusBarManager.startTimer(5 * 60);
+                vscode.window.showInformationMessage('☕ Break started! 5 minutes');
+            } else if (selected.includes('Custom')) {
+                const input = await vscode.window.showInputBox({
+                    prompt: 'Enter duration in minutes',
+                    placeHolder: '25',
+                    validateInput: (value) => {
+                        const num = parseInt(value);
+                        if (isNaN(num) || num <= 0) {
+                            return 'Please enter a valid number';
+                        }
+                        return null;
+                    }
+                });
+
+                if (input) {
+                    const minutes = parseInt(input);
+                    statusBarManager.startTimer(minutes * 60);
+                    vscode.window.showInformationMessage(`⏱️ Timer started! ${minutes} minutes`);
+                }
+            } else if (selected.includes('Start Timer')) {
+                statusBarManager.startTimer(25 * 60);
+                vscode.window.showInformationMessage('⏱️ Timer started! 25 minutes');
+            }
+        })
+    );
+
+    // Export Tasks
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.exportTasks', async () => {
+            const aiWorkspacePath = getAiWorkspacePath();
+            if (!aiWorkspacePath) {
+                vscode.window.showErrorMessage('No .ai-workspace found');
+                return;
+            }
+
+            const format = await vscode.window.showQuickPick(
+                ['📄 Markdown', '📊 JSON', '📋 Plain Text'],
+                { placeHolder: 'Select export format' }
+            );
+
+            if (!format) return;
+
+            const tasks = getAllTasks();
+            let content = '';
+            let extension = '.md';
+
+            if (format.includes('Markdown')) {
+                content = '# AI Agent Tasks Export\n\n';
+                content += `Generated: ${new Date().toLocaleString()}\n\n`;
+
+                const personaGroups = {};
+                tasks.forEach(task => {
+                    if (!personaGroups[task.persona]) {
+                        personaGroups[task.persona] = [];
+                    }
+                    personaGroups[task.persona].push(task);
+                });
+
+                for (const [persona, personaTasks] of Object.entries(personaGroups)) {
+                    content += `## ${persona}\n\n`;
+                    personaTasks.forEach(task => {
+                        content += `### ${task.label}\n`;
+                        content += `**Progress**: ${task.description}\n\n`;
+
+                        // Read checklist
+                        const taskContent = fs.readFileSync(task.path, 'utf-8');
+                        const checklistMatch = taskContent.match(/## Checklist([\\s\\S]*?)(?=##|$)/);
+                        if (checklistMatch) {
+                            content += checklistMatch[0] + '\n\n';
+                        }
+                    });
+                }
+            } else if (format.includes('JSON')) {
+                extension = '.json';
+                content = JSON.stringify(tasks.map(t => ({
+                    title: t.label,
+                    persona: t.persona,
+                    progress: t.description,
+                    file: t.detail
+                })), null, 2);
+            } else {
+                extension = '.txt';
+                content = 'AI AGENT TASKS EXPORT\n';
+                content += '='.repeat(50) + '\n\n';
+                tasks.forEach(task => {
+                    content += `${task.label} (${task.persona})\n`;
+                    content += `Progress: ${task.description}\n`;
+                    content += '-'.repeat(50) + '\n';
+                });
+            }
+
+            const defaultPath = path.join(aiWorkspacePath, `tasks-export-${Date.now()}${extension}`);
+            const uri = await vscode.window.showSaveDialog({
+                defaultUri: vscode.Uri.file(defaultPath),
+                filters: {
+                    'All Files': ['*']
+                }
+            });
+
+            if (uri) {
+                fs.writeFileSync(uri.fsPath, content);
+                vscode.window.showInformationMessage(`✅ Tasks exported to ${path.basename(uri.fsPath)}`);
+
+                const open = await vscode.window.showInformationMessage(
+                    'Export complete!',
+                    'Open File'
+                );
+
+                if (open) {
+                    const doc = await vscode.workspace.openTextDocument(uri);
+                    await vscode.window.showTextDocument(doc);
+                }
+            }
         })
     );
 }
