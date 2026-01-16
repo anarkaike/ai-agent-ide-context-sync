@@ -206,7 +206,6 @@ class PersonasTreeProvider {
 
     createActionItem(label, command, arg) {
         const item = new vscode.TreeItem(label);
-        item.iconPath = new vscode.ThemeIcon('add');
         item.command = {
             command: command,
             title: label,
@@ -238,13 +237,49 @@ class StatusTreeProvider {
         if (!element) {
             try {
                 const output = execSync('ai-doc status', { encoding: 'utf-8' });
-                const lines = output.split('\n').filter(line => line.trim());
 
-                return lines.map(line => {
-                    const item = new vscode.TreeItem(line.trim());
-                    item.iconPath = new vscode.ThemeIcon('info');
-                    return item;
-                });
+                // Remove ANSI color codes
+                const cleanOutput = output.replace(/\x1b\[[0-9;]*m/g, '');
+
+                // Parse the output into structured data
+                const items = [];
+
+                // Extract kernel info
+                const versionMatch = cleanOutput.match(/Versão:\s*([^\n]+)/);
+                if (versionMatch) {
+                    const item = new vscode.TreeItem(`Kernel v${versionMatch[1].trim()}`);
+                    item.iconPath = new vscode.ThemeIcon('package');
+                    items.push(item);
+                }
+
+                // Extract heuristics count
+                const heuristicsMatch = cleanOutput.match(/Inteligência:\s*(\d+)\s*heurísticas/);
+                if (heuristicsMatch) {
+                    const item = new vscode.TreeItem(`${heuristicsMatch[1]} Heurísticas Aprendidas`);
+                    item.iconPath = new vscode.ThemeIcon('lightbulb');
+                    items.push(item);
+                }
+
+                // Extract workspace info
+                const projectMatch = cleanOutput.match(/Projeto:\s*([^\n]+)/);
+                if (projectMatch) {
+                    const item = new vscode.TreeItem(`Projeto: ${projectMatch[1].trim()}`);
+                    item.iconPath = new vscode.ThemeIcon('folder');
+                    items.push(item);
+                }
+
+                // Check if workspace is initialized
+                if (cleanOutput.includes('Execute "ai-doc init"')) {
+                    const item = new vscode.TreeItem('⚠️ Workspace não inicializado');
+                    item.command = {
+                        command: 'ai-agent-sync.init',
+                        title: 'Initialize'
+                    };
+                    item.iconPath = new vscode.ThemeIcon('warning');
+                    items.push(item);
+                }
+
+                return items.length > 0 ? items : [new vscode.TreeItem('No status available')];
             } catch (error) {
                 const item = new vscode.TreeItem('❌ ai-doc CLI not found');
                 item.description = 'Install: npm install -g ai-agent-ide-context-sync';
