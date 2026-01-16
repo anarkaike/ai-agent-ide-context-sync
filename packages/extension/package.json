@@ -2,7 +2,7 @@
     "name": "ai-agent-ide-context-sync-vscode",
     "displayName": "AI Agent IDE Context Sync",
     "description": "Complete AI Kernel management: personas, tasks, analytics, and context sync",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -193,9 +193,14 @@
                     "group": "navigation@3"
                 },
                 {
-                    "command": "ai-agent-sync.refreshPersonas",
+                    "command": "ai-agent-sync.openKanban",
                     "when": "view == ai-agent-sync-personas",
                     "group": "navigation@4"
+                },
+                {
+                    "command": "ai-agent-sync.refreshPersonas",
+                    "when": "view == ai-agent-sync-personas",
+                    "group": "navigation@5"
                 },
                 {
                     "command": "ai-agent-sync.refreshStatus",

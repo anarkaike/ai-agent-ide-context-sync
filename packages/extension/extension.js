@@ -259,6 +259,11 @@ class StatusTreeProvider {
                 if (heuristicsMatch) {
                     const item = new vscode.TreeItem(`${heuristicsMatch[1]} Heurísticas Aprendidas`);
                     item.iconPath = new vscode.ThemeIcon('lightbulb');
+                    item.command = {
+                        command: 'ai-agent-sync.showHeuristics',
+                        title: 'Show Heuristics'
+                    };
+                    item.tooltip = 'Click to view all learned heuristics';
                     items.push(item);
                 }
 
@@ -387,6 +392,28 @@ class AnalyticsTreeProvider {
     createStatItem(label, value) {
         const item = new vscode.TreeItem(`${label}: ${value}`);
         item.iconPath = new vscode.ThemeIcon('graph');
+
+        // Add click commands based on label
+        if (label.includes('Personas')) {
+            item.command = {
+                command: 'ai-agent-sync.showPersonas',
+                title: 'Show All Personas'
+            };
+            item.tooltip = 'Click to view all personas';
+        } else if (label.includes('Active Tasks')) {
+            item.command = {
+                command: 'ai-agent-sync.showActiveTasks',
+                title: 'Show Active Tasks'
+            };
+            item.tooltip = 'Click to view active tasks';
+        } else if (label.includes('Checklist Items') || label.includes('Completed Items')) {
+            item.command = {
+                command: 'ai-agent-sync.showChecklistItems',
+                title: 'Show Checklist Items'
+            };
+            item.tooltip = 'Click to view all checklist items';
+        }
+
         return item;
     }
 }
@@ -1329,6 +1356,265 @@ status: active
 
             const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
             return settings[personaName] || {};
+        })
+    );
+
+    // Open Kanban Board
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.openKanban', async () => {
+            if (kanbanManager) {
+                await kanbanManager.openBoard();
+            } else {
+                vscode.window.showErrorMessage('No .ai-workspace found');
+            }
+        })
+    );
+
+    // Select Theme
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.selectTheme', async () => {
+            await themeManager.selectTheme();
+        })
+    );
+
+    // Weekly Report
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.weeklyReport', async () => {
+            if (!analytics) {
+                vscode.window.showErrorMessage('No .ai-workspace found');
+                return;
+            }
+
+            const report = analytics.generateWeeklyReport();
+            const content = `# 📊 Weekly Productivity Report
+
+**Period**: ${report.period}
+
+## Summary
+- **Total Tasks**: ${report.totalTasks}
+- **Completed**: ${report.completedTasks}
+- **Completion Rate**: ${report.completionRate}%
+
+## Insights
+- **Most Productive Day**: ${report.mostProductiveDay}
+- **Top Persona**: ${report.topPersona}
+
+---
+Generated: ${new Date().toLocaleString()}
+`;
+
+            const doc = await vscode.workspace.openTextDocument({
+                content,
+                language: 'markdown'
+            });
+            await vscode.window.showTextDocument(doc);
+        })
+    );
+
+    // Monthly Report
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.monthlyReport', async () => {
+            if (!analytics) {
+                vscode.window.showErrorMessage('No .ai-workspace found');
+                return;
+            }
+
+            const report = analytics.generateMonthlyReport();
+            const content = `# 📊 Monthly Productivity Report
+
+**Period**: ${report.period}
+
+## Summary
+- **Total Tasks**: ${report.totalTasks}
+- **Completed**: ${report.completedTasks}
+- **Completion Rate**: ${report.completionRate}%
+- **Average Tasks/Week**: ${report.averageTasksPerWeek}
+
+## Trend Analysis
+- **Trend**: ${report.trend === 'increasing' ? '📈 Increasing' : report.trend === 'decreasing' ? '📉 Decreasing' : '➡️ Stable'}
+
+---
+Generated: ${new Date().toLocaleString()}
+`;
+
+            const doc = await vscode.workspace.openTextDocument({
+                content,
+                language: 'markdown'
+            });
+            await vscode.window.showTextDocument(doc);
+        })
+    );
+
+    // Cloud Sync
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.cloudSync', async () => {
+            if (cloudSync) {
+                await cloudSync.syncNow();
+            } else {
+                vscode.window.showInformationMessage('☁️ Cloud Sync coming soon!');
+            }
+        })
+    );
+
+    // Export Backup
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.exportBackup', async () => {
+            if (cloudSync) {
+                await cloudSync.exportBackup();
+            } else {
+                vscode.window.showErrorMessage('No .ai-workspace found');
+            }
+        })
+    );
+
+    // Show Active Tasks (clickable from Analytics)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.showActiveTasks', async () => {
+            const aiWorkspacePath = getAiWorkspacePath();
+            if (!aiWorkspacePath) return;
+
+            const tasksPath = path.join(aiWorkspacePath, 'tasks', 'active');
+            if (!fs.existsSync(tasksPath)) {
+                vscode.window.showInformationMessage('No active tasks found');
+                return;
+            }
+
+            const tasks = fs.readdirSync(tasksPath)
+                .filter(f => f.endsWith('.md'))
+                .map(f => {
+                    const content = fs.readFileSync(path.join(tasksPath, f), 'utf-8');
+                    const title = content.split('\n').find(l => l.startsWith('# '))?.replace('# ', '') || f;
+                    const total = (content.match(/^- \[[ x]\]/gm) || []).length;
+                    const completed = (content.match(/^- \[x\]/gm) || []).length;
+                    const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+                    return `## ${title}\n- **File**: \`${f}\`\n- **Progress**: ${completed}/${total} (${progress}%)\n`;
+                });
+
+            const content = `# 📋 Active Tasks (${tasks.length})
+
+${tasks.join('\n')}
+
+---
+Click on a task file to open it.
+`;
+
+            const doc = await vscode.workspace.openTextDocument({
+                content,
+                language: 'markdown'
+            });
+            await vscode.window.showTextDocument(doc);
+        })
+    );
+
+    // Show All Personas (clickable from Analytics)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.showPersonas', async () => {
+            const aiWorkspacePath = getAiWorkspacePath();
+            if (!aiWorkspacePath) return;
+
+            const personasPath = path.join(aiWorkspacePath, 'personas');
+            if (!fs.existsSync(personasPath)) {
+                vscode.window.showInformationMessage('No personas found');
+                return;
+            }
+
+            const personas = fs.readdirSync(personasPath)
+                .filter(f => f.endsWith('.md') && f.startsWith('AI-'))
+                .map(f => {
+                    const content = fs.readFileSync(path.join(personasPath, f), 'utf-8');
+                    const lines = content.split('\n');
+                    const description = lines.find(l => l.includes('description:'))?.split(':')[1]?.trim() || 'No description';
+
+                    return `## ${f.replace('.md', '')}\n- **Description**: ${description}\n- **File**: \`${f}\`\n`;
+                });
+
+            const content = `# 👥 All Personas (${personas.length})
+
+${personas.join('\n')}
+
+---
+Click on a persona file to open it.
+`;
+
+            const doc = await vscode.workspace.openTextDocument({
+                content,
+                language: 'markdown'
+            });
+            await vscode.window.showTextDocument(doc);
+        })
+    );
+
+    // Show Checklist Items (clickable from Analytics)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.showChecklistItems', async () => {
+            const aiWorkspacePath = getAiWorkspacePath();
+            if (!aiWorkspacePath) return;
+
+            const tasksPath = path.join(aiWorkspacePath, 'tasks', 'active');
+            if (!fs.existsSync(tasksPath)) {
+                vscode.window.showInformationMessage('No tasks found');
+                return;
+            }
+
+            let allItems = [];
+            let totalCompleted = 0;
+
+            fs.readdirSync(tasksPath)
+                .filter(f => f.endsWith('.md'))
+                .forEach(f => {
+                    const content = fs.readFileSync(path.join(tasksPath, f), 'utf-8');
+                    const items = content.match(/^- \[[ x]\] .+$/gm) || [];
+                    const completed = content.match(/^- \[x\] .+$/gm) || [];
+
+                    totalCompleted += completed.length;
+
+                    if (items.length > 0) {
+                        allItems.push(`\n### ${f}\n${items.join('\n')}`);
+                    }
+                });
+
+            const content = `# ✅ All Checklist Items
+
+**Total Items**: ${allItems.length}
+**Completed**: ${totalCompleted}
+
+${allItems.join('\n')}
+
+---
+✅ = Completed | ⬜ = Pending
+`;
+
+            const doc = await vscode.workspace.openTextDocument({
+                content,
+                language: 'markdown'
+            });
+            await vscode.window.showTextDocument(doc);
+        })
+    );
+
+    // Show Heuristics (clickable from Kernel Status)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.showHeuristics', async () => {
+            try {
+                const output = execSync('ai-doc heuristics', { encoding: 'utf-8' });
+
+                const content = `# 💡 Heurísticas Aprendidas
+
+${output}
+
+---
+Generated: ${new Date().toLocaleString()}
+`;
+
+                const doc = await vscode.workspace.openTextDocument({
+                    content,
+                    language: 'markdown'
+                });
+                await vscode.window.showTextDocument(doc);
+            } catch (error) {
+                vscode.window.showErrorMessage(`Failed to load heuristics: ${error.message}`);
+            }
         })
     );
 }
