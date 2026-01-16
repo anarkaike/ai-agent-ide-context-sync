@@ -2,7 +2,7 @@
     "name": "ai-agent-ide-context-sync-vscode",
     "displayName": "AI Agent IDE Context Sync",
     "description": "Complete AI Kernel management: personas, tasks, analytics, and context sync",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -229,11 +229,17 @@
     "scripts": {
         "lint": "eslint .",
         "pretest": "npm run lint",
-        "test": "node ./test/runTest.js"
+        "test": "node ./test/runTest.js",
+        "test:unit": "node ./test/runTest.js",
+        "package": "vsce package --no-dependencies",
+        "publish": "vsce publish"
     },
     "devDependencies": {
         "@types/vscode": "^1.80.0",
         "@types/node": "16.x",
-        "eslint": "^8.41.0"
+        "@types/mocha": "^10.0.0",
+        "@vscode/test-electron": "^2.3.0",
+        "eslint": "^8.41.0",
+        "mocha": "^10.2.0"
     }
 }

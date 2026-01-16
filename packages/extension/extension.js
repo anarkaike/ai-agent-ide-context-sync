@@ -2,6 +2,7 @@ const vscode = require('vscode');
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { I18n, SmartNotifications } = require('./modules');
 
 /**
  * Get workspace .ai-workspace path
@@ -534,6 +535,16 @@ class StatusBarManager {
  */
 function activate(context) {
     console.log('AI Agent IDE Context Sync extension activated!');
+
+    // Initialize i18n
+    const i18n = new I18n(context.extensionPath);
+
+    // Initialize Smart Notifications
+    const notifications = new SmartNotifications(context, i18n);
+    const aiWorkspacePath = getAiWorkspacePath();
+    if (aiWorkspacePath) {
+        notifications.start(aiWorkspacePath);
+    }
 
     // Register Tree Providers
     const personasProvider = new PersonasTreeProvider();
