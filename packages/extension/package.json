@@ -1,0 +1,64 @@
+{
+    "name": "ai-agent-ide-context-sync-vscode",
+    "displayName": "AI Agent IDE Context Sync",
+    "description": "Visual interface for managing universal AI agent context",
+    "version": "0.1.0",
+    "engines": {
+        "vscode": "^1.80.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:ai-agent-sync.build",
+        "onCommand:ai-agent-sync.status"
+    ],
+    "main": "./extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "ai-agent-sync.build",
+                "title": "AI Agent Sync: Build Context"
+            },
+            {
+                "command": "ai-agent-sync.status",
+                "title": "AI Agent Sync: Show Status"
+            },
+            {
+                "command": "ai-agent-sync.heuristics",
+                "title": "AI Agent Sync: View Heuristics"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "ai-agent-sync",
+                    "title": "AI Agent Sync",
+                    "icon": "resources/icon.svg"
+                }
+            ]
+        },
+        "views": {
+            "ai-agent-sync": [
+                {
+                    "id": "ai-agent-sync-status",
+                    "name": "Status"
+                },
+                {
+                    "id": "ai-agent-sync-heuristics",
+                    "name": "Heuristics"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "lint": "eslint .",
+        "pretest": "npm run lint",
+        "test": "node ./test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.80.0",
+        "@types/node": "16.x",
+        "eslint": "^8.41.0"
+    }
+}
