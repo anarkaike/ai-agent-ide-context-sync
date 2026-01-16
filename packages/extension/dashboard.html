@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--vscode-font-family);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-editor-background);
+            padding: 20px;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--vscode-descriptionForeground);
+            font-size: 14px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--vscode-focusBorder);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--vscode-descriptionForeground);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-container {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        canvas {
+            max-height: 300px;
+        }
+
+        .persona-list {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .persona-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid var(--vscode-panel-border);
+        }
+
+        .persona-item:last-child {
+            border-bottom: none;
+        }
+
+        .persona-name {
+            font-weight: 500;
+        }
+
+        .persona-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-bar {
+            width: 100px;
+            height: 8px;
+            background: var(--vscode-input-background);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--vscode-progressBar-background);
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 AI Agent Dashboard</h1>
+        <p class="subtitle">Real-time analytics and insights</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" id="totalPersonas">0</div>
+            <div class="stat-label">👥 Personas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="activeTasks">0</div>
+            <div class="stat-label">📋 Active Tasks</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="completedTasks">0</div>
+            <div class="stat-label">✅ Completed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="completionRate">0%</div>
+            <div class="stat-label">📈 Completion Rate</div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">Task Distribution by Persona</div>
+        <canvas id="personaChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">Completion Progress</div>
+        <canvas id="progressChart"></canvas>
+    </div>
+
+    <div class="persona-list">
+        <div class="chart-title">Persona Progress</div>
+        <div id="personaProgressList"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        // Listen for data from extension
+        window.addEventListener('message', event => {
+            const data = event.data;
+            updateDashboard(data);
+        });
+
+        function updateDashboard(data) {
+            // Update stats
+            document.getElementById('totalPersonas').textContent = data.totalPersonas || 0;
+            document.getElementById('activeTasks').textContent = data.activeTasks || 0;
+            document.getElementById('completedTasks').textContent = data.completedTasks || 0;
+            document.getElementById('completionRate').textContent = 
+                (data.completionRate || 0) + '%';
+
+            // Update charts
+            updatePersonaChart(data.personaData || []);
+            updateProgressChart(data.progressData || {});
+            updatePersonaList(data.personaProgress || []);
+        }
+
+        let personaChart = null;
+        let progressChart = null;
+
+        function updatePersonaChart(personaData) {
+            const ctx = document.getElementById('personaChart').getContext('2d');
+            
+            if (personaChart) {
+                personaChart.destroy();
+            }
+
+            personaChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: personaData.map(p => p.name),
+                    datasets: [{
+                        data: personaData.map(p => p.tasks),
+                        backgroundColor: [
+                            '#667eea', '#764ba2', '#f093fb', '#4facfe',
+                            '#43e97b', '#fa709a', '#fee140', '#30cfd0'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: 'var(--vscode-foreground)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateProgressChart(progressData) {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            if (progressChart) {
+                progressChart.destroy();
+            }
+
+            progressChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Total Items', 'Completed', 'Remaining'],
+                    datasets: [{
+                        label: 'Checklist Items',
+                        data: [
+                            progressData.total || 0,
+                            progressData.completed || 0,
+                            (progressData.total || 0) - (progressData.completed || 0)
+                        ],
+                        backgroundColor: ['#667eea', '#43e97b', '#fa709a']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'var(--vscode-foreground)'
+                            },
+                            grid: {
+                                color: 'var(--vscode-panel-border)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'var(--vscode-foreground)'
+                            },
+                            grid: {
+                                color: 'var(--vscode-panel-border)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'var(--vscode-foreground)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePersonaList(personaProgress) {
+            const container = document.getElementById('personaProgressList');
+            container.innerHTML = '';
+
+            personaProgress.forEach(persona => {
+                const item = document.createElement('div');
+                item.className = 'persona-item';
+                
+                const percentage = persona.total > 0 
+                    ? Math.round((persona.completed / persona.total) * 100)
+                    : 0;
+
+                item.innerHTML = `
+                    <div class="persona-name">${persona.name}</div>
+                    <div class="persona-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="progress-text">${persona.completed}/${persona.total}</div>
+                    </div>
+                `;
+
+                container.appendChild(item);
+            });
+        }
+
+        // Request initial data
+        vscode.postMessage({ command: 'requestData' });
+    </script>
+</body>
+</html>

@@ -878,6 +878,157 @@ status: active
             vscode.window.showInformationMessage('Active task cleared');
         })
     );
+
+    // Open Dashboard
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.openDashboard', () => {
+            const panel = vscode.window.createWebviewPanel(
+                'aiAgentDashboard',
+                '📊 AI Agent Dashboard',
+                vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    retainContextWhenHidden: true
+                }
+            );
+
+            // Load HTML
+            const htmlPath = path.join(context.extensionPath, 'dashboard.html');
+            let html = fs.readFileSync(htmlPath, 'utf-8');
+            panel.webview.html = html;
+
+            // Collect and send data
+            function sendDashboardData() {
+                const aiWorkspacePath = getAiWorkspacePath();
+                if (!aiWorkspacePath) {
+                    panel.webview.postMessage({
+                        totalPersonas: 0,
+                        activeTasks: 0,
+                        completedTasks: 0,
+                        completionRate: 0,
+                        personaData: [],
+                        progressData: {},
+                        personaProgress: []
+                    });
+                    return;
+                }
+
+                // Collect data
+                const personasPath = path.join(aiWorkspacePath, 'personas');
+                const activeTasksPath = path.join(aiWorkspacePath, 'tasks', 'active');
+                const archiveTasksPath = path.join(aiWorkspacePath, 'tasks', 'archive');
+
+                let totalPersonas = 0;
+                let activeTasks = 0;
+                let completedTasks = 0;
+                let totalItems = 0;
+                let completedItems = 0;
+                const personaData = [];
+                const personaProgress = [];
+
+                // Count personas
+                if (fs.existsSync(personasPath)) {
+                    const personas = fs.readdirSync(personasPath)
+                        .filter(f => f.endsWith('.md') && f.startsWith('AI-'));
+                    totalPersonas = personas.length;
+
+                    // Count tasks per persona
+                    personas.forEach(personaFile => {
+                        const personaName = personaFile.replace('.md', '');
+                        let taskCount = 0;
+                        let personaTotalItems = 0;
+                        let personaCompletedItems = 0;
+
+                        if (fs.existsSync(activeTasksPath)) {
+                            const tasks = fs.readdirSync(activeTasksPath)
+                                .filter(f => f.startsWith(personaName) && f.endsWith('.md'));
+
+                            taskCount = tasks.length;
+
+                            tasks.forEach(taskFile => {
+                                const content = fs.readFileSync(
+                                    path.join(activeTasksPath, taskFile),
+                                    'utf-8'
+                                );
+                                const total = (content.match(/^- \[[ x]\]/gm) || []).length;
+                                const done = (content.match(/^- \[x\]/gm) || []).length;
+                                personaTotalItems += total;
+                                personaCompletedItems += done;
+                            });
+                        }
+
+                        if (taskCount > 0) {
+                            personaData.push({
+                                name: personaName,
+                                tasks: taskCount
+                            });
+
+                            personaProgress.push({
+                                name: personaName,
+                                total: personaTotalItems,
+                                completed: personaCompletedItems
+                            });
+                        }
+
+                        totalItems += personaTotalItems;
+                        completedItems += personaCompletedItems;
+                    });
+                }
+
+                // Count active tasks
+                if (fs.existsSync(activeTasksPath)) {
+                    activeTasks = fs.readdirSync(activeTasksPath)
+                        .filter(f => f.endsWith('.md')).length;
+                }
+
+                // Count completed tasks
+                if (fs.existsSync(archiveTasksPath)) {
+                    completedTasks = fs.readdirSync(archiveTasksPath)
+                        .filter(f => f.endsWith('.md')).length;
+                }
+
+                const completionRate = totalItems > 0
+                    ? Math.round((completedItems / totalItems) * 100)
+                    : 0;
+
+                panel.webview.postMessage({
+                    totalPersonas,
+                    activeTasks,
+                    completedTasks,
+                    completionRate,
+                    personaData,
+                    progressData: {
+                        total: totalItems,
+                        completed: completedItems
+                    },
+                    personaProgress
+                });
+            }
+
+            // Handle messages from webview
+            panel.webview.onDidReceiveMessage(
+                message => {
+                    if (message.command === 'requestData') {
+                        sendDashboardData();
+                    }
+                },
+                undefined,
+                context.subscriptions
+            );
+
+            // Send initial data
+            sendDashboardData();
+
+            // Refresh data every 5 seconds
+            const interval = setInterval(() => {
+                sendDashboardData();
+            }, 5000);
+
+            panel.onDidDispose(() => {
+                clearInterval(interval);
+            });
+        })
+    );
 }
 
 function deactivate() { }

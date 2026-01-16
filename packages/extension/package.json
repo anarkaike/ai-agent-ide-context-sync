@@ -2,7 +2,7 @@
     "name": "ai-agent-ide-context-sync-vscode",
     "displayName": "AI Agent IDE Context Sync",
     "description": "Complete AI Kernel management: personas, tasks, analytics, and context sync",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -98,6 +98,11 @@
             {
                 "command": "ai-agent-sync.clearActiveTask",
                 "title": "AI Agent Sync: Clear Active Task"
+            },
+            {
+                "command": "ai-agent-sync.openDashboard",
+                "title": "AI Agent Sync: Open Dashboard",
+                "icon": "$(graph)"
             }
         ],
         "viewsContainers": {
