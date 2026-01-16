@@ -1,9 +1,18 @@
+# Development files
 .vscode/**
 .vscode-test/**
 node_modules/**
 .gitignore
+*.vsix
+
+# Parent repository files (CRITICAL - exclude monorepo)
+../../**
+../**
+
+# Git files
 .git/**
+**/.git/**
+
+# Build files
 **/*.map
 **/.eslintrc.json
-**/.git
-**/node_modules
