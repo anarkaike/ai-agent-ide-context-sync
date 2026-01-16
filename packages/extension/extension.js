@@ -3,6 +3,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { I18n, SmartNotifications } = require('./modules');
+const { KanbanManager, AdvancedAnalytics, ThemeManager, CloudSyncManager } = require('./advanced-modules');
 
 /**
  * Get workspace .ai-workspace path
@@ -545,6 +546,12 @@ function activate(context) {
     if (aiWorkspacePath) {
         notifications.start(aiWorkspacePath);
     }
+
+    // Initialize Advanced Modules
+    const kanbanManager = aiWorkspacePath ? new KanbanManager(context, aiWorkspacePath) : null;
+    const analytics = aiWorkspacePath ? new AdvancedAnalytics(aiWorkspacePath) : null;
+    const themeManager = new ThemeManager(context);
+    const cloudSync = aiWorkspacePath ? new CloudSyncManager(context, aiWorkspacePath) : null;
 
     // Register Tree Providers
     const personasProvider = new PersonasTreeProvider();

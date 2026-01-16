@@ -1,0 +1,20 @@
+{
+  "extension": {
+    "name": "AI Agent IDE Context Sync",
+    "description": "完整的AI内核管理：角色、任务、分析和上下文同步"
+  },
+  "commands": {
+    "init": "初始化工作区",
+    "build": "构建上下文",
+    "createPersona": "创建角色",
+    "createTask": "创建任务",
+    "quickPicker": "快速任务选择器",
+    "openDashboard": "打开仪表板",
+    "openKanban": "打开看板"
+  },
+  "messages": {
+    "workspaceInitialized": "✅ 工作区已初始化！",
+    "taskCreated": "✅ 任务已创建！",
+    "pomodoroCompleted": "⏰ 番茄钟完成！休息时间！🎉"
+  }
+}

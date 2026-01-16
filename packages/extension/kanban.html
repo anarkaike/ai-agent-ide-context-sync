@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Board</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--vscode-font-family);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-editor-background);
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: var(--vscode-font-family);
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+
+        button:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+
+        .kanban-board {
+            display: flex;
+            gap: 20px;
+            min-height: 600px;
+            padding-bottom: 20px;
+        }
+
+        .column {
+            flex: 1;
+            min-width: 300px;
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--vscode-panel-border);
+        }
+
+        .column-title {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .column-count {
+            background: var(--vscode-badge-background);
+            color: var(--vscode-badge-foreground);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .column.todo .column-header {
+            border-bottom-color: #667eea;
+        }
+
+        .column.in-progress .column-header {
+            border-bottom-color: #f093fb;
+        }
+
+        .column.review .column-header {
+            border-bottom-color: #fee140;
+        }
+
+        .column.done .column-header {
+            border-bottom-color: #43e97b;
+        }
+
+        .cards-container {
+            min-height: 500px;
+            padding: 5px;
+        }
+
+        .card {
+            background: var(--vscode-input-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: move;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .card.dragging {
+            opacity: 0.5;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-weight: 500;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .card-persona {
+            font-size: 11px;
+            color: var(--vscode-descriptionForeground);
+            background: var(--vscode-badge-background);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        .card-progress {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: var(--vscode-input-background);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--vscode-progressBar-background);
+            transition: width 0.3s;
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .card-deadline {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .card-deadline.overdue {
+            color: #fa709a;
+        }
+
+        .card-deadline.soon {
+            color: #fee140;
+        }
+
+        .drag-over {
+            background: var(--vscode-list-hoverBackground);
+            border: 2px dashed var(--vscode-focusBorder);
+        }
+
+        .add-card-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px dashed var(--vscode-panel-border);
+            color: var(--vscode-descriptionForeground);
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .add-card-btn:hover {
+            background: var(--vscode-list-hoverBackground);
+            border-color: var(--vscode-focusBorder);
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--vscode-input-background);
+            border-radius: 8px;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        select {
+            background: var(--vscode-dropdown-background);
+            color: var(--vscode-dropdown-foreground);
+            border: 1px solid var(--vscode-dropdown-border);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: var(--vscode-font-family);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>📋 Kanban Board</h1>
+        <div class="controls">
+            <button onclick="exportBoard()">📤 Export</button>
+            <button onclick="refreshBoard()">🔄 Refresh</button>
+        </div>
+    </div>
+
+    <div class="filters">
+        <div class="filter-group">
+            <label>👤 Persona:</label>
+            <select id="personaFilter" onchange="filterCards()">
+                <option value="">All Personas</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>📅 Deadline:</label>
+            <select id="deadlineFilter" onchange="filterCards()">
+                <option value="">All</option>
+                <option value="overdue">Overdue</option>
+                <option value="soon">Due Soon</option>
+                <option value="none">No Deadline</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="kanban-board">
+        <div class="column todo" data-status="todo">
+            <div class="column-header">
+                <div class="column-title">
+                    📝 To Do
+                    <span class="column-count" id="count-todo">0</span>
+                </div>
+            </div>
+            <div class="cards-container" id="cards-todo"></div>
+            <button class="add-card-btn" onclick="addCard('todo')">+ Add Task</button>
+        </div>
+
+        <div class="column in-progress" data-status="in-progress">
+            <div class="column-header">
+                <div class="column-title">
+                    🚀 In Progress
+                    <span class="column-count" id="count-in-progress">0</span>
+                </div>
+            </div>
+            <div class="cards-container" id="cards-in-progress"></div>
+            <button class="add-card-btn" onclick="addCard('in-progress')">+ Add Task</button>
+        </div>
+
+        <div class="column review" data-status="review">
+            <div class="column-header">
+                <div class="column-title">
+                    👀 Review
+                    <span class="column-count" id="count-review">0</span>
+                </div>
+            </div>
+            <div class="cards-container" id="cards-review"></div>
+            <button class="add-card-btn" onclick="addCard('review')">+ Add Task</button>
+        </div>
+
+        <div class="column done" data-status="done">
+            <div class="column-header">
+                <div class="column-title">
+                    ✅ Done
+                    <span class="column-count" id="count-done">0</span>
+                </div>
+            </div>
+            <div class="cards-container" id="cards-done"></div>
+        </div>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+        let tasks = [];
+        let personas = [];
+
+        // Listen for data from extension
+        window.addEventListener('message', event => {
+            const data = event.data;
+            if (data.tasks) {
+                tasks = data.tasks;
+                personas = data.personas || [];
+                renderBoard();
+                updatePersonaFilter();
+            }
+        });
+
+        function renderBoard() {
+            const columns = ['todo', 'in-progress', 'review', 'done'];
+
+            columns.forEach(status => {
+                const container = document.getElementById(`cards-${status}`);
+                container.innerHTML = '';
+
+                const statusTasks = tasks.filter(t => t.status === status);
+                document.getElementById(`count-${status}`).textContent = statusTasks.length;
+
+                statusTasks.forEach(task => {
+                    const card = createCard(task);
+                    container.appendChild(card);
+                });
+            });
+
+            setupDragAndDrop();
+        }
+
+        function createCard(task) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.draggable = true;
+            card.dataset.taskId = task.id;
+
+            const progress = task.total > 0 ? Math.round((task.completed / task.total) * 100) : 0;
+
+            let deadlineHtml = '';
+            if (task.deadline) {
+                const deadline = new Date(task.deadline);
+                const now = new Date();
+                const daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+
+                let deadlineClass = '';
+                if (daysUntil < 0) deadlineClass = 'overdue';
+                else if (daysUntil <= 3) deadlineClass = 'soon';
+
+                deadlineHtml = `
+                    <div class="card-deadline ${deadlineClass}">
+                        📅 ${daysUntil < 0 ? 'Overdue' : `${daysUntil}d left`}
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="card-title">${task.title}</div>
+                    <div class="card-persona">${task.persona}</div>
+                </div>
+                <div class="card-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    <span>${task.completed}/${task.total}</span>
+                </div>
+                <div class="card-meta">
+                    ${deadlineHtml}
+                </div>
+            `;
+
+            card.addEventListener('click', () => openTask(task));
+
+            return card;
+        }
+
+        function setupDragAndDrop() {
+            const cards = document.querySelectorAll('.card');
+            const containers = document.querySelectorAll('.cards-container');
+
+            cards.forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+
+            containers.forEach(container => {
+                container.addEventListener('dragover', handleDragOver);
+                container.addEventListener('drop', handleDrop);
+                container.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+            return false;
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            this.classList.remove('drag-over');
+
+            if (draggedElement) {
+                const taskId = draggedElement.dataset.taskId;
+                const newStatus = this.parentElement.dataset.status;
+
+                // Update task status
+                vscode.postMessage({
+                    command: 'updateTaskStatus',
+                    taskId: taskId,
+                    status: newStatus
+                });
+            }
+
+            return false;
+        }
+
+        function openTask(task) {
+            vscode.postMessage({
+                command: 'openTask',
+                taskId: task.id
+            });
+        }
+
+        function addCard(status) {
+            vscode.postMessage({
+                command: 'createTask',
+                status: status
+            });
+        }
+
+        function filterCards() {
+            const personaFilter = document.getElementById('personaFilter').value;
+            const deadlineFilter = document.getElementById('deadlineFilter').value;
+
+            // Filter logic would go here
+            // For now, just refresh
+            renderBoard();
+        }
+
+        function updatePersonaFilter() {
+            const select = document.getElementById('personaFilter');
+            select.innerHTML = '<option value="">All Personas</option>';
+
+            personas.forEach(persona => {
+                const option = document.createElement('option');
+                option.value = persona;
+                option.textContent = persona;
+                select.appendChild(option);
+            });
+        }
+
+        function exportBoard() {
+            vscode.postMessage({
+                command: 'exportKanban'
+            });
+        }
+
+        function refreshBoard() {
+            vscode.postMessage({
+                command: 'refreshKanban'
+            });
+        }
+
+        // Request initial data
+        vscode.postMessage({ command: 'ready' });
+    </script>
+</body>
+
+</html>

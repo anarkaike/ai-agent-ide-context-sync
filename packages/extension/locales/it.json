@@ -1,0 +1,20 @@
+{
+  "extension": {
+    "name": "AI Agent IDE Context Sync",
+    "description": "Gestione completa del kernel IA: personas, attività, analisi e sincronizzazione del contesto"
+  },
+  "commands": {
+    "init": "Inizializza Area di Lavoro",
+    "build": "Costruisci Contesto",
+    "createPersona": "Crea Persona",
+    "createTask": "Crea Attività",
+    "quickPicker": "Selettore Rapido Attività",
+    "openDashboard": "Apri Dashboard",
+    "openKanban": "Apri Kanban"
+  },
+  "messages": {
+    "workspaceInitialized": "✅ Area di lavoro inizializzata!",
+    "taskCreated": "✅ Attività creata!",
+    "pomodoroCompleted": "⏰ Pomodoro completato! Tempo per una pausa! 🎉"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "extension": {
+    "name": "AI Agent IDE Context Sync",
+    "description": "完全なAIカーネル管理：ペルソナ、タスク、分析、コンテキスト同期"
+  },
+  "commands": {
+    "init": "ワークスペースを初期化",
+    "build": "コンテキストを構築",
+    "createPersona": "ペルソナを作成",
+    "createTask": "タスクを作成",
+    "quickPicker": "クイックタスクピッカー",
+    "openDashboard": "ダッシュボードを開く",
+    "openKanban": "カンバンボードを開く"
+  },
+  "messages": {
+    "workspaceInitialized": "✅ ワークスペースが初期化されました！",
+    "taskCreated": "✅ タスクが作成されました！",
+    "pomodoroCompleted": "⏰ ポモドーロ完了！休憩の時間です！🎉"
+  }
+}

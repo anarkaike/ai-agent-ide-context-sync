@@ -1,0 +1,20 @@
+{
+  "extension": {
+    "name": "AI Agent IDE Context Sync",
+    "description": "Vollständige KI-Kernel-Verwaltung: Personas, Aufgaben, Analysen und Kontextsynchronisation"
+  },
+  "commands": {
+    "init": "Arbeitsbereich Initialisieren",
+    "build": "Kontext Erstellen",
+    "createPersona": "Persona Erstellen",
+    "createTask": "Aufgabe Erstellen",
+    "quickPicker": "Schnellauswahl für Aufgaben",
+    "openDashboard": "Dashboard Öffnen",
+    "openKanban": "Kanban-Board Öffnen"
+  },
+  "messages": {
+    "workspaceInitialized": "✅ Arbeitsbereich initialisiert!",
+    "taskCreated": "✅ Aufgabe erstellt!",
+    "pomodoroCompleted": "⏰ Pomodoro abgeschlossen! Zeit für eine Pause! 🎉"
+  }
+}

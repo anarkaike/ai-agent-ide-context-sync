@@ -2,7 +2,7 @@
     "name": "ai-agent-ide-context-sync-vscode",
     "displayName": "AI Agent IDE Context Sync",
     "description": "Complete AI Kernel management: personas, tasks, analytics, and context sync",
-    "version": "1.6.0",
+    "version": "2.0.0",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -118,6 +118,36 @@
                 "command": "ai-agent-sync.customizePersona",
                 "title": "Customize Persona",
                 "icon": "$(paintcan)"
+            },
+            {
+                "command": "ai-agent-sync.openKanban",
+                "title": "AI Agent Sync: Open Kanban Board",
+                "icon": "$(project)"
+            },
+            {
+                "command": "ai-agent-sync.selectTheme",
+                "title": "AI Agent Sync: Select Theme",
+                "icon": "$(symbol-color)"
+            },
+            {
+                "command": "ai-agent-sync.weeklyReport",
+                "title": "AI Agent Sync: Weekly Report",
+                "icon": "$(graph-line)"
+            },
+            {
+                "command": "ai-agent-sync.monthlyReport",
+                "title": "AI Agent Sync: Monthly Report",
+                "icon": "$(graph)"
+            },
+            {
+                "command": "ai-agent-sync.cloudSync",
+                "title": "AI Agent Sync: Cloud Sync",
+                "icon": "$(cloud-upload)"
+            },
+            {
+                "command": "ai-agent-sync.exportBackup",
+                "title": "AI Agent Sync: Export Backup",
+                "icon": "$(database)"
             }
         ],
         "viewsContainers": {

@@ -1,0 +1,20 @@
+{
+  "extension": {
+    "name": "AI Agent IDE Context Sync",
+    "description": "Täydellinen AI-ytimen hallinta: persoonat, tehtävät, analytiikka ja kontekstin synkronointi"
+  },
+  "commands": {
+    "init": "Alusta Työtila",
+    "build": "Rakenna Konteksti",
+    "createPersona": "Luo Persoona",
+    "createTask": "Luo Tehtävä",
+    "quickPicker": "Nopea Tehtävävalitsin",
+    "openDashboard": "Avaa Kojelauta",
+    "openKanban": "Avaa Kanban-taulu"
+  },
+  "messages": {
+    "workspaceInitialized": "✅ Työtila alustettu!",
+    "taskCreated": "✅ Tehtävä luotu!",
+    "pomodoroCompleted": "⏰ Pomodoro valmis! Taukoaika! 🎉"
+  }
+}

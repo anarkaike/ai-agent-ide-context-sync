@@ -1,0 +1,93 @@
+{
+    "themes": {
+        "default": {
+            "name": "Default",
+            "colors": {
+                "primary": "#667eea",
+                "secondary": "#764ba2",
+                "success": "#43e97b",
+                "warning": "#fee140",
+                "danger": "#fa709a",
+                "info": "#4facfe"
+            }
+        },
+        "ocean": {
+            "name": "Ocean Blue",
+            "colors": {
+                "primary": "#2E3192",
+                "secondary": "#1BFFFF",
+                "success": "#00D9FF",
+                "warning": "#FFD700",
+                "danger": "#FF6B9D",
+                "info": "#4A90E2"
+            }
+        },
+        "sunset": {
+            "name": "Sunset",
+            "colors": {
+                "primary": "#FF6B6B",
+                "secondary": "#FFE66D",
+                "success": "#4ECDC4",
+                "warning": "#FF9F1C",
+                "danger": "#E63946",
+                "info": "#A8DADC"
+            }
+        },
+        "forest": {
+            "name": "Forest Green",
+            "colors": {
+                "primary": "#2D6A4F",
+                "secondary": "#52B788",
+                "success": "#74C69D",
+                "warning": "#FFB703",
+                "danger": "#D62828",
+                "info": "#023047"
+            }
+        },
+        "purple-rain": {
+            "name": "Purple Rain",
+            "colors": {
+                "primary": "#7209B7",
+                "secondary": "#B5179E",
+                "success": "#10B981",
+                "warning": "#F59E0B",
+                "danger": "#EF4444",
+                "info": "#3B82F6"
+            }
+        },
+        "cyberpunk": {
+            "name": "Cyberpunk",
+            "colors": {
+                "primary": "#FF00FF",
+                "secondary": "#00FFFF",
+                "success": "#39FF14",
+                "warning": "#FFFF00",
+                "danger": "#FF0040",
+                "info": "#00D9FF"
+            }
+        },
+        "minimal": {
+            "name": "Minimal",
+            "colors": {
+                "primary": "#000000",
+                "secondary": "#666666",
+                "success": "#2ECC71",
+                "warning": "#F39C12",
+                "danger": "#E74C3C",
+                "info": "#3498DB"
+            }
+        },
+        "pastel": {
+            "name": "Pastel Dreams",
+            "colors": {
+                "primary": "#FFB6C1",
+                "secondary": "#E0BBE4",
+                "success": "#C1E1C1",
+                "warning": "#FFE4B5",
+                "danger": "#FFB6B9",
+                "info": "#B4E7F5"
+            }
+        }
+    },
+    "customThemes": []
+}

@@ -1,0 +1,20 @@
+{
+  "extension": {
+    "name": "AI Agent IDE Context Sync",
+    "description": "Gestion complète du noyau IA: personas, tâches, analyses et synchronisation de contexte"
+  },
+  "commands": {
+    "init": "Initialiser l'Espace de Travail",
+    "build": "Construire le Contexte",
+    "createPersona": "Créer une Persona",
+    "createTask": "Créer une Tâche",
+    "quickPicker": "Sélecteur Rapide de Tâches",
+    "openDashboard": "Ouvrir le Tableau de Bord",
+    "openKanban": "Ouvrir le Tableau Kanban"
+  },
+  "messages": {
+    "workspaceInitialized": "✅ Espace de travail initialisé!",
+    "taskCreated": "✅ Tâche créée!",
+    "pomodoroCompleted": "⏰ Pomodoro terminé! Temps pour une pause! 🎉"
+  }
+}
