@@ -140,6 +140,73 @@ ai-doc soul import soul-backup-20260116.tar.gz
 
 ---
 
+## 🎨 VS Code Extension
+
+Gerencie visualmente todo o seu AI Kernel diretamente do VS Code!
+
+### 📦 Instalação
+
+```bash
+# Via Open VSX (Antigravity, Cursor, Windsurf, VS Code)
+code --install-extension junio-de-almeida-vitorino.ai-agent-ide-context-sync-vscode
+```
+
+Ou busque por "AI Agent IDE Context Sync" na marketplace da sua IDE.
+
+### ✨ Funcionalidades da Extensão
+
+#### 👥 Gerenciamento Visual
+- **Criar/Editar/Deletar Personas**: Interface visual completa
+- **Gerenciar Tasks**: CRUD completo com drag-and-drop
+- **Toggle Checklists**: Clique para marcar items como concluído
+- **Arquivar Tasks**: Organize tasks completadas
+
+#### 🎨 Customização
+- **16 Cores Predefinidas**: Paleta vibrante e harmoniosa
+- **Color Picker Customizado**: Escolha qualquer cor
+- **24 Ícones Emoji**: Robôs, animais, símbolos
+- **Preview em Tempo Real**: Veja mudanças instantaneamente
+
+#### ⏱️ Pomodoro Timer
+- **25min Pomodoro**: Modo foco com countdown
+- **5min Break**: Timer de pausa curta
+- **Duração Customizada**: Defina seus próprios minutos
+- **Pause/Resume**: Controle total sobre o timer
+- **Notificações**: Alertas quando completar
+
+#### 📊 Dashboard Interativo
+- **Gráficos em Tempo Real**: Chart.js com doughnut e bar charts
+- **Estatísticas**: Personas, tasks, taxa de conclusão
+- **Auto-refresh**: Atualiza a cada 5 segundos
+- **Design Moderno**: Integrado ao tema do VS Code
+
+#### 🔍 Navegação Rápida
+- **Quick Picker** (`Ctrl+Shift+T`): Navegação rápida entre tasks
+- **Busca Global** (`Ctrl+Shift+F`): Buscar em tasks e checklists
+- **Status Bar**: Task ativa com timer
+
+#### 📤 Export
+- **Markdown**: Agrupado por persona
+- **JSON**: Dados estruturados
+- **Plain Text**: Formato simples
+
+### 🎯 Como Usar
+
+1. **Instale a extensão** e o CLI global
+2. **Abra seu projeto** no VS Code
+3. **Clique no ícone** AI Agent Sync na sidebar
+4. **Initialize Workspace** se necessário
+5. **Crie personas** e comece a trabalhar!
+
+### 📸 Screenshots
+
+- **Sidebar View**: Hierarquia de Personas → Tasks → Checklists
+- **Dashboard**: Gráficos interativos e estatísticas
+- **Customização**: Interface visual para cores e ícones
+- **Timer**: Pomodoro integrado na status bar
+
+---
+
 ## 🏗️ Arquitetura
 
 ```
