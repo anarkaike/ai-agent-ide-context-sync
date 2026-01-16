@@ -1237,6 +1237,82 @@ status: active
             }
         })
     );
+
+    // Customize Persona
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.customizePersona', async (personaName) => {
+            const aiWorkspacePath = getAiWorkspacePath();
+            if (!aiWorkspacePath) {
+                vscode.window.showErrorMessage('No .ai-workspace found');
+                return;
+            }
+
+            // Load or create settings file
+            const settingsPath = path.join(aiWorkspacePath, '.persona-settings.json');
+            let settings = {};
+
+            if (fs.existsSync(settingsPath)) {
+                settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+            }
+
+            const panel = vscode.window.createWebviewPanel(
+                'customizePersona',
+                `🎨 Customize ${personaName}`,
+                vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    retainContextWhenHidden: true
+                }
+            );
+
+            // Load HTML
+            const htmlPath = path.join(context.extensionPath, 'customize-persona.html');
+            panel.webview.html = fs.readFileSync(htmlPath, 'utf-8');
+
+            // Handle messages
+            panel.webview.onDidReceiveMessage(
+                message => {
+                    if (message.command === 'ready') {
+                        panel.webview.postMessage({
+                            persona: {
+                                name: personaName,
+                                color: settings[personaName]?.color,
+                                icon: settings[personaName]?.icon
+                            }
+                        });
+                    } else if (message.command === 'save') {
+                        settings[personaName] = {
+                            color: message.color,
+                            icon: message.icon
+                        };
+
+                        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+                        vscode.window.showInformationMessage(`✅ ${personaName} customized!`);
+
+                        // Refresh views
+                        personasProvider.refresh();
+                        panel.dispose();
+                    }
+                },
+                undefined,
+                context.subscriptions
+            );
+        })
+    );
+
+    // Load persona settings helper
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.getPersonaSettings', (personaName) => {
+            const aiWorkspacePath = getAiWorkspacePath();
+            if (!aiWorkspacePath) return {};
+
+            const settingsPath = path.join(aiWorkspacePath, '.persona-settings.json');
+            if (!fs.existsSync(settingsPath)) return {};
+
+            const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+            return settings[personaName] || {};
+        })
+    );
 }
 
 function deactivate() { }

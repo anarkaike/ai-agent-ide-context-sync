@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customize Persona</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--vscode-font-family);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-editor-background);
+            padding: 30px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .color-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+            border-color: var(--vscode-focusBorder);
+        }
+
+        .color-option.selected {
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 0 0 2px var(--vscode-editor-background);
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 10px;
+        }
+
+        .icon-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid var(--vscode-panel-border);
+            background: var(--vscode-input-background);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.2s;
+        }
+
+        .icon-option:hover {
+            transform: scale(1.1);
+            border-color: var(--vscode-focusBorder);
+        }
+
+        .icon-option.selected {
+            border-color: var(--vscode-focusBorder);
+            background: var(--vscode-button-background);
+        }
+
+        .preview {
+            background: var(--vscode-input-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .preview-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .preview-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: var(--vscode-font-family);
+        }
+
+        .btn-primary {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+
+        .btn-primary:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+
+        .btn-secondary {
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+
+        .btn-secondary:hover {
+            background: var(--vscode-button-secondaryHoverBackground);
+        }
+
+        .custom-color {
+            margin-top: 15px;
+        }
+
+        .custom-color input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 4px;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            padding: 0 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🎨 Customize Persona</h1>
+    <p class="subtitle" id="personaName">Loading...</p>
+
+    <div class="section">
+        <div class="section-title">Choose a Color</div>
+        <div class="color-grid" id="colorGrid"></div>
+        <div class="custom-color">
+            <input type="color" id="customColor" placeholder="Custom color">
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Choose an Icon</div>
+        <div class="icon-grid" id="iconGrid"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Preview</div>
+        <div class="preview">
+            <div class="preview-item">
+                <div class="preview-icon" id="previewIcon">🤖</div>
+                <span id="previewName">AI-PERSONA</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button class="btn-primary" onclick="save()">💾 Save</button>
+        <button class="btn-secondary" onclick="reset()">🔄 Reset to Default</button>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        const colors = [
+            '#667eea', '#764ba2', '#f093fb', '#4facfe',
+            '#43e97b', '#fa709a', '#fee140', '#30cfd0',
+            '#a8edea', '#fed6e3', '#c471f5', '#12c2e9',
+            '#f857a6', '#ff6a88', '#fbc2eb', '#a6c1ee'
+        ];
+
+        const icons = [
+            '🤖', '👾', '🎯', '⚡', '🔥', '💎', '🌟', '🚀',
+            '🎨', '🎭', '🎪', '🎬', '🎮', '🎲', '🎯', '🎪',
+            '🦄', '🦋', '🐉', '🦅', '🦊', '🐺', '🦁', '🐯'
+        ];
+
+        let selectedColor = colors[0];
+        let selectedIcon = icons[0];
+        let personaData = {};
+
+        // Initialize
+        window.addEventListener('message', event => {
+            const data = event.data;
+            if (data.persona) {
+                personaData = data.persona;
+                document.getElementById('personaName').textContent = personaData.name;
+                selectedColor = personaData.color || colors[0];
+                selectedIcon = personaData.icon || icons[0];
+                renderColors();
+                renderIcons();
+                updatePreview();
+            }
+        });
+
+        function renderColors() {
+            const grid = document.getElementById('colorGrid');
+            grid.innerHTML = '';
+
+            colors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-option';
+                div.style.backgroundColor = color;
+                if (color === selectedColor) {
+                    div.classList.add('selected');
+                    div.textContent = '✓';
+                }
+                div.onclick = () => selectColor(color);
+                grid.appendChild(div);
+            });
+        }
+
+        function renderIcons() {
+            const grid = document.getElementById('iconGrid');
+            grid.innerHTML = '';
+
+            icons.forEach(icon => {
+                const div = document.createElement('div');
+                div.className = 'icon-option';
+                div.textContent = icon;
+                if (icon === selectedIcon) {
+                    div.classList.add('selected');
+                }
+                div.onclick = () => selectIcon(icon);
+                grid.appendChild(div);
+            });
+        }
+
+        function selectColor(color) {
+            selectedColor = color;
+            renderColors();
+            updatePreview();
+        }
+
+        function selectIcon(icon) {
+            selectedIcon = icon;
+            renderIcons();
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const previewIcon = document.getElementById('previewIcon');
+            const previewName = document.getElementById('previewName');
+
+            previewIcon.style.backgroundColor = selectedColor;
+            previewIcon.textContent = selectedIcon;
+            previewName.textContent = personaData.name;
+        }
+
+        document.getElementById('customColor').addEventListener('change', (e) => {
+            selectColor(e.target.value);
+        });
+
+        function save() {
+            vscode.postMessage({
+                command: 'save',
+                color: selectedColor,
+                icon: selectedIcon
+            });
+        }
+
+        function reset() {
+            selectedColor = colors[0];
+            selectedIcon = icons[0];
+            renderColors();
+            renderIcons();
+            updatePreview();
+        }
+
+        // Request initial data
+        vscode.postMessage({ command: 'ready' });
+    </script>
+</body>
+
+</html>
