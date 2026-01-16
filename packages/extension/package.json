@@ -2,7 +2,7 @@
     "name": "ai-agent-ide-context-sync-vscode",
     "displayName": "AI Agent IDE Context Sync",
     "description": "Complete AI Kernel management: personas, tasks, analytics, and context sync",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -84,6 +84,20 @@
                 "command": "ai-agent-sync.refreshAnalytics",
                 "title": "Refresh",
                 "icon": "$(refresh)"
+            },
+            {
+                "command": "ai-agent-sync.quickPicker",
+                "title": "AI Agent Sync: Quick Task Picker",
+                "icon": "$(search)"
+            },
+            {
+                "command": "ai-agent-sync.searchTasks",
+                "title": "AI Agent Sync: Search in Tasks",
+                "icon": "$(search)"
+            },
+            {
+                "command": "ai-agent-sync.clearActiveTask",
+                "title": "AI Agent Sync: Clear Active Task"
             }
         ],
         "viewsContainers": {
@@ -171,7 +185,21 @@
                     "group": "inline@2"
                 }
             ]
-        }
+        },
+        "keybindings": [
+            {
+                "command": "ai-agent-sync.quickPicker",
+                "key": "ctrl+shift+t",
+                "mac": "cmd+shift+t",
+                "when": "!terminalFocus"
+            },
+            {
+                "command": "ai-agent-sync.searchTasks",
+                "key": "ctrl+shift+f",
+                "mac": "cmd+shift+f",
+                "when": "!searchViewletVisible"
+            }
+        ]
     },
     "scripts": {
         "lint": "eslint .",

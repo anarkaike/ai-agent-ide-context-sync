@@ -390,6 +390,81 @@ class AnalyticsTreeProvider {
 }
 
 /**
+ * Get all tasks from all personas
+ */
+function getAllTasks() {
+    const aiWorkspacePath = getAiWorkspacePath();
+    if (!aiWorkspacePath) return [];
+
+    const tasksPath = path.join(aiWorkspacePath, 'tasks', 'active');
+    if (!fs.existsSync(tasksPath)) return [];
+
+    const taskFiles = fs.readdirSync(tasksPath).filter(f => f.endsWith('.md'));
+
+    return taskFiles.map(file => {
+        const taskPath = path.join(tasksPath, file);
+        const content = fs.readFileSync(taskPath, 'utf-8');
+
+        const titleMatch = content.match(/title:\s*["']?([^"'\n]+)["']?/);
+        const personaMatch = file.match(/^(AI-[A-Z]+)/);
+
+        const title = titleMatch ? titleMatch[1] : file.replace('.md', '');
+        const persona = personaMatch ? personaMatch[1] : 'Unknown';
+
+        // Count progress
+        const totalItems = (content.match(/^- \[[ x]\]/gm) || []).length;
+        const doneItems = (content.match(/^- \[x\]/gm) || []).length;
+        const progress = totalItems > 0 ? `${doneItems}/${totalItems}` : '';
+
+        return {
+            label: title,
+            description: `${persona} ${progress}`,
+            detail: file,
+            path: taskPath,
+            persona: persona
+        };
+    });
+}
+
+/**
+ * Status Bar Manager
+ */
+class StatusBarManager {
+    constructor() {
+        this.statusBarItem = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Left,
+            100
+        );
+        this.statusBarItem.command = 'ai-agent-sync.quickPicker';
+        this.currentTask = null;
+    }
+
+    show() {
+        this.statusBarItem.show();
+    }
+
+    hide() {
+        this.statusBarItem.hide();
+    }
+
+    updateTask(taskInfo) {
+        if (taskInfo) {
+            this.currentTask = taskInfo;
+            this.statusBarItem.text = `$(checklist) ${taskInfo.label}`;
+            this.statusBarItem.tooltip = `Task: ${taskInfo.label}\nPersona: ${taskInfo.persona}\nClick to switch task`;
+        } else {
+            this.currentTask = null;
+            this.statusBarItem.text = '$(add) Select Task';
+            this.statusBarItem.tooltip = 'Click to select a task';
+        }
+    }
+
+    getCurrentTask() {
+        return this.currentTask;
+    }
+}
+
+/**
  * Activate extension
  */
 function activate(context) {
@@ -428,14 +503,19 @@ function activate(context) {
         context.subscriptions.push(watcher);
     }
 
+    // Initialize Status Bar
+    const statusBarManager = new StatusBarManager();
+    statusBarManager.show();
+    context.subscriptions.push(statusBarManager.statusBarItem);
+
     // Register Commands
-    registerCommands(context, personasProvider, statusProvider, analyticsProvider);
+    registerCommands(context, personasProvider, statusProvider, analyticsProvider, statusBarManager);
 }
 
 /**
  * Register all commands
  */
-function registerCommands(context, personasProvider, statusProvider, analyticsProvider) {
+function registerCommands(context, personasProvider, statusProvider, analyticsProvider, statusBarManager) {
     // Initialize workspace
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.init', async () => {
@@ -682,6 +762,120 @@ status: active
             } catch (error) {
                 vscode.window.showErrorMessage(`❌ Status check failed: ${error.message}`);
             }
+        })
+    );
+
+    // Quick Picker - Fast task navigation
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.quickPicker', async () => {
+            const tasks = getAllTasks();
+
+            if (tasks.length === 0) {
+                vscode.window.showInformationMessage('No tasks found. Create one first!');
+                return;
+            }
+
+            // Add "Create New Task" option at the top
+            const items = [
+                {
+                    label: '$(add) Create New Task',
+                    description: '',
+                    detail: 'Create a new task for a persona',
+                    isCreateNew: true
+                },
+                { label: '', kind: vscode.QuickPickItemKind.Separator },
+                ...tasks
+            ];
+
+            const selected = await vscode.window.showQuickPick(items, {
+                placeHolder: 'Select a task or create new',
+                matchOnDescription: true,
+                matchOnDetail: true
+            });
+
+            if (!selected) return;
+
+            if (selected.isCreateNew) {
+                // Trigger create task command
+                vscode.commands.executeCommand('ai-agent-sync.createTask');
+            } else {
+                // Open task and update status bar
+                const doc = await vscode.workspace.openTextDocument(selected.path);
+                await vscode.window.showTextDocument(doc);
+                statusBarManager.updateTask(selected);
+            }
+        })
+    );
+
+    // Search in tasks
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.searchTasks', async () => {
+            const searchTerm = await vscode.window.showInputBox({
+                prompt: 'Search in tasks and checklists',
+                placeHolder: 'Enter search term...'
+            });
+
+            if (!searchTerm) return;
+
+            const tasks = getAllTasks();
+            const results = [];
+
+            for (const task of tasks) {
+                const content = fs.readFileSync(task.path, 'utf-8');
+
+                // Search in title
+                if (task.label.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    results.push({
+                        ...task,
+                        matchType: 'Title'
+                    });
+                    continue;
+                }
+
+                // Search in checklist items
+                const lines = content.split('\n');
+                const matchingLines = lines.filter(line =>
+                    line.includes('- [') && line.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+
+                if (matchingLines.length > 0) {
+                    results.push({
+                        ...task,
+                        matchType: `${matchingLines.length} checklist item(s)`,
+                        detail: matchingLines[0].trim()
+                    });
+                }
+            }
+
+            if (results.length === 0) {
+                vscode.window.showInformationMessage(`No results found for "${searchTerm}"`);
+                return;
+            }
+
+            const selected = await vscode.window.showQuickPick(
+                results.map(r => ({
+                    label: r.label,
+                    description: `${r.persona} - Match in: ${r.matchType}`,
+                    detail: r.detail,
+                    path: r.path
+                })),
+                {
+                    placeHolder: `${results.length} result(s) for "${searchTerm}"`
+                }
+            );
+
+            if (selected) {
+                const doc = await vscode.workspace.openTextDocument(selected.path);
+                await vscode.window.showTextDocument(doc);
+            }
+        })
+    );
+
+    // Clear active task from status bar
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.clearActiveTask', () => {
+            statusBarManager.updateTask(null);
+            vscode.window.showInformationMessage('Active task cleared');
         })
     );
 }
