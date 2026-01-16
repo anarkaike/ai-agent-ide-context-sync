@@ -9,6 +9,13 @@
     "categories": [
         "Other"
     ],
+    "publisher": "anarkaike",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/anarkaike/ai-agent-ide-context-sync.git",
+        "directory": "packages/extension"
+    },
     "activationEvents": [
         "onCommand:ai-agent-sync.build",
         "onCommand:ai-agent-sync.status"
