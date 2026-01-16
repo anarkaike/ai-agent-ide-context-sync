@@ -1,8 +1,8 @@
 {
     "name": "ai-agent-ide-context-sync-vscode",
     "displayName": "AI Agent IDE Context Sync",
-    "description": "Visual interface for managing universal AI agent context",
-    "version": "0.3.0",
+    "description": "Complete AI Kernel management: personas, tasks, analytics, and context sync",
+    "version": "1.0.0",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -17,12 +17,16 @@
         "directory": "packages/extension"
     },
     "activationEvents": [
-        "onCommand:ai-agent-sync.build",
-        "onCommand:ai-agent-sync.status"
+        "onView:ai-agent-sync-personas"
     ],
     "main": "./extension.js",
     "contributes": {
         "commands": [
+            {
+                "command": "ai-agent-sync.init",
+                "title": "AI Agent Sync: Initialize Workspace",
+                "icon": "$(rocket)"
+            },
             {
                 "command": "ai-agent-sync.build",
                 "title": "AI Agent Sync: Build Context",
@@ -31,6 +35,40 @@
             {
                 "command": "ai-agent-sync.status",
                 "title": "AI Agent Sync: Show Status"
+            },
+            {
+                "command": "ai-agent-sync.createPersona",
+                "title": "Create New Persona",
+                "icon": "$(add)"
+            },
+            {
+                "command": "ai-agent-sync.editPersona",
+                "title": "Edit Persona"
+            },
+            {
+                "command": "ai-agent-sync.deletePersona",
+                "title": "Delete Persona"
+            },
+            {
+                "command": "ai-agent-sync.createTask",
+                "title": "Create New Task",
+                "icon": "$(add)"
+            },
+            {
+                "command": "ai-agent-sync.archiveTask",
+                "title": "Archive Task"
+            },
+            {
+                "command": "ai-agent-sync.deleteTask",
+                "title": "Delete Task"
+            },
+            {
+                "command": "ai-agent-sync.toggleChecklistItem",
+                "title": "Toggle Checklist Item"
+            },
+            {
+                "command": "ai-agent-sync.openFile",
+                "title": "Open File"
             },
             {
                 "command": "ai-agent-sync.refreshPersonas",
@@ -43,8 +81,9 @@
                 "icon": "$(refresh)"
             },
             {
-                "command": "ai-agent-sync.openTask",
-                "title": "Open Task File"
+                "command": "ai-agent-sync.refreshAnalytics",
+                "title": "Refresh",
+                "icon": "$(refresh)"
             }
         ],
         "viewsContainers": {
@@ -60,31 +99,76 @@
             "ai-agent-sync": [
                 {
                     "id": "ai-agent-sync-personas",
-                    "name": "AI Agents & Tasks"
+                    "name": "👥 AI Agents & Tasks"
+                },
+                {
+                    "id": "ai-agent-sync-analytics",
+                    "name": "📊 Analytics"
                 },
                 {
                     "id": "ai-agent-sync-status",
-                    "name": "Kernel Status"
+                    "name": "⚙️ Kernel Status"
                 }
             ]
         },
         "menus": {
-            "view/item/context": [
-                {
-                    "command": "ai-agent-sync.openTask",
-                    "when": "view == ai-agent-sync-personas && viewItem == task"
-                }
-            ],
             "view/title": [
+                {
+                    "command": "ai-agent-sync.init",
+                    "when": "view == ai-agent-sync-personas",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "ai-agent-sync.build",
+                    "when": "view == ai-agent-sync-personas",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "ai-agent-sync.createPersona",
+                    "when": "view == ai-agent-sync-personas",
+                    "group": "navigation@3"
+                },
                 {
                     "command": "ai-agent-sync.refreshPersonas",
                     "when": "view == ai-agent-sync-personas",
-                    "group": "navigation"
+                    "group": "navigation@4"
                 },
                 {
                     "command": "ai-agent-sync.refreshStatus",
                     "when": "view == ai-agent-sync-status",
                     "group": "navigation"
+                },
+                {
+                    "command": "ai-agent-sync.refreshAnalytics",
+                    "when": "view == ai-agent-sync-analytics",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "ai-agent-sync.editPersona",
+                    "when": "view == ai-agent-sync-personas && viewItem == persona",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "ai-agent-sync.deletePersona",
+                    "when": "view == ai-agent-sync-personas && viewItem == persona",
+                    "group": "inline@2"
+                },
+                {
+                    "command": "ai-agent-sync.createTask",
+                    "when": "view == ai-agent-sync-personas && viewItem == tasks-section",
+                    "group": "inline"
+                },
+                {
+                    "command": "ai-agent-sync.archiveTask",
+                    "when": "view == ai-agent-sync-personas && viewItem == task",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "ai-agent-sync.deleteTask",
+                    "when": "view == ai-agent-sync-personas && viewItem == task",
+                    "group": "inline@2"
                 }
             ]
         }
