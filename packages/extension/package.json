@@ -2,7 +2,7 @@
     "name": "ai-agent-ide-context-sync-vscode",
     "displayName": "AI Agent IDE Context Sync",
     "description": "Visual interface for managing universal AI agent context",
-    "version": "0.1.0",
+    "version": "0.3.0",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -25,15 +25,26 @@
         "commands": [
             {
                 "command": "ai-agent-sync.build",
-                "title": "AI Agent Sync: Build Context"
+                "title": "AI Agent Sync: Build Context",
+                "icon": "$(sync)"
             },
             {
                 "command": "ai-agent-sync.status",
                 "title": "AI Agent Sync: Show Status"
             },
             {
-                "command": "ai-agent-sync.heuristics",
-                "title": "AI Agent Sync: View Heuristics"
+                "command": "ai-agent-sync.refreshPersonas",
+                "title": "Refresh",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "ai-agent-sync.refreshStatus",
+                "title": "Refresh",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "ai-agent-sync.openTask",
+                "title": "Open Task File"
             }
         ],
         "viewsContainers": {
@@ -48,12 +59,32 @@
         "views": {
             "ai-agent-sync": [
                 {
-                    "id": "ai-agent-sync-status",
-                    "name": "Status"
+                    "id": "ai-agent-sync-personas",
+                    "name": "AI Agents & Tasks"
                 },
                 {
-                    "id": "ai-agent-sync-heuristics",
-                    "name": "Heuristics"
+                    "id": "ai-agent-sync-status",
+                    "name": "Kernel Status"
+                }
+            ]
+        },
+        "menus": {
+            "view/item/context": [
+                {
+                    "command": "ai-agent-sync.openTask",
+                    "when": "view == ai-agent-sync-personas && viewItem == task"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "ai-agent-sync.refreshPersonas",
+                    "when": "view == ai-agent-sync-personas",
+                    "group": "navigation"
+                },
+                {
+                    "command": "ai-agent-sync.refreshStatus",
+                    "when": "view == ai-agent-sync-status",
+                    "group": "navigation"
                 }
             ]
         }
