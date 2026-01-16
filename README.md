@@ -1,5 +1,244 @@
 # 🧠 AI Agent IDE Context Sync
 
+> **Hub Universal de Contexto para Agentes de IA em múltiplas IDEs**
+
+Pare de se repetir. Um contexto, infinitos agentes.
+
+[![NPM Version](https://img.shields.io/npm/v/ai-agent-ide-context-sync.svg)](https://www.npmjs.com/package/ai-agent-ide-context-sync)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+---
+
+## 🎯 O que é isso?
+
+**AI Agent IDE Context Sync** é um sistema universal de gerenciamento de contexto que sincroniza a inteligência do seu projeto entre **todos os agentes de IA para código** — Cursor, Windsurf, Trae, Claude, Copilot, Gemini, Antigravity e muito mais.
+
+Em vez de manter arquivos separados como `.cursorrules`, `.windsurfrules`, `.github/copilot-instructions.md` e outros específicos de cada IDE, você define seu contexto **uma vez** e o sistema automaticamente sincroniza para todos os agentes.
+
+### O Problema
+
+Você está trabalhando em um projeto Laravel + Vue. Você tem:
+- `.cursorrules` para o Cursor
+- `.windsurfrules` para o Windsurf
+- `.github/copilot-instructions.md` para o Copilot
+- `.trae/rules/project_rules.md` para o Trae
+- `.claude/instructions.md` para Claude Projects
+
+Toda vez que você atualiza sua arquitetura, adiciona um novo padrão ou muda um padrão de código, você precisa **atualizar manualmente 5+ arquivos**. É um pesadelo.
+
+### A Solução
+
+```bash
+npm install -g ai-agent-ide-context-sync
+cd seu-projeto
+ai-doc init
+ai-doc build
+```
+
+Agora **todos os seus agentes compartilham o mesmo cérebro**. Atualize uma vez, sincronize em todos os lugares.
+
+---
+
+## ✨ Funcionalidades
+
+### 🔄 Sincronização Universal
+Gera automaticamente arquivos de contexto para:
+- **Cursor** (`.cursorrules`)
+- **Windsurf** (`.windsurfrules`)
+- **GitHub Copilot** (`.github/copilot-instructions.md`)
+- **Trae** (`.trae/rules/project_rules.md`)
+- **Claude Projects** (`.claude/instructions.md`)
+- **Gemini CLI** (`.google/instructions.md`)
+- **Antigravity** (`.ai-workspace/cache/compiled/ai-instructions.md`)
+
+### 🧬 Arquitetura Modular
+- **Módulos Core**: Identidade, Memória, Tarefas, Análise
+- **Integrações de Stack**: Laravel, Vue, React, Next.js (extensível)
+- **Motor de Heurísticas**: Aprende padrões automaticamente do seu código
+- **Sistema Soul**: Base de conhecimento portável (exporte/importe seus aprendizados)
+
+### 🚀 Auto-Evolução
+O sistema aprende com suas interações:
+- Padrões de navegação (rotas Laravel, componentes Vue)
+- Otimizações de prompts
+- Padrões de código e anti-padrões
+- Insights técnicos
+
+### 🌍 Conhecimento Portável
+Exporte sua "Soul" (conhecimento acumulado) e compartilhe:
+```bash
+ai-doc soul export
+# Cria soul-backup-YYYYMMDD.tar.gz
+```
+
+Importe em outra máquina ou projeto:
+```bash
+ai-doc soul import soul-backup-20260116.tar.gz
+```
+
+---
+
+## 📦 Instalação
+
+### Instalação Global (Recomendado)
+```bash
+npm install -g ai-agent-ide-context-sync
+```
+
+### Inicializar no Seu Projeto
+```bash
+cd seu-projeto
+ai-doc init
+```
+
+Isso cria um diretório `.ai-workspace/` com:
+- `config.yaml` (metadados do projeto)
+- `personas/` (identidades de agentes IA)
+- `tasks/` (rastreamento de trabalho ativo)
+- `analysis/` (decisões arquiteturais)
+
+---
+
+## 🛠️ Uso
+
+### Construir Contexto para Todos os Agentes
+```bash
+ai-doc build
+```
+
+Isso compila seus módulos kernel, integrações de stack e contexto do projeto em um único conjunto de instruções abrangente e sincroniza para todas as IDEs suportadas.
+
+### Verificar Status
+```bash
+ai-doc status
+```
+
+Saída:
+```
+=== 🔧 AI KERNEL (Global) ===
+   Versão: 2.0.0
+   Inteligência: 15 heurísticas aprendidas
+
+=== 📁 AI WORKSPACE (Local) ===
+   Projeto: sistema-clinica-new
+   Path: /caminho/para/seu/projeto/.ai-workspace
+```
+
+### Ver Heurísticas Aprendidas
+```bash
+ai-doc heuristics
+```
+
+### Exportar/Importar Soul
+```bash
+# Exportar
+ai-doc soul export
+
+# Importar
+ai-doc soul import soul-backup-20260116.tar.gz
+```
+
+---
+
+## 🏗️ Arquitetura
+
+```
+~/.ai-doc/
+├── kernel/          # Inteligência global (compartilhada entre todos os projetos)
+│   ├── modules/     # Core, Identity, Memory, Tasks, Analysis
+│   ├── heuristics/  # Padrões auto-aprendidos
+│   └── cli/         # Interface de linha de comando
+└── soul/            # Base de conhecimento portável
+    └── experience/  # Insights de Laravel, Vue, React
+
+seu-projeto/
+└── .ai-workspace/   # Contexto local do projeto
+    ├── config.yaml
+    ├── personas/
+    ├── tasks/
+    └── analysis/
+```
+
+---
+
+## 🎭 Sistema de Identidade
+
+Crie personas de agentes IA com expertise específica:
+
+```bash
+ai-doc identity create AI-NARUTO
+```
+
+Cada persona tem:
+- Especialidades técnicas
+- Estilo de comunicação
+- Preferências de trabalho
+- Histórico de tarefas
+- Espaço de raciocínio ("Mesa de Raciocínio")
+
+---
+
+## 🧪 Motor de Heurísticas
+
+O sistema aprende automaticamente:
+- **Padrões de Navegação**: "Ao trabalhar com Laravel, sempre verifique `routes/web.php` primeiro"
+- **Otimizações de Prompt**: "Use a flag `--filter` para testes PHPUnit"
+- **Padrões de Código**: "Multi-tenancy requer filtragem por `business_id`"
+
+Essas heurísticas são armazenadas em `~/.ai-doc/kernel/heuristics/` e aplicadas em todos os projetos.
+
+---
+
+## 🌌 Sistema Soul
+
+A "Soul" é sua sabedoria técnica acumulada:
+- **Pitfalls**: Erros comuns e como evitá-los
+- **Patterns**: Soluções arquiteturais comprovadas
+- **Insights**: Lições aprendidas em produção
+
+Exporte, compartilhe com sua equipe ou importe em uma nova máquina.
+
+---
+
+## 📚 Documentação
+
+- [Documentação Completa](https://github.com/anarkaike/ai-agent-ide-context-sync/wiki)
+- [Guia de Contribuição](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
+
+---
+
+## 🤝 Contribuindo
+
+Contribuições são bem-vindas! Por favor, leia nosso [Guia de Contribuição](CONTRIBUTING.md) primeiro.
+
+---
+
+## 📄 Licença
+
+MIT © Junio
+
+---
+
+## 🙏 Agradecimentos
+
+Inspirado pela necessidade de uma camada de contexto universal na era do desenvolvimento assistido por IA.
+
+Construído com ❤️ para desenvolvedores cansados de copiar e colar as mesmas instruções em 5 IDEs diferentes.
+
+---
+
+**Pare de se repetir. Comece a sincronizar.**
+
+```bash
+npm install -g ai-agent-ide-context-sync
+```
+
+---
+---
+
+# 🧠 AI Agent IDE Context Sync
+
 > **Universal Context Hub for AI Agents across multiple IDEs**
 
 Stop repeating yourself. One context, infinite agents.
@@ -116,7 +355,7 @@ ai-doc status
 Output:
 ```
 === 🔧 AI KERNEL (Global) ===
-   Versão: 2.0.0-alpha.1
+   Versão: 2.0.0
    Inteligência: 15 heurísticas aprendidas
 
 === 📁 AI WORKSPACE (Local) ===
