@@ -1,12 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <circle cx="50" cy="50" r="45" fill="url(#grad)"/>
-  <path d="M 30 40 L 50 25 L 70 40 L 70 60 L 50 75 L 30 60 Z" fill="white" opacity="0.9"/>
-  <circle cx="50" cy="50" r="8" fill="url(#grad)"/>
-  <text x="50" y="90" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">AI</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Background circle -->
+  <circle cx="12" cy="12" r="11" fill="#667eea"/>
+  
+  <!-- AI Brain icon -->
+  <path d="M12 4 C8 4 6 6 6 9 C6 10 6.5 11 7 11.5 L7 13 C7 14 7.5 15 8.5 15.5 L8.5 17 C8.5 18.5 9.5 19.5 11 19.5 L13 19.5 C14.5 19.5 15.5 18.5 15.5 17 L15.5 15.5 C16.5 15 17 14 17 13 L17 11.5 C17.5 11 18 10 18 9 C18 6 16 4 12 4 Z" 
+        fill="white" opacity="0.9"/>
+  
+  <!-- Neural connections -->
+  <circle cx="9" cy="9" r="1" fill="#667eea"/>
+  <circle cx="15" cy="9" r="1" fill="#667eea"/>
+  <circle cx="12" cy="12" r="1" fill="#667eea"/>
+  <circle cx="10" cy="15" r="1" fill="#667eea"/>
+  <circle cx="14" cy="15" r="1" fill="#667eea"/>
+  
+  <!-- Connection lines -->
+  <line x1="9" y1="9" x2="12" y2="12" stroke="#667eea" stroke-width="0.5"/>
+  <line x1="15" y1="9" x2="12" y2="12" stroke="#667eea" stroke-width="0.5"/>
+  <line x1="12" y1="12" x2="10" y2="15" stroke="#667eea" stroke-width="0.5"/>
+  <line x1="12" y1="12" x2="14" y2="15" stroke="#667eea" stroke-width="0.5"/>
 </svg>
