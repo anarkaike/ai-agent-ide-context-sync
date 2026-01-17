@@ -5,6 +5,107 @@ All notable changes to the "AI Agent IDE Context Sync" extension will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Other languages:
+- Português (Brasil): [CHANGELOG.pt-BR.md](./CHANGELOG.pt-BR.md)
+
+Related docs:
+- Extension README (EN): [README.md](./README.md)
+- Extension README (PT-BR): [README.pt-BR.md](./README.pt-BR.md)
+
+## [2.0.10] - 2026-01-17
+
+### Added
+- ✏️ Edição direta das seções markdown das personas via webview
+
+### Changed
+- Sincronização das seções `##` do corpo com o formulário da persona
+- Melhor alinhamento entre frontmatter e conteúdo detalhado da persona
+
+## [2.0.9] - 2026-01-17
+
+### Added
+- 🧩 Dynamic persona form webview com suporte completo ao frontmatter
+- 📋 Task form webview com selects editáveis de status e persona
+- 🗓️ Edição direta de deadline da task via webview
+- 📚 Visualização das seções do markdown das tasks em cards read-only
+
+### Changed
+- Atualização do frontmatter de tasks e personas diretamente a partir dos formulários
+- Melhor consistência entre frontmatter e conteúdo exibido nas webviews
+
+### Fixed
+- Formulário de persona não carregando todos os campos do template markdown
+- Select de status da task desabilitado e persona exibida apenas como texto
+
+## [2.0.8] - 2026-01-17
+
+### Added
+- 🧠 AI Kernel integration with the global `ai-doc` CLI
+- 🗂️ AI Workspace-aware personas and tasks management
+- 🧱 Kanban Board com colunas `todo`, `in-progress`, `review` e `done`
+- 🔗 Drag & drop com persistência em frontmatter das tasks
+- 📈 Kernel Status webview com resumo estruturado do `ai-doc status`
+- 💡 Heurísticas Aprendidas webview conectado ao motor global de heurísticas
+- 👁️ Ação inline de "View Full Details" para personas
+- 🧾 Tooltips ricas para personas com descrição e progresso de checklist
+
+### Changed
+- Melhorias visuais no painel de Kernel Status
+- Layout das heurísticas com contexto de tipo e stack
+- Árvore de personas com ações inline (editar, excluir, customizar, visualizar)
+- Melhor feedback de erros quando o workspace `.ai-workspace` não existe
+
+### Fixed
+- Kanban deixando de mostrar tasks após mudança de status
+- Fallback de status inválido para `todo` ao ler tasks antigas
+- Sincronização entre personas globais e workspace local
+
+## [2.0.1] - 2026-01-16
+
+### Fixed
+- 🧩 Kanban command registration e comportamento em workspaces reais
+- 📊 Itens de Analytics e Kernel Status clicáveis a partir da árvore lateral
+
+### Changed
+- Melhor integração entre Kanban, Analytics e Kernel Status
+
+## [2.0.0] - 2026-01-16
+
+### Added
+- 🧱 **Kanban Board Avançado**
+  - Webview dedicada `kanban.html`
+  - Colunas `todo`, `in-progress`, `review` e `done`
+  - Integração com `advanced-modules.js` para leitura de tasks
+- 🌐 **Suporte a 12 idiomas**
+  - Arquivos de locale em `packages/extension/locales/*.json`
+  - Traduções para `ar`, `de`, `es`, `fi`, `fr`, `hi`, `it`, `ja`, `ko`, `zh-CN` e outros
+- 🎨 **Themes**
+  - Configuração de temas em `themes.json`
+  - Paletas visuais para Kanban e dashboards
+- 📊 **Analytics Avançado**
+  - Métricas derivadas das tasks do Kanban
+  - Base para relatórios semanais/mensais
+
+### Changed
+- Estrutura interna ajustada para suportar Kanban, temas e múltiplos idiomas
+
+## [1.6.0] - 2026-01-16
+
+### Added
+- 🌐 **i18n básico**
+  - Locales `en` e `pt-BR` para textos da extensão
+  - Arquivos `locales/en.json` e `locales/pt-BR.json`
+- 🔔 **Smart Notifications (fundação)**
+  - Módulo central em `modules.js` para notificações inteligentes
+  - Hooks para futura integração com tarefas e prazos
+- 🧪 **Testing Suite**
+  - Testes em `packages/extension/test/extension.test.js`
+  - Runner em `packages/extension/test/runTest.js`
+
+### Technical
+- Atualização de `package.json` com scripts de teste
+- Empacotamento da versão `ai-agent-ide-context-sync-vscode-1.6.0.vsix`
+
 ## [1.5.0] - 2026-01-16
 
 ### Added
@@ -151,6 +252,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **2.0.10** - Persona markdown sections editing
+- **2.0.9** - Persona & Task webviews with full frontmatter editing
+- **2.0.8** - AI Kernel Integration, Kanban & Webviews
+- **2.0.1** - Kanban fixes & clickable views
+- **2.0.0** - Enterprise Edition (Kanban, 12 Languages, Themes & Advanced Analytics)
+- **1.6.0** - i18n, Smart Notifications & Testing Suite
 - **1.5.0** - Persona Customization
 - **1.4.0** - Timer & Export
 - **1.3.0** - Icon Improvements
@@ -163,7 +270,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Upcoming Features
 
-### v1.6.0 - Smart Notifications (Planned)
+### Smart Notifications Roadmap
 - 🔔 Automatic reminders for stalled tasks
 - 📅 Deadline alerts
 - 🎉 Completion celebrations
@@ -179,6 +286,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[2.0.1]: https://github.com/anarkaike/ai-agent-ide-context-sync/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/anarkaike/ai-agent-ide-context-sync/compare/v1.6.0...v2.0.0
+[1.6.0]: https://github.com/anarkaike/ai-agent-ide-context-sync/compare/v1.5.0...v1.6.0
+[2.0.9]: https://github.com/anarkaike/ai-agent-ide-context-sync/compare/v2.0.8...v2.0.9
+[2.0.8]: https://github.com/anarkaike/ai-agent-ide-context-sync/compare/v2.0.1...v2.0.8
 [1.5.0]: https://github.com/anarkaike/ai-agent-ide-context-sync/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/anarkaike/ai-agent-ide-context-sync/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/anarkaike/ai-agent-ide-context-sync/compare/v1.2.0...v1.3.0

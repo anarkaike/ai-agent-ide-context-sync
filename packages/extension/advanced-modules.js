@@ -88,8 +88,12 @@ class KanbanManager {
         const completed = (content.match(/^- \[x\]/gm) || []).length;
 
         // Extract status and deadline from frontmatter or content
-        const statusMatch = content.match(/status:\s*(\w+)/i);
+        const statusMatch = content.match(/status:\s*([\w-]+)/i);
         const deadlineMatch = content.match(/deadline:\s*(\d{4}-\d{2}-\d{2})/i);
+
+        const validStatuses = ['todo', 'in-progress', 'review', 'done'];
+        const rawStatus = statusMatch ? statusMatch[1].toLowerCase() : 'todo';
+        const status = validStatuses.includes(rawStatus) ? rawStatus : 'todo';
 
         return {
             id: filename,
@@ -97,7 +101,7 @@ class KanbanManager {
             persona,
             total,
             completed,
-            status: statusMatch ? statusMatch[1] : 'todo',
+            status,
             deadline: deadlineMatch ? deadlineMatch[1] : null,
             path: filePath
         };
@@ -165,8 +169,7 @@ class KanbanManager {
         const taskPath = path.join(tasksPath, taskId);
 
         if (fs.existsSync(taskPath)) {
-            const doc = await vscode.workspace.openTextDocument(taskPath);
-            await vscode.window.showTextDocument(doc);
+            vscode.commands.executeCommand('ai-agent-sync.showTaskDetails', taskPath);
         }
     }
 

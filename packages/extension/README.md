@@ -12,6 +12,8 @@ Manage your AI agents, tasks, and project context without leaving your editor.
 
 [Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Changelog](#-changelog)
 
+> 🇧🇷 Leia também em português: [README.pt-BR.md](./README.pt-BR.md)
+
 </div>
 
 ---
@@ -270,6 +272,11 @@ MIT © Junio de Almeida Vitorino
 - **NPM Package**: [ai-agent-ide-context-sync](https://www.npmjs.com/package/ai-agent-ide-context-sync)
 - **GitHub**: [anarkaike/ai-agent-ide-context-sync](https://github.com/anarkaike/ai-agent-ide-context-sync)
 - **Open VSX**: [Extension Page](https://open-vsx.org/extension/junio-de-almeida-vitorino/ai-agent-ide-context-sync-vscode)
+
+## 📦 Changelog
+
+- English: [CHANGELOG.md](./CHANGELOG.md)
+- Português (Brasil): [CHANGELOG.pt-BR.md](./CHANGELOG.pt-BR.md)
 
 ---
 

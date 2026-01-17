@@ -2141,6 +2141,20 @@ Sempre que uma tarefa for concluída ou uma versão fechada:
 5. **Sincronize Docs (Opcional)**
    - Se houver arquivo Markdown público, replique o conteúdo gerado pelo JSON.
 
+## 🔧 Regra Especial: Extensão VS Code (AI Agent IDE Context Sync)
+
+Quando o contexto for a extensão VS Code deste projeto:
+
+1. Ao gerar uma nova versão da extensão:
+   - Atualize o campo `version` em `packages/extension/package.json`.
+   - Atualize o `CHANGELOG.md` da extensão com a nova versão no topo.
+   - Para cada idioma suportado de changelog (ex.: `CHANGELOG.md`, `CHANGELOG.pt-BR.md`), replique a entrada da versão no respectivo idioma.
+2. Após atualizar versão e changelogs:
+   - Rode os scripts de verificação configurados (por exemplo, `npm test` em `packages/extension`, mesmo que apenas para validar que o fluxo atual continua consistente).
+   - Gere obrigatoriamente o pacote VSIX da extensão executando em `packages/extension`:
+     - `npm run package`
+   - Isso deve produzir um arquivo `.vsix` nomeado com a nova versão (ex.: `ai-agent-ide-context-sync-vscode-X.Y.Z.vsix`).
+
 ## 📝 Template do JSON
 ```json
 {

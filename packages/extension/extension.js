@@ -2,16 +2,98 @@ const vscode = require('vscode');
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { I18n, SmartNotifications } = require('./modules');
 const { KanbanManager, AdvancedAnalytics, ThemeManager, CloudSyncManager } = require('./advanced-modules');
+
+// Global Management Instances
+let i18n = null;
+let notifications = null;
+let kanbanManager = null;
+let analytics = null;
+let themeManager = null;
+let cloudSync = null;
+let personasProvider = null;
+let statusProvider = null;
+let analyticsProvider = null;
+let statusBarManager = null;
+
+/**
+ * Ensure that personas existing in the global identity state
+ * also have corresponding workspace persona files.
+ */
+function ensureWorkspacePersonas(aiWorkspacePath) {
+    try {
+        const identityRoot = path.join(os.homedir(), '.ai-doc', 'data', 'identity');
+        const presencePath = path.join(os.homedir(), '.ai-doc', 'data', 'live-state', 'presence.json');
+        const identitiesPath = path.join(identityRoot, 'identities.json');
+
+        let personasToEnsure = new Set();
+
+        if (fs.existsSync(presencePath)) {
+            try {
+                const presence = JSON.parse(fs.readFileSync(presencePath, 'utf-8'));
+                if (presence.current_identity && typeof presence.current_identity === 'string') {
+                    personasToEnsure.add(presence.current_identity);
+                }
+            } catch { }
+        }
+
+        if (fs.existsSync(identitiesPath)) {
+            try {
+                const identities = JSON.parse(fs.readFileSync(identitiesPath, 'utf-8'));
+                const active = identities.active || [];
+                active.forEach(entry => {
+                    if (entry && entry.persona) {
+                        personasToEnsure.add(entry.persona);
+                    }
+                });
+            } catch { }
+        }
+
+        if (personasToEnsure.size === 0) {
+            return;
+        }
+
+        const personasPath = path.join(aiWorkspacePath, 'personas');
+        if (!fs.existsSync(personasPath)) {
+            fs.mkdirSync(personasPath, { recursive: true });
+        }
+
+        personasToEnsure.forEach(personaName => {
+            if (!personaName.startsWith('AI-')) return;
+            const filePath = path.join(personasPath, `${personaName}.md`);
+            if (fs.existsSync(filePath)) return;
+
+            const content = `---
+title: "${personaName}"
+description: AI Agent
+created: ${new Date().toISOString()}
+status: active
+---
+
+# ${personaName}
+
+`;
+            fs.writeFileSync(filePath, content);
+        });
+    } catch { }
+}
 
 /**
  * Get workspace .ai-workspace path
  */
 function getAiWorkspacePath() {
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    if (!workspaceFolder) return null;
-    return path.join(workspaceFolder.uri.fsPath, '.ai-workspace');
+    const folders = vscode.workspace.workspaceFolders;
+    if (!folders) return null;
+
+    // Try to find folder with .ai-workspace
+    for (const folder of folders) {
+        const p = path.join(folder.uri.fsPath, '.ai-workspace');
+        if (fs.existsSync(p)) return p;
+    }
+
+    return path.join(folders[0].uri.fsPath, '.ai-workspace');
 }
 
 /**
@@ -69,17 +151,49 @@ class PersonasTreeProvider {
             return [this.createActionItem('➕ Create First Persona', 'ai-agent-sync.createPersona')];
         }
 
+        const settingsPath = path.join(aiWorkspacePath, '.persona-settings.json');
+        let personaSettings = {};
+
+        if (fs.existsSync(settingsPath)) {
+            try {
+                personaSettings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+            } catch (e) {
+                personaSettings = {};
+            }
+        }
+
         const personas = personaFiles.map(file => {
             const personaName = file.replace('.md', '');
             const personaPath = path.join(personasPath, file);
             const content = fs.readFileSync(personaPath, 'utf-8');
+            const tasksPath = path.join(aiWorkspacePath, 'tasks', 'active');
 
-            // Extract description from frontmatter
+            let taskCount = 0;
+            let totalItems = 0;
+            let doneItems = 0;
+
+            if (fs.existsSync(tasksPath)) {
+                const taskFiles = fs.readdirSync(tasksPath)
+                    .filter(f => f.startsWith(personaName) && f.endsWith('.md'));
+
+                taskCount = taskFiles.length;
+
+                taskFiles.forEach(taskFile => {
+                    const taskContent = fs.readFileSync(path.join(tasksPath, taskFile), 'utf-8');
+                    const total = (taskContent.match(/^- \[[ x]\]/gm) || []).length;
+                    const done = (taskContent.match(/^- \[x\]/gm) || []).length;
+                    totalItems += total;
+                    doneItems += done;
+                });
+            }
+
             const descMatch = content.match(/description:\s*["']?([^"'\n]+)["']?/);
             const description = descMatch ? descMatch[1] : 'AI Agent';
+            const settings = personaSettings[personaName] || {};
+            const iconEmoji = settings.icon || '';
 
             const item = new vscode.TreeItem(
-                personaName,
+                iconEmoji ? `${iconEmoji} ${personaName}` : personaName,
                 vscode.TreeItemCollapsibleState.Collapsed
             );
             item.iconPath = new vscode.ThemeIcon('robot', new vscode.ThemeColor('charts.purple'));
@@ -87,6 +201,16 @@ class PersonasTreeProvider {
             item.description = description;
             item.personaName = personaName;
             item.personaPath = personaPath;
+            const tooltipLines = [];
+            tooltipLines.push(`$(robot) ${personaName}`);
+            tooltipLines.push('');
+            tooltipLines.push(description);
+            tooltipLines.push('');
+            tooltipLines.push(`$(checklist) Tasks ativas: ${taskCount}`);
+            tooltipLines.push(`$(check) Checklist: ${doneItems}/${totalItems}`);
+            const mdTooltip = new vscode.MarkdownString(tooltipLines.join('\n'));
+            mdTooltip.isTrusted = false;
+            item.tooltip = mdTooltip;
 
             return item;
         });
@@ -100,16 +224,12 @@ class PersonasTreeProvider {
     getPersonaDetails(personaElement) {
         const details = [];
 
-        // Tasks section
         const tasksItem = new vscode.TreeItem('📋 Tasks', vscode.TreeItemCollapsibleState.Expanded);
         tasksItem.contextValue = 'tasks-section';
         tasksItem.personaName = personaElement.personaName;
         details.push(tasksItem);
 
-        // Actions
-        details.push(this.createActionItem('✏️ Edit Persona', 'ai-agent-sync.editPersona', personaElement.personaPath));
-        details.push(this.createActionItem('🗑️ Delete Persona', 'ai-agent-sync.deletePersona', personaElement.personaName));
-        details.push(this.createActionItem('📄 View Full Details', 'ai-agent-sync.openFile', personaElement.personaPath));
+        details.push(this.createActionItem('View Full Details', 'ai-agent-sync.viewPersonaDetails', personaElement.personaPath));
 
         return details;
     }
@@ -148,11 +268,16 @@ class PersonasTreeProvider {
             item.taskPath = taskPath;
             item.description = totalItems > 0 ? `${doneItems}/${totalItems}` : '';
             item.tooltip = `${file}\n${doneItems}/${totalItems} items completed`;
+            item.command = {
+                command: 'ai-agent-sync.showTaskDetails',
+                title: 'Show Task Details',
+                arguments: [taskPath]
+            };
 
             return item;
         });
 
-        tasks.push(this.createActionItem('➕ Create New Task', 'ai-agent-sync.createTask', personaName));
+        tasks.push(this.createActionItem('Create New Task', 'ai-agent-sync.createTask', personaName));
 
         return tasks;
     }
@@ -199,9 +324,10 @@ class PersonasTreeProvider {
         }
 
         // Add actions
-        items.push(this.createActionItem('✏️ Edit Task', 'ai-agent-sync.openFile', taskPath));
-        items.push(this.createActionItem('📦 Archive Task', 'ai-agent-sync.archiveTask', taskPath));
-        items.push(this.createActionItem('🗑️ Delete Task', 'ai-agent-sync.deleteTask', taskPath));
+        items.push(this.createActionItem('View Full Details', 'ai-agent-sync.showTaskDetails', taskPath));
+        items.push(this.createActionItem('Edit Task', 'ai-agent-sync.openFile', taskPath));
+        items.push(this.createActionItem('Archive Task', 'ai-agent-sync.archiveTask', taskPath));
+        items.push(this.createActionItem('Delete Task', 'ai-agent-sync.deleteTask', taskPath));
 
         return items;
     }
@@ -214,6 +340,14 @@ class PersonasTreeProvider {
             arguments: arg ? [arg] : []
         };
         item.contextValue = 'action';
+
+        // Use icons instead of just text
+        if (label.includes('Create')) item.iconPath = new vscode.ThemeIcon('add');
+        else if (label.includes('Edit')) item.iconPath = new vscode.ThemeIcon('edit');
+        else if (label.includes('Delete')) item.iconPath = new vscode.ThemeIcon('trash');
+        else if (label.includes('Archive')) item.iconPath = new vscode.ThemeIcon('archive');
+        else if (label.includes('Details')) item.iconPath = new vscode.ThemeIcon('info');
+
         return item;
     }
 }
@@ -240,21 +374,25 @@ class StatusTreeProvider {
             try {
                 const output = execSync('ai-doc status', { encoding: 'utf-8' });
 
-                // Remove ANSI color codes
                 const cleanOutput = output.replace(/\x1b\[[0-9;]*m/g, '');
 
-                // Parse the output into structured data
                 const items = [];
 
-                // Extract kernel info
+                const aiWorkspacePath = getAiWorkspacePath();
+                const isInitialized = aiWorkspacePath && fs.existsSync(aiWorkspacePath);
+
                 const versionMatch = cleanOutput.match(/Versão:\s*([^\n]+)/);
                 if (versionMatch) {
                     const item = new vscode.TreeItem(`Kernel v${versionMatch[1].trim()}`);
                     item.iconPath = new vscode.ThemeIcon('package');
+                    item.command = {
+                        command: 'ai-agent-sync.showKernelInfo',
+                        title: 'Show Kernel Info'
+                    };
+                    item.tooltip = 'Detalhes do Kernel e do workspace atual';
                     items.push(item);
                 }
 
-                // Extract heuristics count
                 const heuristicsMatch = cleanOutput.match(/Inteligência:\s*(\d+)\s*heurísticas/);
                 if (heuristicsMatch) {
                     const item = new vscode.TreeItem(`${heuristicsMatch[1]} Heurísticas Aprendidas`);
@@ -267,7 +405,6 @@ class StatusTreeProvider {
                     items.push(item);
                 }
 
-                // Extract workspace info
                 const projectMatch = cleanOutput.match(/Projeto:\s*([^\n]+)/);
                 if (projectMatch) {
                     const item = new vscode.TreeItem(`Projeto: ${projectMatch[1].trim()}`);
@@ -275,8 +412,17 @@ class StatusTreeProvider {
                     items.push(item);
                 }
 
-                // Check if workspace is initialized
-                if (cleanOutput.includes('Execute "ai-doc init"')) {
+                if (isInitialized) {
+                    const item = new vscode.TreeItem('✅ Workspace inicializado');
+                    item.iconPath = new vscode.ThemeIcon(
+                        'check',
+                        new vscode.ThemeColor('testing.iconPassed')
+                    );
+                    if (aiWorkspacePath) {
+                        item.tooltip = aiWorkspacePath;
+                    }
+                    items.push(item);
+                } else if (cleanOutput.includes('Execute "ai-doc init"') || !aiWorkspacePath) {
                     const item = new vscode.TreeItem('⚠️ Workspace não inicializado');
                     item.command = {
                         command: 'ai-agent-sync.init',
@@ -391,9 +537,31 @@ class AnalyticsTreeProvider {
 
     createStatItem(label, value) {
         const item = new vscode.TreeItem(`${label}: ${value}`);
-        item.iconPath = new vscode.ThemeIcon('graph');
+        if (label.includes('Personas')) {
+            item.iconPath = new vscode.ThemeIcon('account');
+        } else if (label.includes('Active Tasks')) {
+            item.iconPath = new vscode.ThemeIcon('flame');
+        } else if (label.includes('Completed Tasks')) {
+            item.iconPath = new vscode.ThemeIcon(
+                'check',
+                new vscode.ThemeColor('testing.iconPassed')
+            );
+        } else if (label.includes('Total Checklist Items')) {
+            item.iconPath = new vscode.ThemeIcon(
+                'circle-large-outline',
+                new vscode.ThemeColor('disabledForeground')
+            );
+        } else if (label.includes('Completed Items')) {
+            item.iconPath = new vscode.ThemeIcon(
+                'pass-filled',
+                new vscode.ThemeColor('testing.iconPassed')
+            );
+        } else if (label.includes('Completion Rate')) {
+            item.iconPath = new vscode.ThemeIcon('pie-chart');
+        } else {
+            item.iconPath = new vscode.ThemeIcon('graph');
+        }
 
-        // Add click commands based on label
         if (label.includes('Personas')) {
             item.command = {
                 command: 'ai-agent-sync.showPersonas',
@@ -412,6 +580,12 @@ class AnalyticsTreeProvider {
                 title: 'Show Checklist Items'
             };
             item.tooltip = 'Click to view all checklist items';
+        } else if (label.includes('Completion Rate')) {
+            item.command = {
+                command: 'ai-agent-sync.showCompletionDetails',
+                title: 'Show Completion Details'
+            };
+            item.tooltip = 'Baseado em itens de checklist completados em relação ao total';
         }
 
         return item;
@@ -565,25 +739,26 @@ function activate(context) {
     console.log('AI Agent IDE Context Sync extension activated!');
 
     // Initialize i18n
-    const i18n = new I18n(context.extensionPath);
+    i18n = new I18n(context.extensionPath);
 
     // Initialize Smart Notifications
-    const notifications = new SmartNotifications(context, i18n);
+    notifications = new SmartNotifications(context, i18n);
     const aiWorkspacePath = getAiWorkspacePath();
     if (aiWorkspacePath) {
         notifications.start(aiWorkspacePath);
+        ensureWorkspacePersonas(aiWorkspacePath);
     }
 
     // Initialize Advanced Modules
-    const kanbanManager = aiWorkspacePath ? new KanbanManager(context, aiWorkspacePath) : null;
-    const analytics = aiWorkspacePath ? new AdvancedAnalytics(aiWorkspacePath) : null;
-    const themeManager = new ThemeManager(context);
-    const cloudSync = aiWorkspacePath ? new CloudSyncManager(context, aiWorkspacePath) : null;
+    kanbanManager = aiWorkspacePath ? new KanbanManager(context, aiWorkspacePath) : null;
+    analytics = aiWorkspacePath ? new AdvancedAnalytics(aiWorkspacePath) : null;
+    themeManager = new ThemeManager(context);
+    cloudSync = aiWorkspacePath ? new CloudSyncManager(context, aiWorkspacePath) : null;
 
     // Register Tree Providers
-    const personasProvider = new PersonasTreeProvider();
-    const statusProvider = new StatusTreeProvider();
-    const analyticsProvider = new AnalyticsTreeProvider();
+    personasProvider = new PersonasTreeProvider();
+    statusProvider = new StatusTreeProvider();
+    analyticsProvider = new AnalyticsTreeProvider();
 
     vscode.window.registerTreeDataProvider('ai-agent-sync-personas', personasProvider);
     vscode.window.registerTreeDataProvider('ai-agent-sync-status', statusProvider);
@@ -614,28 +789,103 @@ function activate(context) {
     }
 
     // Initialize Status Bar
-    const statusBarManager = new StatusBarManager();
+    statusBarManager = new StatusBarManager();
     statusBarManager.show();
     context.subscriptions.push(statusBarManager.statusBarItem);
 
     // Register Commands
-    registerCommands(context, personasProvider, statusProvider, analyticsProvider, statusBarManager);
+    registerCommands(context);
 }
 
 /**
  * Register all commands
  */
-function registerCommands(context, personasProvider, statusProvider, analyticsProvider, statusBarManager) {
+function registerCommands(context) {
     // Initialize workspace
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.init', async () => {
             try {
                 execSync('ai-doc init', { encoding: 'utf-8' });
                 vscode.window.showInformationMessage('✅ Workspace initialized!');
+
+                // Re-initialize managers with new workspace path
+                const newAiWorkspacePath = getAiWorkspacePath();
+                if (newAiWorkspacePath) {
+                    kanbanManager = new KanbanManager(context, newAiWorkspacePath);
+                    analytics = new AdvancedAnalytics(newAiWorkspacePath);
+                    cloudSync = new CloudSyncManager(context, newAiWorkspacePath);
+                    notifications.start(newAiWorkspacePath);
+                }
+
                 personasProvider.refresh();
                 statusProvider.refresh();
             } catch (error) {
                 vscode.window.showErrorMessage(`❌ Init failed: ${error.message}`);
+            }
+        })
+    );
+
+    // Kernel info from status view
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.showKernelInfo', async () => {
+            try {
+                const statusOutput = execSync('ai-doc status', { encoding: 'utf-8' })
+                    .replace(/\x1b\[[0-9;]*m/g, '');
+
+                const lines = statusOutput.split('\n').map(l => l.trim()).filter(Boolean);
+                const kernelLine = lines.find(l => l.toLowerCase().includes('ai kernel'));
+                const workspaceLine = lines.find(l => l.toLowerCase().includes('ai workspace'));
+                const otherLines = lines.filter(l => l !== kernelLine && l !== workspaceLine);
+
+                let statusSection = '';
+
+                if (kernelLine || workspaceLine) {
+                    statusSection += `### Kernel Global\n\n`;
+                    if (kernelLine) {
+                        statusSection += `- ${kernelLine}\n\n`;
+                    }
+                    statusSection += `### Kernel do Workspace\n\n`;
+                    if (workspaceLine) {
+                        statusSection += `- ${workspaceLine}\n\n`;
+                    }
+                }
+
+                if (otherLines.length > 0) {
+                    statusSection += `### Saída Completa\n\n\`\`\`\n${otherLines.join('\n')}\n\`\`\`\n`;
+                }
+
+                const aiWorkspacePath = getAiWorkspacePath();
+                let statsSummary = '';
+
+                if (aiWorkspacePath && fs.existsSync(aiWorkspacePath)) {
+                    const analyticsProvider = new AnalyticsTreeProvider();
+                    const stats = analyticsProvider.calculateStats(aiWorkspacePath);
+                    statsSummary = `
+## Workspace Analytics
+
+- Personas: ${stats.personas}
+- Active Tasks: ${stats.activeTasks}
+- Completed Tasks: ${stats.completedTasks}
+- Total Checklist Items: ${stats.totalChecklistItems}
+- Completed Items: ${stats.completedChecklistItems}
+- Completion Rate: ${stats.completionRate}%
+`;
+                }
+
+                const content = `# ⚙️ Kernel Status
+
+## ai-doc status
+
+${statusSection}
+${statsSummary}
+
+---
+Fonte: ai-doc status + leitura da pasta .ai-workspace do projeto atual.
+`;
+
+                showWebviewReport(`# ⚙️ Kernel Status`, content);
+            } catch (error) {
+                vscode.window.showErrorMessage(`Failed to load kernel info: ${error.message}`);
             }
         })
     );
@@ -661,54 +911,272 @@ function registerCommands(context, personasProvider, statusProvider, analyticsPr
         })
     );
 
-    // Create persona
-    context.subscriptions.push(
-        vscode.commands.registerCommand('ai-agent-sync.createPersona', async () => {
-            const name = await vscode.window.showInputBox({
-                prompt: 'Enter persona name (e.g., AI-NARUTO)',
-                placeHolder: 'AI-NAME',
-                validateInput: (value) => {
-                    if (!value.startsWith('AI-')) {
-                        return 'Name must start with AI-';
+    async function openPersonaForm(mode, filePath) {
+        const aiWorkspacePath = getAiWorkspacePath();
+        if (!aiWorkspacePath) {
+            vscode.window.showErrorMessage('No .ai-workspace found');
+            return;
+        }
+
+        let persona = null;
+        let sections = [];
+        let frontmatter = [];
+
+        if (mode === 'edit' && filePath && fs.existsSync(filePath)) {
+            const content = fs.readFileSync(filePath, 'utf-8');
+            const nameMatch = content.match(/title:\s*["']?([^"'\n]+)["']?/);
+            const descMatch = content.match(/description:\s*["']?([^"'\n]+)["']?/);
+
+            persona = {
+                name: nameMatch ? nameMatch[1] : path.basename(filePath, '.md'),
+                description: descMatch ? descMatch[1] : '',
+                path: filePath
+            };
+
+            const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+            if (fmMatch) {
+                const fmLines = fmMatch[1].split('\n');
+                fmLines.forEach(line => {
+                    const m = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+                    if (m) {
+                        let value = m[2].trim();
+                        if ((value.startsWith('"') && value.endsWith('"')) ||
+                            (value.startsWith('\'') && value.endsWith('\''))) {
+                            value = value.substring(1, value.length - 1);
+                        }
+                        frontmatter.push({
+                            key: m[1],
+                            value
+                        });
                     }
-                    if (!/^AI-[A-Z]+$/.test(value)) {
-                        return 'Use uppercase letters only (e.g., AI-NARUTO)';
+                });
+            }
+
+            const parts = content.split('---');
+            let body = '';
+            if (parts.length >= 3) {
+                body = parts.slice(2).join('---');
+            } else {
+                body = content;
+            }
+
+            const lines = body.split('\n');
+            let current = null;
+
+            lines.forEach(line => {
+                const headingMatch = line.match(/^##\s+(.+)\s*$/);
+                if (headingMatch) {
+                    if (current) {
+                        sections.push({
+                            title: current.title,
+                            content: current.lines.join('\n').trim()
+                        });
                     }
-                    return null;
+                    current = {
+                        title: headingMatch[1],
+                        lines: []
+                    };
+                } else if (current) {
+                    current.lines.push(line);
                 }
             });
 
-            if (!name) return;
-
-            const description = await vscode.window.showInputBox({
-                prompt: 'Enter persona description',
-                placeHolder: 'Senior Backend Developer specializing in Laravel'
-            });
-
-            try {
-                execSync(`ai-doc identity create ${name}`, { encoding: 'utf-8' });
-                vscode.window.showInformationMessage(`✅ Persona ${name} created!`);
-                personasProvider.refresh();
-                analyticsProvider.refresh();
-            } catch (error) {
-                vscode.window.showErrorMessage(`❌ Failed to create persona: ${error.message}`);
+            if (current) {
+                sections.push({
+                    title: current.title,
+                    content: current.lines.join('\n').trim()
+                });
             }
+        }
+
+        const panel = vscode.window.createWebviewPanel(
+            'personaForm',
+            mode === 'create' ? '➕ Create Persona' : '👤 Edit Persona',
+            vscode.ViewColumn.One,
+            {
+                enableScripts: true,
+                retainContextWhenHidden: true
+            }
+        );
+
+        const htmlPath = path.join(context.extensionPath, 'persona-form.html');
+        panel.webview.html = fs.readFileSync(htmlPath, 'utf-8');
+
+        panel.webview.onDidReceiveMessage(
+            async message => {
+                        if (message.command === 'ready') {
+                            panel.webview.postMessage({
+                                mode,
+                                persona,
+                                sections,
+                                frontmatter
+                            });
+                } else if (message.command === 'save') {
+                    const name = (message.name || '').trim();
+                    const description = (message.description || '').trim();
+
+                    if (!name) {
+                        vscode.window.showErrorMessage('Name is required');
+                        return;
+                    }
+
+                    if (!name.startsWith('AI-')) {
+                        vscode.window.showErrorMessage('Name must start with AI-');
+                        return;
+                    }
+
+                    if (!/^AI-[A-Z]+$/.test(name)) {
+                        vscode.window.showErrorMessage('Use uppercase letters only (e.g., AI-NARUTO)');
+                        return;
+                    }
+
+                    try {
+                        if (mode === 'create') {
+                            execSync(`ai-doc identity create ${name}`, { encoding: 'utf-8' });
+                            ensureWorkspacePersonas(aiWorkspacePath);
+
+                            const personaPath = path.join(aiWorkspacePath, 'personas', `${name}.md`);
+                            if (fs.existsSync(personaPath)) {
+                                let content = fs.readFileSync(personaPath, 'utf-8');
+                                if (content.includes('description:')) {
+                                    content = content.replace(/description:\s*["']?([^"'\n]+)["']?/,
+                                        `description: "${description || 'AI Agent'}"`);
+                                } else {
+                                    content = content.replace(/title:\s*["']?([^"'\n]+)["']?/, match => {
+                                        return `${match}\ndescription: "${description || 'AI Agent'}"`;
+                                    });
+                                }
+                                fs.writeFileSync(personaPath, content);
+                            }
+
+                            vscode.window.showInformationMessage(`✅ Persona ${name} created!`);
+                        } else if (mode === 'edit' && persona && persona.path) {
+                            const personaPath = persona.path;
+                            if (fs.existsSync(personaPath)) {
+                                let content = fs.readFileSync(personaPath, 'utf-8');
+
+                                if (Array.isArray(message.frontmatter) && message.frontmatter.length > 0) {
+                                    const map = {};
+                                    message.frontmatter.forEach(f => {
+                                        if (f && f.key) {
+                                            map[f.key] = (f.value || '').toString();
+                                        }
+                                    });
+
+                                    map.title = name;
+                                    map.description = description || 'AI Agent';
+
+                                    const keys = Object.keys(map);
+                                    const lines = keys.map(k => {
+                                        const v = map[k];
+                                        const needsQuotes = /[\s:]/.test(v);
+                                        const safe = needsQuotes ? `"${v.replace(/"/g, '\\"')}"` : v;
+                                        return `${k}: ${safe}`;
+                                    });
+
+                                    if (content.startsWith('---')) {
+                                        content = content.replace(/^---[\s\S]*?---/, `---\n${lines.join('\n')}\n---`);
+                                    } else {
+                                        content = `---\n${lines.join('\n')}\n---\n\n` + content;
+                                    }
+                                } else {
+                                    if (content.includes('description:')) {
+                                        content = content.replace(/description:\s*["']?([^"'\n]+)["']?/,
+                                            `description: "${description || 'AI Agent'}"`);
+                                    } else {
+                                        content = content.replace(/title:\s*["']?([^"'\n]+)["']?/, match => {
+                                            return `${match}\ndescription: "${description || 'AI Agent'}"`;
+                                        });
+                                    }
+                                }
+
+                                if (Array.isArray(message.sections) && message.sections.length > 0) {
+                                    const bodyLines = [];
+                                    message.sections.forEach(sec => {
+                                        if (!sec || !sec.title) {
+                                            return;
+                                        }
+                                        bodyLines.push(`## ${sec.title}`);
+                                        const contentText = (sec.content || '').trim();
+                                        if (contentText) {
+                                            bodyLines.push('');
+                                            bodyLines.push(contentText);
+                                        }
+                                        bodyLines.push('');
+                                    });
+
+                                    let bodyContent = bodyLines.join('\n');
+                                    bodyContent = bodyContent.replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
+
+                                    if (content.startsWith('---')) {
+                                        const fmMatch = content.match(/^---[\s\S]*?---/);
+                                        if (fmMatch) {
+                                            const header = fmMatch[0];
+                                            content = `${header}\n\n${bodyContent}`;
+                                        } else {
+                                            content = bodyContent;
+                                        }
+                                    } else {
+                                        content = bodyContent;
+                                    }
+                                }
+
+                                fs.writeFileSync(personaPath, content);
+                            }
+
+                            vscode.window.showInformationMessage(`✅ Persona ${persona.name} updated!`);
+                        }
+
+                        personasProvider.refresh();
+                        analyticsProvider.refresh();
+                        panel.dispose();
+                    } catch (error) {
+                        vscode.window.showErrorMessage(`❌ Failed to save persona: ${error.message}`);
+                    }
+                } else if (message.command === 'editMarkdown' && message.path) {
+                    const doc = await vscode.workspace.openTextDocument(message.path);
+                    await vscode.window.showTextDocument(doc);
+                }
+            },
+            undefined,
+            context.subscriptions
+        );
+    }
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.createPersona', async () => {
+            await openPersonaForm('create');
         })
     );
 
-    // Edit persona
     context.subscriptions.push(
-        vscode.commands.registerCommand('ai-agent-sync.editPersona', async (filePath) => {
-            if (filePath) {
-                const doc = await vscode.workspace.openTextDocument(filePath);
-                await vscode.window.showTextDocument(doc);
+        vscode.commands.registerCommand('ai-agent-sync.editPersona', async (arg) => {
+            let filePath = null;
+
+            if (typeof arg === 'string') {
+                filePath = arg;
+            } else if (arg && typeof arg === 'object') {
+                if (arg.personaPath) {
+                    filePath = arg.personaPath;
+                } else if (arg.resourceUri && arg.resourceUri.fsPath) {
+                    filePath = arg.resourceUri.fsPath;
+                }
             }
+
+            if (!filePath || !fs.existsSync(filePath)) {
+                vscode.window.showErrorMessage('Persona file not found');
+                return;
+            }
+
+            await openPersonaForm('edit', filePath);
         })
     );
 
     // Delete persona
     context.subscriptions.push(
-        vscode.commands.registerCommand('ai-agent-sync.deletePersona', async (personaName) => {
+        vscode.commands.registerCommand('ai-agent-sync.deletePersona', async (arg) => {
+            const personaName = typeof arg === 'string' ? arg : (arg?.personaName || arg?.label);
+
             const confirm = await vscode.window.showWarningMessage(
                 `Delete persona ${personaName}?`,
                 { modal: true },
@@ -731,7 +1199,39 @@ function registerCommands(context, personasProvider, statusProvider, analyticsPr
 
     // Create task
     context.subscriptions.push(
-        vscode.commands.registerCommand('ai-agent-sync.createTask', async (personaName) => {
+        vscode.commands.registerCommand('ai-agent-sync.createTask', async (arg) => {
+            let personaName = typeof arg === 'string' ? arg : (arg?.personaName || arg?.label);
+
+            if (!personaName) {
+                const aiWorkspacePath = getAiWorkspacePath();
+                if (!aiWorkspacePath) {
+                    vscode.window.showErrorMessage('No .ai-workspace found');
+                    return;
+                }
+
+                const personasPath = path.join(aiWorkspacePath, 'personas');
+                if (!fs.existsSync(personasPath)) {
+                    vscode.window.showErrorMessage('No personas found. Create one first.');
+                    return;
+                }
+
+                const personaFiles = fs.readdirSync(personasPath)
+                    .filter(f => f.endsWith('.md') && f.startsWith('AI-'));
+
+                if (personaFiles.length === 0) {
+                    vscode.window.showErrorMessage('No personas found. Create one first.');
+                    return;
+                }
+
+                const picked = await vscode.window.showQuickPick(
+                    personaFiles.map(f => f.replace('.md', '')),
+                    { placeHolder: 'Select persona for the new task' }
+                );
+
+                if (!picked) return;
+                personaName = picked;
+            }
+
             const title = await vscode.window.showInputBox({
                 prompt: 'Enter task title',
                 placeHolder: 'Implement user authentication'
@@ -846,6 +1346,304 @@ status: active
                 const doc = await vscode.workspace.openTextDocument(filePath);
                 await vscode.window.showTextDocument(doc);
             }
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.viewPersonaDetails', async (arg) => {
+            let filePath = null;
+
+            if (typeof arg === 'string') {
+                filePath = arg;
+            } else if (arg && typeof arg === 'object') {
+                if (arg.personaPath) {
+                    filePath = arg.personaPath;
+                } else if (arg.resourceUri && arg.resourceUri.fsPath) {
+                    filePath = arg.resourceUri.fsPath;
+                }
+            }
+
+            if (!filePath || !fs.existsSync(filePath)) {
+                vscode.window.showErrorMessage('Persona file not found');
+                return;
+            }
+
+            const doc = await vscode.workspace.openTextDocument(filePath);
+            await vscode.window.showTextDocument(doc);
+        })
+    );
+
+    // Task details webview
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.showTaskDetails', async (taskPath) => {
+            if (!taskPath) {
+                vscode.window.showErrorMessage('Task path not provided');
+                return;
+            }
+
+            if (!fs.existsSync(taskPath)) {
+                vscode.window.showErrorMessage('Task file not found');
+                return;
+            }
+
+            const content = fs.readFileSync(taskPath, 'utf-8');
+
+            let frontmatter = [];
+            let sections = [];
+
+            const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+            if (fmMatch) {
+                const fmLines = fmMatch[1].split('\n');
+                fmLines.forEach(line => {
+                    const m = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+                    if (m) {
+                        let value = m[2].trim();
+                        if ((value.startsWith('"') && value.endsWith('"')) ||
+                            (value.startsWith('\'') && value.endsWith('\''))) {
+                            value = value.substring(1, value.length - 1);
+                        }
+                        frontmatter.push({
+                            key: m[1],
+                            value
+                        });
+                    }
+                });
+            }
+
+            let body = '';
+            if (content.startsWith('---')) {
+                const parts = content.split('---');
+                if (parts.length >= 3) {
+                    body = parts.slice(2).join('---');
+                }
+            }
+            if (!body) {
+                body = content;
+            }
+
+            const lines = body.split('\n');
+            let current = null;
+
+            lines.forEach(line => {
+                const headingMatch = line.match(/^##\s+(.+)\s*$/);
+                if (headingMatch) {
+                    if (current) {
+                        sections.push({
+                            title: current.title,
+                            content: current.lines.join('\n').trim()
+                        });
+                    }
+                    current = {
+                        title: headingMatch[1],
+                        lines: []
+                    };
+                } else if (current) {
+                    current.lines.push(line);
+                }
+            });
+
+            if (current) {
+                sections.push({
+                    title: current.title,
+                    content: current.lines.join('\n').trim()
+                });
+            }
+
+            const titleMatch = content.match(/title:\s*["']?([^"'\n]+)["']?/);
+            const personaMatch = content.match(/persona:\s*([^\n]+)/);
+            const statusMatch = content.match(/status:\s*([\w-]+)/i);
+            const deadlineMatch = content.match(/deadline:\s*(\d{4}-\d{2}-\d{2})/i);
+
+            const totalItems = (content.match(/^- \[[ x]\]/gm) || []).length;
+            const doneItems = (content.match(/^- \[x\]/gm) || []).length;
+
+            const validStatuses = ['todo', 'in-progress', 'review', 'done'];
+            const rawStatus = statusMatch ? statusMatch[1].toLowerCase() : 'todo';
+            const status = validStatuses.includes(rawStatus) ? rawStatus : 'todo';
+
+            const aiWorkspacePath = getAiWorkspacePath();
+            let personas = [];
+
+            if (aiWorkspacePath) {
+                const personasPath = path.join(aiWorkspacePath, 'personas');
+                if (fs.existsSync(personasPath)) {
+                    personas = fs.readdirSync(personasPath)
+                        .filter(f => f.endsWith('.md') && f.startsWith('AI-'))
+                        .map(f => f.replace('.md', ''));
+                }
+            }
+
+            const task = {
+                id: path.basename(taskPath),
+                title: titleMatch ? titleMatch[1] : path.basename(taskPath),
+                persona: personaMatch ? personaMatch[1].trim() : '',
+                status,
+                deadline: deadlineMatch ? deadlineMatch[1] : null,
+                total: totalItems,
+                completed: doneItems,
+                path: taskPath
+            };
+
+            const panel = vscode.window.createWebviewPanel(
+                'taskDetails',
+                `📋 ${task.title}`,
+                vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    retainContextWhenHidden: true
+                }
+            );
+
+            const htmlPath = path.join(context.extensionPath, 'task-details.html');
+            panel.webview.html = fs.readFileSync(htmlPath, 'utf-8');
+
+            panel.webview.onDidReceiveMessage(
+                async message => {
+                    if (message.command === 'ready') {
+                        panel.webview.postMessage({ task, frontmatter, sections, personas });
+                    } else if (message.command === 'editMarkdown' && message.path) {
+                        const doc = await vscode.workspace.openTextDocument(message.path);
+                        await vscode.window.showTextDocument(doc);
+                    } else if (message.command === 'save') {
+                        try {
+                            if (!fs.existsSync(taskPath)) {
+                                vscode.window.showErrorMessage('Task file not found');
+                                return;
+                            }
+
+                            let updatedContent = fs.readFileSync(taskPath, 'utf-8');
+
+                            if (Array.isArray(message.frontmatter) && message.frontmatter.length > 0) {
+                                const map = {};
+                                message.frontmatter.forEach(f => {
+                                    if (f && f.key) {
+                                        map[f.key] = (f.value || '').toString();
+                                    }
+                                });
+
+                                const keys = Object.keys(map);
+                                const linesFm = keys.map(k => {
+                                    const v = map[k];
+                                    const needsQuotes = /[\s:]/.test(v);
+                                    const safe = needsQuotes ? `"${v.replace(/"/g, '\\"')}"` : v;
+                                    return `${k}: ${safe}`;
+                                });
+
+                                if (updatedContent.startsWith('---')) {
+                                    updatedContent = updatedContent.replace(
+                                        /^---[\s\S]*?---/,
+                                        `---\n${linesFm.join('\n')}\n---`
+                                    );
+                                } else {
+                                    updatedContent = `---\n${linesFm.join('\n')}\n---\n\n` + updatedContent;
+                                }
+                            }
+
+                            fs.writeFileSync(taskPath, updatedContent);
+
+                            const newContent = fs.readFileSync(taskPath, 'utf-8');
+
+                            const newTitleMatch = newContent.match(/title:\s*["']?([^"'\n]+)["']?/);
+                            const newPersonaMatch = newContent.match(/persona:\s*([^\n]+)/);
+                            const newStatusMatch = newContent.match(/status:\s*([\w-]+)/i);
+                            const newDeadlineMatch = newContent.match(/deadline:\s*(\d{4}-\d{2}-\d{2})/i);
+
+                            const newTotalItems = (newContent.match(/^- \[[ x]\]/gm) || []).length;
+                            const newDoneItems = (newContent.match(/^- \[x\]/gm) || []).length;
+
+                            const validStatuses2 = ['todo', 'in-progress', 'review', 'done'];
+                            const rawStatus2 = newStatusMatch ? newStatusMatch[1].toLowerCase() : 'todo';
+                            const status2 = validStatuses2.includes(rawStatus2) ? rawStatus2 : 'todo';
+
+                            const updatedTask = {
+                                id: path.basename(taskPath),
+                                title: newTitleMatch ? newTitleMatch[1] : path.basename(taskPath),
+                                persona: newPersonaMatch ? newPersonaMatch[1].trim() : '',
+                                status: status2,
+                                deadline: newDeadlineMatch ? newDeadlineMatch[1] : null,
+                                total: newTotalItems,
+                                completed: newDoneItems,
+                                path: taskPath
+                            };
+
+                            let newFrontmatter = [];
+                            let newSections = [];
+
+                            const newFmMatch = newContent.match(/^---\n([\s\S]*?)\n---/);
+                            if (newFmMatch) {
+                                const fmLines2 = newFmMatch[1].split('\n');
+                                fmLines2.forEach(line => {
+                                    const m = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+                                    if (m) {
+                                        let value = m[2].trim();
+                                        if ((value.startsWith('"') && value.endsWith('"')) ||
+                                            (value.startsWith('\'') && value.endsWith('\''))) {
+                                            value = value.substring(1, value.length - 1);
+                                        }
+                                        newFrontmatter.push({
+                                            key: m[1],
+                                            value
+                                        });
+                                    }
+                                });
+                            }
+
+                            let newBody = '';
+                            if (newContent.startsWith('---')) {
+                                const parts2 = newContent.split('---');
+                                if (parts2.length >= 3) {
+                                    newBody = parts2.slice(2).join('---');
+                                }
+                            }
+                            if (!newBody) {
+                                newBody = newContent;
+                            }
+
+                            const lines2 = newBody.split('\n');
+                            let current2 = null;
+
+                            lines2.forEach(line => {
+                                const headingMatch = line.match(/^##\s+(.+)\s*$/);
+                                if (headingMatch) {
+                                    if (current2) {
+                                        newSections.push({
+                                            title: current2.title,
+                                            content: current2.lines.join('\n').trim()
+                                        });
+                                    }
+                                    current2 = {
+                                        title: headingMatch[1],
+                                        lines: []
+                                    };
+                                } else if (current2) {
+                                    current2.lines.push(line);
+                                }
+                            });
+
+                            if (current2) {
+                                newSections.push({
+                                    title: current2.title,
+                                    content: current2.lines.join('\n').trim()
+                                });
+                            }
+
+                            panel.webview.postMessage({
+                                task: updatedTask,
+                                frontmatter: newFrontmatter,
+                                sections: newSections,
+                                personas
+                            });
+
+                            analyticsProvider.refresh();
+                            vscode.window.showInformationMessage('✅ Task updated!');
+                        } catch (error) {
+                            vscode.window.showErrorMessage(`❌ Failed to save task: ${error.message}`);
+                        }
+                    }
+                },
+                undefined,
+                context.subscriptions
+            );
         })
     );
 
@@ -1285,7 +2083,14 @@ status: active
 
     // Customize Persona
     context.subscriptions.push(
-        vscode.commands.registerCommand('ai-agent-sync.customizePersona', async (personaName) => {
+        vscode.commands.registerCommand('ai-agent-sync.customizePersona', async (arg) => {
+            const personaName = typeof arg === 'string' ? arg : (arg?.personaName || arg?.label);
+
+            if (!personaName) {
+                vscode.window.showErrorMessage('Could not determine persona name');
+                return;
+            }
+
             const aiWorkspacePath = getAiWorkspacePath();
             if (!aiWorkspacePath) {
                 vscode.window.showErrorMessage('No .ai-workspace found');
@@ -1333,10 +2138,12 @@ status: active
 
                         fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
                         vscode.window.showInformationMessage(`✅ ${personaName} customized!`);
-
-                        // Refresh views
                         personasProvider.refresh();
-                        panel.dispose();
+                    } else if (message.command === 'reset') {
+                        delete settings[personaName];
+                        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+                        vscode.window.showInformationMessage(`✅ ${personaName} reset to default!`);
+                        personasProvider.refresh();
                     }
                 },
                 undefined,
@@ -1403,11 +2210,7 @@ status: active
 Generated: ${new Date().toLocaleString()}
 `;
 
-            const doc = await vscode.workspace.openTextDocument({
-                content,
-                language: 'markdown'
-            });
-            await vscode.window.showTextDocument(doc);
+            showWebviewReport(`# 📊 Weekly Productivity Report`, content);
         })
     );
 
@@ -1437,11 +2240,7 @@ Generated: ${new Date().toLocaleString()}
 Generated: ${new Date().toLocaleString()}
 `;
 
-            const doc = await vscode.workspace.openTextDocument({
-                content,
-                language: 'markdown'
-            });
-            await vscode.window.showTextDocument(doc);
+            showWebviewReport(`# 📊 Monthly Productivity Report`, content);
         })
     );
 
@@ -1499,11 +2298,7 @@ ${tasks.join('\n')}
 Click on a task file to open it.
 `;
 
-            const doc = await vscode.workspace.openTextDocument({
-                content,
-                language: 'markdown'
-            });
-            await vscode.window.showTextDocument(doc);
+            showWebviewReport(`# 📋 Active Tasks`, content);
         })
     );
 
@@ -1537,11 +2332,7 @@ ${personas.join('\n')}
 Click on a persona file to open it.
 `;
 
-            const doc = await vscode.workspace.openTextDocument({
-                content,
-                language: 'markdown'
-            });
-            await vscode.window.showTextDocument(doc);
+            showWebviewReport(`# 👥 All Personas`, content);
         })
     );
 
@@ -1559,24 +2350,35 @@ Click on a persona file to open it.
 
             let allItems = [];
             let totalCompleted = 0;
+            let totalItems = 0;
 
             fs.readdirSync(tasksPath)
                 .filter(f => f.endsWith('.md'))
                 .forEach(f => {
                     const content = fs.readFileSync(path.join(tasksPath, f), 'utf-8');
-                    const items = content.match(/^- \[[ x]\] .+$/gm) || [];
+                    const rawItems = content.match(/^- \[[ x]\] .+$/gm) || [];
                     const completed = content.match(/^- \[x\] .+$/gm) || [];
 
+                    totalItems += rawItems.length;
                     totalCompleted += completed.length;
 
-                    if (items.length > 0) {
-                        allItems.push(`\n### ${f}\n${items.join('\n')}`);
+                    if (rawItems.length > 0) {
+                        const pretty = rawItems.map(line => {
+                            if (line.startsWith('- [x] ')) {
+                                return `- ✅ ${line.substring(6)}`;
+                            }
+                            if (line.startsWith('- [ ] ')) {
+                                return `- ⬜ ${line.substring(6)}`;
+                            }
+                            return line;
+                        });
+                        allItems.push(`\n### ${f}\n${pretty.join('\n')}`);
                     }
                 });
 
             const content = `# ✅ All Checklist Items
 
-**Total Items**: ${allItems.length}
+**Total Items**: ${totalItems}
 **Completed**: ${totalCompleted}
 
 ${allItems.join('\n')}
@@ -1585,11 +2387,57 @@ ${allItems.join('\n')}
 ✅ = Completed | ⬜ = Pending
 `;
 
-            const doc = await vscode.workspace.openTextDocument({
-                content,
-                language: 'markdown'
-            });
-            await vscode.window.showTextDocument(doc);
+            showWebviewReport(`# ✅ All Checklist Items`, content);
+        })
+    );
+
+    // Show Completion Details (clickable from Analytics)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.showCompletionDetails', async () => {
+            const aiWorkspacePath = getAiWorkspacePath();
+            if (!aiWorkspacePath) return;
+
+            const personasPath = path.join(aiWorkspacePath, 'personas');
+            const activeTasksPath = path.join(aiWorkspacePath, 'tasks', 'active');
+
+            let totalItems = 0;
+            let completedItems = 0;
+
+            if (fs.existsSync(activeTasksPath)) {
+                const taskFiles = fs.readdirSync(activeTasksPath).filter(f => f.endsWith('.md'));
+                taskFiles.forEach(file => {
+                    const content = fs.readFileSync(path.join(activeTasksPath, file), 'utf-8');
+                    const total = (content.match(/^- \[[ x]\]/gm) || []).length;
+                    const done = (content.match(/^- \[x\]/gm) || []).length;
+                    totalItems += total;
+                    completedItems += done;
+                });
+            }
+
+            const rate = totalItems > 0
+                ? Math.round((completedItems / totalItems) * 100)
+                : 0;
+
+            const personasCount = fs.existsSync(personasPath)
+                ? fs.readdirSync(personasPath).filter(f => f.endsWith('.md') && f.startsWith('AI-')).length
+                : 0;
+
+            const content = `# 📈 Completion Rate
+
+**Completion Rate**: ${rate}%
+**Completed Checklist Items**: ${completedItems}
+**Total Checklist Items**: ${totalItems}
+**Personas**: ${personasCount}
+
+---
+O Completion Rate é calculado como:
+
+\`itens de checklist completos / itens de checklist totais * 100\`
+
+Apenas tarefas ativas em \`.ai-workspace/tasks/active/\` são consideradas.
+`;
+
+            showWebviewReport(`# 📈 Completion Rate`, content);
         })
     );
 
@@ -1599,24 +2447,123 @@ ${allItems.join('\n')}
             try {
                 const output = execSync('ai-doc heuristics', { encoding: 'utf-8' });
 
+                const lines = output.split('\n').map(l => l.replace(/\x1b\[[0-9;]*m/g, ''));
+
+                const transformed = [];
+                let currentType = '';
+                let currentStack = '';
+
+                lines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (!trimmed) {
+                        transformed.push('');
+                        return;
+                    }
+
+                    if (trimmed.startsWith('===') && trimmed.endsWith('===')) {
+                        const title = trimmed.replace(/===/g, '').trim();
+                        transformed.push(`# ${title}`);
+                    } else if (trimmed.startsWith('Total:')) {
+                        transformed.push(`**${trimmed}**`);
+                    } else if (trimmed.startsWith('--') && trimmed.endsWith('--')) {
+                        const t = trimmed.replace(/--/g, '').trim();
+                        currentType = t;
+                        transformed.push(`## ${t}`);
+                    } else if (trimmed.startsWith('Stack:')) {
+                        const stackName = trimmed.replace('Stack:', '').trim();
+                        currentStack = stackName;
+                        transformed.push(`### Stack: ${stackName}`);
+                    } else if (trimmed.startsWith('• [')) {
+                        const match = trimmed.match(/• \[([^\]]+)\]\s*(.*)/);
+                        if (match) {
+                            const id = match[1];
+                            const desc = match[2] || '';
+                            transformed.push(`- 💡 \`${id}\` ${desc}`);
+                            const meta = [];
+                            if (currentType) meta.push(currentType.toUpperCase());
+                            if (currentStack) meta.push(currentStack);
+                            if (meta.length > 0) {
+                                transformed.push(`  Contexto: ${meta.join(' · ')}`);
+                            }
+                        } else {
+                            transformed.push(`- ${trimmed.substring(1).trim()}`);
+                        }
+                    } else {
+                        transformed.push(trimmed);
+                    }
+                });
+
+                const md = transformed.join('\n');
+
                 const content = `# 💡 Heurísticas Aprendidas
 
-${output}
+${md}
 
 ---
 Generated: ${new Date().toLocaleString()}
 `;
 
-                const doc = await vscode.workspace.openTextDocument({
-                    content,
-                    language: 'markdown'
-                });
-                await vscode.window.showTextDocument(doc);
+                showWebviewReport(`# 💡 Heurísticas Aprendidas`, content);
             } catch (error) {
                 vscode.window.showErrorMessage(`Failed to load heuristics: ${error.message}`);
             }
         })
     );
+}
+
+/**
+ * Show results/reports in a styled Webview Panel
+ */
+function showWebviewReport(title, content) {
+    const panel = vscode.window.createWebviewPanel(
+        'aiAgentReport',
+        title,
+        vscode.ViewColumn.One,
+        { enableScripts: true }
+    );
+
+    // Simple markdown-ish to HTML conversion
+    const html = content
+        .replace(/^# (.*)/gm, '<h1>$1</h1>')
+        .replace(/^## (.*)/gm, '<h2>$1</h2>')
+        .replace(/^### (.*)/gm, '<h3>$1</h3>')
+        .replace(/^\*\*(.*)\*\*/gm, '<strong>$1</strong>')
+        .replace(/^- (.*)/gm, '<li>$1</li>')
+        .replace(/\n\n/g, '<div style=\"margin-top:20px\"></div>')
+        .replace(/---/g, '<hr>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    panel.webview.html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { 
+                    font-family: var(--vscode-font-family); 
+                    padding: 40px; 
+                    color: var(--vscode-foreground); 
+                    background: var(--vscode-editor-background); 
+                    line-height: 1.6;
+                    max-width: 800px;
+                    margin: 0 auto;
+                }
+                h1 { border-bottom: 2px solid var(--vscode-panel-border); padding-bottom: 10px; margin-bottom: 30px; font-weight: 600; }
+                h2 { margin-top: 40px; border-left: 4px solid var(--vscode-button-background); padding-left: 15px; font-weight: 500; }
+                h3 { margin-top: 25px; font-weight: 500; color: var(--vscode-descriptionForeground); }
+                li { margin-bottom: 8px; list-style-type: none; position: relative; padding-left: 20px; }
+                li::before { content: "•"; color: var(--vscode-button-background); position: absolute; left: 0; font-weight: bold; }
+                .meta { color: var(--vscode-descriptionForeground); font-size: 0.9em; margin-top: 50px; text-align: center; }
+                hr { border: 0; border-top: 1px solid var(--vscode-panel-border); margin: 40px 0; }
+                code { background: var(--vscode-textCodeBlock-background); padding: 3px 6px; border-radius: 4px; font-family: var(--vscode-editor-font-family); }
+                strong { color: var(--vscode-foreground); font-weight: 600; }
+            </style>
+        </head>
+        <body>
+            ${html}
+            <div class=\"meta\">AI Agent IDE Context Sync - Report Generated via Webview</div>
+        </body>
+        </html>
+    `;
 }
 
 function deactivate() { }

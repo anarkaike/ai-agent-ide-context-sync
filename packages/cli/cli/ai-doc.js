@@ -114,7 +114,36 @@ const commands = {
 
   init: () => { /* Mantido anterior */ },
   identity: (args) => { /* Mantido anterior */ },
-  heuristics: () => { /* Mantido anterior */ },
+  heuristics: () => {
+    if (!HeuristicsEngine) {
+      log('Heuristics engine not available', 'yellow');
+      return;
+    }
+
+    const engine = new HeuristicsEngine();
+    const stats = engine.stats();
+
+    console.log('\n=== 💡 Heurísticas do Kernel ===\n');
+    console.log(`Total: ${stats.total} heurísticas\n`);
+
+    Object.keys(engine.heuristics).forEach(type => {
+      const stacks = engine.heuristics[type];
+      const stackNames = Object.keys(stacks);
+      if (stackNames.length === 0) return;
+
+      console.log(`-- ${type.toUpperCase()} --`);
+      stackNames.forEach(stack => {
+        const list = stacks[stack] || [];
+        if (list.length === 0) return;
+        console.log(`  Stack: ${stack}`);
+        list.forEach(h => {
+          const desc = h.pattern || h.description || '';
+          console.log(`   • [${h.id}] ${desc}`);
+        });
+      });
+      console.log();
+    });
+  },
   soul: (args) => { /* Mantido anterior */ },
   help: () => {
     logSection('AI-DOC CLI v2.0.0');

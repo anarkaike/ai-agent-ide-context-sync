@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Details</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--vscode-font-family);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-editor-background);
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: var(--vscode-descriptionForeground);
+            font-size: 13px;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: var(--vscode-font-family);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+
+        .btn-primary:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        input,
+        select {
+            height: 32px;
+            border-radius: 4px;
+            border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            padding: 0 8px;
+            font-family: var(--vscode-font-family);
+            font-size: 13px;
+        }
+
+        input[readonly] {
+            opacity: 0.9;
+        }
+
+        .progress-card {
+            margin-top: 8px;
+            padding: 14px;
+            border-radius: 6px;
+            border: 1px solid var(--vscode-panel-border);
+            background: var(--vscode-editorWidget-background);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--vscode-input-background);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #34d399, #22c55e);
+            transition: width 0.2s ease-out;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .badge-status {
+            background: var(--vscode-badge-background);
+            color: var(--vscode-badge-foreground);
+        }
+
+        .badge-overdue {
+            background: rgba(248, 113, 113, 0.18);
+            color: #fecaca;
+        }
+
+        .badge-soon {
+            background: rgba(253, 224, 71, 0.18);
+            color: #facc15;
+        }
+
+        .notes {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .sections {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .section-card {
+            border-radius: 6px;
+            border: 1px solid var(--vscode-panel-border);
+            background: var(--vscode-editorWidget-background);
+            padding: 12px 14px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 6px;
+        }
+
+        .section-body {
+            width: 100%;
+            border-radius: 4px;
+            border: 1px solid var(--vscode-panel-border);
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            padding: 8px;
+            font-family: var(--vscode-font-family);
+            font-size: 12px;
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="title-group">
+            <h1 id="taskTitle">Task</h1>
+            <div class="subtitle" id="taskSubtitle"></div>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="field">
+            <div class="label">Title</div>
+            <input id="fieldTitle" type="text" readonly>
+        </div>
+        <div class="field">
+            <div class="label">Persona</div>
+            <select id="fieldPersona"></select>
+        </div>
+        <div class="field">
+            <div class="label">Status</div>
+            <select id="fieldStatus">
+                <option value="todo">To Do</option>
+                <option value="in-progress">In Progress</option>
+                <option value="review">Review</option>
+                <option value="done">Done</option>
+            </select>
+        </div>
+        <div class="field">
+            <div class="label">Deadline</div>
+            <input id="fieldDeadline" type="date">
+        </div>
+    </div>
+
+    <div class="progress-card">
+        <div class="progress-header">
+            <div>
+                <span>Checklist Progress</span>
+            </div>
+            <div id="progressText">0/0 (0%)</div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="notes" id="deadlineInfo"></div>
+    </div>
+
+    <div class="sections" id="sections"></div>
+
+    <div class="buttons">
+        <button class="btn btn-primary" onclick="saveTask()">
+            <span>💾</span>
+            <span>Save</span>
+        </button>
+        <button class="btn btn-secondary" onclick="editMarkdown()">
+            <span>✏️</span>
+            <span>Edit Markdown</span>
+        </button>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+        let currentTask = null;
+        let frontmatter = [];
+        let sections = [];
+        let personas = [];
+
+        window.addEventListener('message', event => {
+            const data = event.data;
+            if (data.task) {
+                currentTask = data.task;
+            }
+            if (data.frontmatter) {
+                frontmatter = data.frontmatter;
+            }
+            if (data.sections) {
+                sections = data.sections;
+            }
+            if (data.personas) {
+                personas = Array.isArray(data.personas) ? data.personas : [];
+            }
+            renderTask();
+        });
+
+        function renderTask() {
+            if (!currentTask) return;
+
+            document.getElementById('taskTitle').textContent = currentTask.title || 'Task';
+            document.getElementById('taskSubtitle').textContent = currentTask.id || '';
+
+            document.getElementById('fieldTitle').value = currentTask.title || '';
+
+            const personaSelect = document.getElementById('fieldPersona');
+            if (personaSelect) {
+                const personaSet = new Set(personas || []);
+                if (currentTask.persona) {
+                    personaSet.add(currentTask.persona);
+                }
+
+                personaSelect.innerHTML = '';
+
+                Array.from(personaSet).sort().forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    personaSelect.appendChild(option);
+                });
+
+                if (currentTask.persona) {
+                    personaSelect.value = currentTask.persona;
+                }
+            }
+
+            const statusSelect = document.getElementById('fieldStatus');
+            statusSelect.value = currentTask.status || 'todo';
+
+            const deadlineInput = document.getElementById('fieldDeadline');
+            if (currentTask.deadline) {
+                deadlineInput.value = currentTask.deadline;
+            } else {
+                deadlineInput.value = '';
+            }
+
+            const total = currentTask.total || 0;
+            const completed = currentTask.completed || 0;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('progressText').textContent = `${completed}/${total} (${percent}%)`;
+            document.getElementById('progressFill').style.width = `${percent}%`;
+
+            const infoEl = document.getElementById('deadlineInfo');
+            infoEl.textContent = '';
+
+            if (currentTask.deadline) {
+                const deadline = new Date(currentTask.deadline);
+                const now = new Date();
+                const diffDays = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+
+                if (!isNaN(diffDays)) {
+                    if (diffDays < 0) {
+                        infoEl.textContent = `⚠️ Overdue by ${Math.abs(diffDays)} day(s)`;
+                    } else if (diffDays === 0) {
+                        infoEl.textContent = '📅 Due today';
+                    } else {
+                        infoEl.textContent = `📅 ${diffDays} day(s) remaining`;
+                    }
+                }
+            }
+
+            const sectionsContainer = document.getElementById('sections');
+            if (sectionsContainer) {
+                sectionsContainer.innerHTML = '';
+
+                if (Array.isArray(sections) && sections.length > 0) {
+                    sections.forEach(sec => {
+                        const card = document.createElement('div');
+                        card.className = 'section-card';
+
+                        const title = document.createElement('div');
+                        title.className = 'section-title';
+                        title.textContent = sec.title;
+
+                        const label = document.createElement('div');
+                        label.className = 'section-label';
+                        label.textContent = 'Read-only';
+
+                        const body = document.createElement('textarea');
+                        body.className = 'section-body';
+                        body.readOnly = true;
+                        body.value = sec.content || '';
+
+                        card.appendChild(title);
+                        card.appendChild(label);
+                        card.appendChild(body);
+                        sectionsContainer.appendChild(card);
+                    });
+                }
+            }
+        }
+
+        function saveTask() {
+            if (!currentTask) return;
+
+            const titleInput = document.getElementById('fieldTitle');
+            const personaSelect = document.getElementById('fieldPersona');
+            const statusSelect = document.getElementById('fieldStatus');
+            const deadlineInput = document.getElementById('fieldDeadline');
+
+            const updatedFrontmatter = [];
+            const existing = {};
+
+            if (Array.isArray(frontmatter)) {
+                frontmatter.forEach(f => {
+                    if (f && f.key) {
+                        existing[f.key] = f.value || '';
+                    }
+                });
+            }
+
+            if (titleInput) {
+                const titleValue = titleInput.value.trim();
+                if (titleValue) {
+                    existing.title = titleValue;
+                }
+            }
+
+            if (personaSelect) {
+                existing.persona = personaSelect.value || '';
+            }
+
+            if (statusSelect) {
+                existing.status = statusSelect.value || 'todo';
+            }
+
+            if (deadlineInput && deadlineInput.value) {
+                existing.deadline = deadlineInput.value;
+            } else if (Object.prototype.hasOwnProperty.call(existing, 'deadline')) {
+                delete existing.deadline;
+            }
+
+            Object.keys(existing).forEach(key => {
+                updatedFrontmatter.push({
+                    key,
+                    value: existing[key]
+                });
+            });
+
+            vscode.postMessage({
+                command: 'save',
+                path: currentTask.path,
+                frontmatter: updatedFrontmatter
+            });
+        }
+
+        function editMarkdown() {
+            if (!currentTask) return;
+            vscode.postMessage({
+                command: 'editMarkdown',
+                path: currentTask.path
+            });
+        }
+
+        vscode.postMessage({ command: 'ready' });
+    </script>
+</body>
+
+</html>

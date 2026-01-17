@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persona Form</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--vscode-font-family);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-editor-background);
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: var(--vscode-descriptionForeground);
+            font-size: 13px;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: var(--vscode-font-family);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+
+        .btn-primary:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+
+        .btn-secondary {
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+
+        .btn-secondary:hover {
+            background: var(--vscode-button-secondaryHoverBackground);
+        }
+
+        .form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 16px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        input,
+        textarea {
+            border-radius: 4px;
+            border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            padding: 6px 8px;
+            font-family: var(--vscode-font-family);
+            font-size: 13px;
+        }
+
+        input {
+            height: 32px;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        input[readonly] {
+            opacity: 0.9;
+        }
+
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .sections {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .section-card {
+            border-radius: 6px;
+            border: 1px solid var(--vscode-panel-border);
+            background: var(--vscode-editorWidget-background);
+            padding: 12px 14px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 6px;
+        }
+
+        .section-body {
+            width: 100%;
+            border-radius: 4px;
+            border: 1px solid var(--vscode-panel-border);
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            padding: 8px;
+            font-family: var(--vscode-font-family);
+            font-size: 12px;
+            min-height: 60px;
+            resize: vertical;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="title-group">
+            <h1 id="title">Persona</h1>
+            <div class="subtitle" id="subtitle"></div>
+        </div>
+        <button class="btn btn-secondary" id="editMarkdownBtn" onclick="editMarkdown()">
+            <span>✏️</span>
+            <span>Edit Markdown</span>
+        </button>
+    </div>
+
+    <div class="form">
+        <div class="field">
+            <div class="label">Name</div>
+            <input id="fieldName" type="text" placeholder="AI-NARUTO">
+        </div>
+        <div class="field">
+            <div class="label">Description</div>
+            <textarea id="fieldDescription" placeholder="Senior Backend Developer specializing in Laravel"></textarea>
+        </div>
+    </div>
+
+    <div class="form" id="frontmatterForm"></div>
+
+    <div class="sections" id="sections"></div>
+
+    <div class="buttons">
+        <button class="btn btn-primary" onclick="savePersona()">
+            <span>💾</span>
+            <span>Save</span>
+        </button>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+        let mode = 'create';
+        let persona = null;
+        let sections = [];
+        let frontmatter = [];
+
+        window.addEventListener('message', event => {
+            const data = event.data;
+            if (data.mode) {
+                mode = data.mode;
+            }
+            if (data.persona) {
+                persona = data.persona;
+            }
+            if (data.sections) {
+                sections = data.sections;
+            }
+            if (data.frontmatter) {
+                frontmatter = data.frontmatter;
+            }
+            render();
+        });
+
+        function render() {
+            const titleEl = document.getElementById('title');
+            const subtitleEl = document.getElementById('subtitle');
+            const nameInput = document.getElementById('fieldName');
+            const descInput = document.getElementById('fieldDescription');
+            const editBtn = document.getElementById('editMarkdownBtn');
+            const fmContainer = document.getElementById('frontmatterForm');
+            const sectionsContainer = document.getElementById('sections');
+
+            if (mode === 'create') {
+                titleEl.textContent = 'Create Persona';
+                subtitleEl.textContent = 'Names must start with AI- and use uppercase letters';
+                nameInput.readOnly = false;
+                editBtn.style.display = 'none';
+            } else {
+                titleEl.textContent = 'Edit Persona';
+                subtitleEl.textContent = persona && persona.path ? persona.path : '';
+                nameInput.readOnly = true;
+                editBtn.style.display = persona && persona.path ? 'inline-flex' : 'none';
+            }
+
+            const fmMap = {};
+            if (Array.isArray(frontmatter)) {
+                frontmatter.forEach(f => {
+                    if (f && f.key) {
+                        fmMap[f.key.toLowerCase()] = f.value || '';
+                    }
+                });
+            }
+
+            if (persona) {
+                nameInput.value = persona.name || fmMap.title || '';
+                descInput.value = persona.description || fmMap.description || '';
+            } else {
+                nameInput.value = fmMap.title || '';
+                descInput.value = fmMap.description || '';
+            }
+
+            if (fmContainer) {
+                fmContainer.innerHTML = '';
+
+                if (Array.isArray(frontmatter) && frontmatter.length > 0) {
+                    frontmatter.forEach(f => {
+                        if (!f || !f.key) return;
+
+                        const keyLower = f.key.toLowerCase();
+                        if (keyLower === 'title' || keyLower === 'description') {
+                            return;
+                        }
+
+                        const field = document.createElement('div');
+                        field.className = 'field';
+
+                        const label = document.createElement('div');
+                        label.className = 'label';
+                        label.textContent = f.key
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, c => c.toUpperCase());
+                        field.appendChild(label);
+
+                        const id = `fm-${f.key}`;
+                        const value = f.value || '';
+
+                        if (keyLower === 'status') {
+                            const select = document.createElement('select');
+                            select.id = id;
+
+                            const options = ['active', 'idle', 'planning', 'retired'];
+                            const existing = value && !options.includes(value) ? [value] : [];
+
+                            existing.concat(options).forEach(val => {
+                                const opt = document.createElement('option');
+                                opt.value = val;
+                                opt.textContent = val;
+                                select.appendChild(opt);
+                            });
+
+                            if (value) {
+                                select.value = value;
+                            }
+
+                            field.appendChild(select);
+                            fmContainer.appendChild(field);
+                            return;
+                        }
+
+                        if (keyLower === 'gatilho' ||
+                            keyLower === 'gatilho_rapido' ||
+                            keyLower === 'gatilhos_rapidos') {
+                            const hidden = document.createElement('input');
+                            hidden.type = 'hidden';
+                            hidden.id = id;
+                            hidden.value = value;
+                            field.appendChild(hidden);
+
+                            const parts = value.split('|');
+                            const situacaoVal = parts[0] ? parts[0].trim() : '';
+                            const acaoVal = parts[1] ? parts[1].trim() : '';
+                            const statusVal = parts[2] ? parts[2].trim() : '';
+
+                            const situacaoField = document.createElement('div');
+                            situacaoField.className = 'field';
+                            const situacaoLabel = document.createElement('div');
+                            situacaoLabel.className = 'label';
+                            situacaoLabel.textContent = 'Situação';
+                            const situacaoInput = document.createElement('input');
+                            situacaoInput.type = 'text';
+                            situacaoInput.value = situacaoVal;
+                            situacaoField.appendChild(situacaoLabel);
+                            situacaoField.appendChild(situacaoInput);
+
+                            const acaoField = document.createElement('div');
+                            acaoField.className = 'field';
+                            const acaoLabel = document.createElement('div');
+                            acaoLabel.className = 'label';
+                            acaoLabel.textContent = 'Ação';
+                            const acaoInput = document.createElement('input');
+                            acaoInput.type = 'text';
+                            acaoInput.value = acaoVal;
+                            acaoField.appendChild(acaoLabel);
+                            acaoField.appendChild(acaoInput);
+
+                            const statusField = document.createElement('div');
+                            statusField.className = 'field';
+                            const statusLabel = document.createElement('div');
+                            statusLabel.className = 'label';
+                            statusLabel.textContent = 'Status';
+                            const statusSelect = document.createElement('select');
+                            const gatilhoStatuses = ['ativo', 'pausado', 'desativado'];
+                            const existingStatus = statusVal && !gatilhoStatuses.includes(statusVal) ? [statusVal] : [];
+                            existingStatus.concat(gatilhoStatuses).forEach(val => {
+                                const opt = document.createElement('option');
+                                opt.value = val;
+                                opt.textContent = val;
+                                statusSelect.appendChild(opt);
+                            });
+                            if (statusVal) {
+                                statusSelect.value = statusVal;
+                            }
+                            statusField.appendChild(statusLabel);
+                            statusField.appendChild(statusSelect);
+
+                            function syncGatilho() {
+                                const s = situacaoInput.value.trim();
+                                const a = acaoInput.value.trim();
+                                const st = statusSelect.value.trim();
+                                hidden.value = [s, a, st].join(' | ');
+                            }
+
+                            situacaoInput.addEventListener('input', syncGatilho);
+                            acaoInput.addEventListener('input', syncGatilho);
+                            statusSelect.addEventListener('change', syncGatilho);
+
+                            field.appendChild(situacaoField);
+                            field.appendChild(acaoField);
+                            field.appendChild(statusField);
+
+                            fmContainer.appendChild(field);
+                            return;
+                        }
+
+                        let control;
+
+                        if (keyLower === 'stack' ||
+                            keyLower === 'role' ||
+                            keyLower === 'communication_style' ||
+                            keyLower === 'communication-style' ||
+                            keyLower === 'goals' ||
+                            keyLower === 'profile' ||
+                            keyLower === 'personalidade' ||
+                            keyLower === 'personalidade_ia' ||
+                            keyLower === 'especialidade' ||
+                            keyLower === 'especialidades' ||
+                            keyLower === 'gatilhos_rapidos' ||
+                            keyLower === 'gatilhos-rapidos' ||
+                            keyLower === 'observacoes' ||
+                            keyLower === 'observações') {
+                            control = document.createElement('textarea');
+                            control.rows = 3;
+                        } else {
+                            control = document.createElement('input');
+                            control.type = 'text';
+                        }
+
+                        control.id = id;
+                        control.value = value;
+                        field.appendChild(control);
+
+                        fmContainer.appendChild(field);
+                    });
+                }
+            }
+
+            sectionsContainer.innerHTML = '';
+            if (mode === 'edit' && sections && sections.length > 0) {
+                sections.forEach((sec, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'section-card';
+
+                    const title = document.createElement('div');
+                    title.className = 'section-title';
+                    title.textContent = sec.title;
+
+                    const label = document.createElement('div');
+                    label.className = 'section-label';
+                    label.textContent = 'Markdown';
+
+                    const body = document.createElement('textarea');
+                    body.className = 'section-body';
+                    body.id = `section-${index}`;
+                    body.value = sec.content || '';
+
+                    card.appendChild(title);
+                    card.appendChild(label);
+                    card.appendChild(body);
+                    sectionsContainer.appendChild(card);
+                });
+            }
+        }
+
+        function savePersona() {
+            const name = document.getElementById('fieldName').value.trim();
+            const description = document.getElementById('fieldDescription').value.trim();
+
+            const updatedFrontmatter = [];
+            const existing = {};
+
+            if (Array.isArray(frontmatter)) {
+                frontmatter.forEach(f => {
+                    if (f && f.key) {
+                        existing[f.key] = f.value || '';
+                    }
+                });
+            }
+
+            Object.keys(existing).forEach(key => {
+                const el = document.getElementById(`fm-${key}`);
+                if (el) {
+                    existing[key] = el.value.trim();
+                }
+            });
+
+            existing.title = name;
+            existing.description = description;
+
+            Object.keys(existing).forEach(key => {
+                updatedFrontmatter.push({
+                    key,
+                    value: existing[key]
+                });
+            });
+
+            const updatedSections = [];
+            if (mode === 'edit' && Array.isArray(sections)) {
+                sections.forEach((sec, index) => {
+                    const el = document.getElementById(`section-${index}`);
+                    if (el && sec && sec.title) {
+                        updatedSections.push({
+                            title: sec.title,
+                            content: el.value
+                        });
+                    }
+                });
+            }
+
+            vscode.postMessage({
+                command: 'save',
+                mode,
+                name,
+                description,
+                frontmatter: updatedFrontmatter,
+                sections: updatedSections
+            });
+        }
+
+        function editMarkdown() {
+            if (!persona || !persona.path) return;
+            vscode.postMessage({
+                command: 'editMarkdown',
+                path: persona.path
+            });
+        }
+
+        vscode.postMessage({ command: 'ready' });
+    </script>
+</body>
+
+</html>

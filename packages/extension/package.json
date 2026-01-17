@@ -2,7 +2,7 @@
     "name": "ai-agent-ide-context-sync-vscode",
     "displayName": "AI Agent IDE Context Sync",
     "description": "Complete AI Kernel management: personas, tasks, analytics, and context sync",
-    "version": "2.0.1",
+    "version": "2.0.10",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -38,29 +38,38 @@
             },
             {
                 "command": "ai-agent-sync.createPersona",
-                "title": "Create New Persona",
+                "title": "Create New Persona\nCria um novo agente de IA",
+                "icon": "$(add)"
+            },
+            {
+                "command": "ai-agent-sync.createTask",
+                "title": "Create New Task\nCria uma nova task para a persona",
                 "icon": "$(add)"
             },
             {
                 "command": "ai-agent-sync.editPersona",
-                "title": "Edit Persona"
+                "title": "Edit Persona\nEdita nome e descrição da persona",
+                "icon": "$(edit)"
             },
             {
                 "command": "ai-agent-sync.deletePersona",
-                "title": "Delete Persona"
+                "title": "Delete Persona\nRemove a persona do workspace",
+                "icon": "$(trash)"
             },
             {
                 "command": "ai-agent-sync.createTask",
-                "title": "Create New Task",
+                "title": "Create New Task\nCria uma nova task para a persona",
                 "icon": "$(add)"
             },
             {
                 "command": "ai-agent-sync.archiveTask",
-                "title": "Archive Task"
+                "title": "Archive Task\nMove a task para o arquivo",
+                "icon": "$(archive)"
             },
             {
                 "command": "ai-agent-sync.deleteTask",
-                "title": "Delete Task"
+                "title": "Delete Task\nExclui a task permanentemente",
+                "icon": "$(trash)"
             },
             {
                 "command": "ai-agent-sync.toggleChecklistItem",
@@ -69,6 +78,16 @@
             {
                 "command": "ai-agent-sync.openFile",
                 "title": "Open File"
+            },
+            {
+                "command": "ai-agent-sync.viewPersonaDetails",
+                "title": "View Full Details\nAbre o arquivo completo da persona",
+                "icon": "$(eye)"
+            },
+            {
+                "command": "ai-agent-sync.showTaskDetails",
+                "title": "AI Agent Sync: Show Task Details",
+                "icon": "$(info)"
             },
             {
                 "command": "ai-agent-sync.refreshPersonas",
@@ -193,6 +212,11 @@
                     "group": "navigation@3"
                 },
                 {
+                    "command": "ai-agent-sync.createTask",
+                    "when": "view == ai-agent-sync-personas",
+                    "group": "navigation@3.5"
+                },
+                {
                     "command": "ai-agent-sync.openKanban",
                     "when": "view == ai-agent-sync-personas",
                     "group": "navigation@4"
@@ -228,6 +252,11 @@
                     "command": "ai-agent-sync.customizePersona",
                     "when": "view == ai-agent-sync-personas && viewItem == persona",
                     "group": "inline@3"
+                },
+                {
+                    "command": "ai-agent-sync.viewPersonaDetails",
+                    "when": "view == ai-agent-sync-personas && viewItem == persona",
+                    "group": "inline@4"
                 },
                 {
                     "command": "ai-agent-sync.createTask",
