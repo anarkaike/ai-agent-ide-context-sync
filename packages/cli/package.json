@@ -1,5 +1,5 @@
 {
-  "name": "ai-agent-ide-context-sync-v2",
+  "name": "ai-agent-ide-context-sync",
   "version": "2.0.3",
   "description": "Universal Context Hub for AI Agents across multiple IDEs (Cursor, Trae, Windsurf, Claude, Copilot, Gemini, Antigravity).",
   "main": "cli/ai-doc.js",

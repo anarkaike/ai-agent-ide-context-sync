@@ -4,10 +4,10 @@
 
 > **Hub Universal de Contexto para Agentes de IA em múltiplas IDEs**
 
-**Pare de se repetir. Um contexto, infinitos agentes.**
+**Cansado de reesplicar sua arquitetura, camadas, stack e padrões para cada agente de IA? Este é o seu novo aliado. Um contexto, infinitos agentes.**
 
-[![NPM Version](https://img.shields.io/npm/v/ai-agent-ide-context-sync.svg)](https://www.npmjs.com/package/ai-agent-ide-context-sync)
-[![NPM Downloads](https://img.shields.io/npm/dm/ai-agent-ide-context-sync.svg)](https://www.npmjs.com/package/ai-agent-ide-context-sync)
+[![NPM Version](https://img.shields.io/npm/v/ai-agent-ide-context-sync-v2.svg)](https://www.npmjs.com/package/ai-agent-ide-context-sync-v2)
+[![NPM Downloads](https://img.shields.io/npm/dm/ai-agent-ide-context-sync-v2.svg)](https://www.npmjs.com/package/ai-agent-ide-context-sync-v2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Stars](https://img.shields.io/github/stars/anarkaike/ai-agent-ide-context-sync.svg)](https://github.com/anarkaike/ai-agent-ide-context-sync)
 
@@ -15,15 +15,28 @@
 
 ---
 
-## 🎯 O que é isso?
+## 🎯 O que é?
 
 **AI Agent IDE Context Sync** é um sistema universal de gerenciamento de contexto que sincroniza a inteligência do seu projeto entre **todos os agentes de IA para código** — Cursor, Windsurf, Trae, Claude, Copilot, Gemini, Antigravity e muito mais.
 
 Em vez de manter arquivos separados como `.cursorrules`, `.windsurfrules`, `.github/copilot-instructions.md` e outros específicos de cada IDE, você define seu contexto **uma vez** e o sistema automaticamente sincroniza para todos os agentes.
 
+Além disso, utiliza o próprio repositório git do projeto, para versionar a memoria, contexto, tasks e atividades de forma persistente para cada uma das personas criadas para os agentes de IA das IDEs.
+
+Rastreie com precisão o checklist de cada janela de agente de ia das IDEs em arquivos separados, para que você não perca nenhum passo e atribua a personas, que são identidades que as janelas de agente de IA podem assumir.
+
+---
+#### 🌟 :)  SE GOSTOU, ME DA UMA ESTRELINHA NO REPOSITÓRIO :) 🌟 
+###### Ainda está em processo de amadurecimento. Contribuições são bem vindas. Por favor, abra uma issue para discutir qualquer funcionalidade, bug ou simplesmente para comentar o que achou.
+#### 🌟 :) IF YOU LIKED IT, GIVE ME A STAR IN THE REPOSITORY :) 🌟
+###### It's still in the process of maturing. Contributions are welcome. Please open an issue to discuss any functionality, bug, or simply to comment on what you thought.
+#### 🌟 :) SI TE GUSTÓ, DAME UNA ESTRELLA EN EL REPOSITORIO :) 🌟
+###### Todavía está en desarrollo. Se agradecen las contribuciones. Por favor, abre un problema para comentar cualquier funcionalidad, error o simplemente para comentar qué te pareció.
+---
+
 ### 😫 O Problema
 
-Você está trabalhando em um projeto Laravel + Vue. Você tem:
+Você está trabalhando em um projeto Laravel + Vue com camadas e padrões definidos. Você tem:
 - `.cursorrules` para o Cursor
 - `.windsurfrules` para o Windsurf
 - `.github/copilot-instructions.md` para o Copilot
@@ -84,8 +97,8 @@ Um único comando (`ai-doc build`) gera contexto para **7+ IDEs/Agentes** simult
 
 ### 🧬 Arquitetura Modular
 - **Módulos Core**: Identidade, Memória, Tarefas, Análise
-- **Integrações de Stack**: Laravel, Vue, React, Next.js (extensível)
-- **Motor de Heurísticas**: Aprende padrões automaticamente do seu código
+- **Integrações de Stack**: Laravel, Vue, React, Next.js (extensível - implemente suas próprias integrações de stack)
+- **Motor de Heurísticas**: Aprende padrões automaticamente do seu código e otimiza prompts
 - **Sistema Soul**: Base de conhecimento portável (exporte/importe seus aprendizados)
 
 ### 🚀 Auto-Evolução
@@ -292,8 +305,8 @@ npm install -g ai-agent-ide-context-sync
 
 **Stop repeating yourself. One context, infinite agents.**
 
-[![NPM Version](https://img.shields.io/npm/v/ai-agent-ide-context-sync.svg)](https://www.npmjs.com/package/ai-agent-ide-context-sync)
-[![NPM Downloads](https://img.shields.io/npm/dm/ai-agent-ide-context-sync.svg)](https://www.npmjs.com/package/ai-agent-ide-context-sync)
+[![NPM Version](https://img.shields.io/npm/v/ai-agent-ide-context-sync-v2.svg)](https://www.npmjs.com/package/ai-agent-ide-context-sync-v2)
+[![NPM Downloads](https://img.shields.io/npm/dm/ai-agent-ide-context-sync-v2.svg)](https://www.npmjs.com/package/ai-agent-ide-context-sync-v2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Stars](https://img.shields.io/github/stars/anarkaike/ai-agent-ide-context-sync.svg)](https://github.com/anarkaike/ai-agent-ide-context-sync)
 
@@ -566,3 +579,8 @@ Built with ❤️ for developers who are tired of copy-pasting the same instruct
 ```bash
 npm install -g ai-agent-ide-context-sync
 ```
+<br><br>
+<div align="center">
+Made with ❤️ by [Junio de Almeida Vitorino](https://github.com/anarkaike)  <br>
+Siga-me / Follow-me: https://www.linkedin.com/in/junioalmeida/
+</div>

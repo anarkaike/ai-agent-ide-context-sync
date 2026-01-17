@@ -1,23 +1,25 @@
 # 🧠 AI Agent IDE Context Sync
 
-> **Hub Universal de Contexto para Agentes de IA em múltiplas IDEs**
+> **Hub Universal de Contexto e Memória para Agentes de IA em múltiplas IDEs**
 
-Pare de se repetir. Um contexto, infinitos agentes.
+Está cansado de repetir sempre os padrões, contexto e memória para cada agente de IA? Este é o seu novo aliado. Um contexto, infinitos agentes.
 
 [![NPM Version](https://img.shields.io/npm/v/ai-agent-ide-context-sync.svg)](https://www.npmjs.com/package/ai-agent-ide-context-sync)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## 🎯 O que é isso?
+## 🎯 O que é?
 
-**AI Agent IDE Context Sync** é um sistema universal de gerenciamento de contexto que sincroniza a inteligência do seu projeto entre **todos os agentes de IA para código** — Cursor, Windsurf, Trae, Claude, Copilot, Gemini, Antigravity e muito mais.
+**AI Agent IDE Context Sync** é um sistema operacional universal de gerenciamento de contexto que sincroniza a inteligência do seu projeto entre **todos os agentes de IA para código** — Cursor, Windsurf, Trae, Claude, Copilot, Gemini, Antigravity e muito mais.
 
 Em vez de manter arquivos separados como `.cursorrules`, `.windsurfrules`, `.github/copilot-instructions.md` e outros específicos de cada IDE, você define seu contexto **uma vez** e o sistema automaticamente sincroniza para todos os agentes.
 
+Além disso, utiliza o próprio repositório git do projeto, para versionar a memoria, contexto, tasks e atividades de forma persistente para cada uma das personas criadas para os agentes de IA das IDEs.
+
 ### O Problema
 
-Você está trabalhando em um projeto Laravel + Vue. Você tem:
+Você está trabalhando em um projeto Laravel + Vue com camadas e padrões definidos. Você tem:
 - `.cursorrules` para o Cursor
 - `.windsurfrules` para o Windsurf
 - `.github/copilot-instructions.md` para o Copilot
@@ -53,8 +55,8 @@ Gera automaticamente arquivos de contexto para:
 
 ### 🧬 Arquitetura Modular
 - **Módulos Core**: Identidade, Memória, Tarefas, Análise
-- **Integrações de Stack**: Laravel, Vue, React, Next.js (extensível)
-- **Motor de Heurísticas**: Aprende padrões automaticamente do seu código
+- **Integrações de Stack**: Laravel, Vue, React, Next.js (extensível - implemente suas próprias integrações de stack)
+- **Motor de Heurísticas**: Aprende padrões automaticamente do seu código e otimiza prompts
 - **Sistema Soul**: Base de conhecimento portável (exporte/importe seus aprendizados)
 
 ### 🚀 Auto-Evolução

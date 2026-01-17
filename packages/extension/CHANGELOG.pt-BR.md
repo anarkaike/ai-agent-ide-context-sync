@@ -10,6 +10,11 @@ Outros idiomas e documentos relacionados:
 - README (EN): [README.md](./README.md)
 - README (PT-BR): [README.pt-BR.md](./README.pt-BR.md)
 
+## [2.0.12] - 2026-01-17
+
+### Alterado
+- Novo ícone principal destacando sync, kernel de IA e núcleo de sistema
+
 ## [2.0.11] - 2026-01-17
 
 ### Adicionado

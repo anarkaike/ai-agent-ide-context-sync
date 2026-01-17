@@ -66,6 +66,13 @@ Manage your AI agents, tasks, and project context without leaving your editor.
 - **Sync Status**: Monitor sync state across IDEs
 
 ---
+#### 🌟 :)  SE GOSTOU, ME DA UMA ESTRELINHA NA EXTENSÃO  :) 🌟 
+###### Ainda está em processo de amadurecimento. Contribuições são bem vindas. Por favor, abra uma issue para discutir qualquer funcionalidade, bug ou simplesmente para comentar o que achou.
+#### 🌟 :) IF YOU LIKED IT, GIVE ME A STAR IN THE EXTENSION :) 🌟
+###### It's still in the process of maturing. Contributions are welcome. Please open an issue to discuss any functionality, bug, or simply to comment on what you thought.
+#### 🌟 :) SI TE GUSTÓ, DAME UNA ESTRELLA EN LA EXTENSIÓN :) 🌟
+###### Todavía está en desarrollo. Se agradecen las contribuciones. Por favor, abre un problema para comentar cualquier funcionalidad, error o simplemente para comentar qué te pareció.
+---
 
 ## 🚀 Installation
 
@@ -284,6 +291,6 @@ MIT © Junio de Almeida Vitorino
 
 **Stop managing AI context manually. Start using the visual interface!** 🚀
 
-Made with ❤️ by [Junio](https://github.com/anarkaike)
-
+Made with ❤️ by [Junio de Almeida Vitorino](https://github.com/anarkaike)
+Siga-me / Follow-me: https://www.linkedin.com/in/junioalmeida/
 </div>

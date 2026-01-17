@@ -12,6 +12,11 @@ Related docs:
 - Extension README (EN): [README.md](./README.md)
 - Extension README (PT-BR): [README.pt-BR.md](./README.pt-BR.md)
 
+## [2.0.12] - 2026-01-17
+
+### Changed
+- New core icon design emphasizing sync, AI kernel and OS-like core
+
 ## [2.0.11] - 2026-01-17
 
 ### Added
