@@ -10,6 +10,15 @@ Outros idiomas e documentos relacionados:
 - README (EN): [README.md](./README.md)
 - README (PT-BR): [README.pt-BR.md](./README.pt-BR.md)
 
+## [2.0.11] - 2026-01-17
+
+### Adicionado
+- 📋 Subformulários interativos de checklist para campos de lista do frontmatter da persona (stack, goals, especialidades)
+
+### Alterado
+- Layout mais compacto para campos pequenos de frontmatter no webview de persona
+- Grade de frontmatter reorganizada para evitar inputs ocupando a largura completa
+
 ## [2.0.10] - 2026-01-17
 
 ### Adicionado
@@ -273,4 +282,3 @@ Outros idiomas e documentos relacionados:
 - 📅 Alertas de deadline
 - 🎉 Celebrações de conclusão
 - 📈 Insights de produtividade
-

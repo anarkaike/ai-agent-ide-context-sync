@@ -78,10 +78,20 @@
             gap: 16px;
         }
 
+        .form-frontmatter {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
         .field {
             display: flex;
             flex-direction: column;
             gap: 6px;
+        }
+
+        .field-inline {
+            max-width: 260px;
         }
 
         .label {
@@ -161,6 +171,42 @@
             min-height: 60px;
             resize: vertical;
         }
+
+        .checklist-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checklist-item-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checklist-item-row input[type="text"] {
+            flex: 1;
+        }
+
+        .checklist-add-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .checklist-remove-btn {
+            border-radius: 4px;
+            border: 1px solid var(--vscode-panel-border);
+            background: transparent;
+            color: var(--vscode-descriptionForeground);
+            padding: 2px 6px;
+            cursor: pointer;
+        }
+
+        .checklist-remove-btn:hover {
+            background: var(--vscode-list-hoverBackground);
+        }
     </style>
 </head>
 
@@ -187,7 +233,7 @@
         </div>
     </div>
 
-    <div class="form" id="frontmatterForm"></div>
+    <div class="form-frontmatter" id="frontmatterForm"></div>
 
     <div class="sections" id="sections"></div>
 
@@ -221,6 +267,232 @@
             }
             render();
         });
+
+        function isChecklistSection(sec) {
+            if (!sec || !sec.title) {
+                return false;
+            }
+            const t = sec.title.toLowerCase();
+            return t.includes('checklist') || t.includes('lista');
+        }
+
+        function buildChecklistSection(card, sec, index) {
+            const container = document.createElement('div');
+            container.className = 'checklist-container';
+
+            const itemsWrapper = document.createElement('div');
+            itemsWrapper.className = 'checklist-items';
+            container.appendChild(itemsWrapper);
+
+            const addRow = document.createElement('div');
+            addRow.className = 'checklist-add-row';
+            const addInput = document.createElement('input');
+            addInput.type = 'text';
+            addInput.placeholder = 'New item';
+            const addButton = document.createElement('button');
+            addButton.type = 'button';
+            addButton.textContent = '+';
+            addButton.className = 'btn btn-secondary';
+            addRow.appendChild(addInput);
+            addRow.appendChild(addButton);
+            container.appendChild(addRow);
+
+            const hidden = document.createElement('textarea');
+            hidden.className = 'section-body';
+            hidden.id = `section-${index}`;
+            hidden.style.display = 'none';
+
+            function syncHidden() {
+                const rows = itemsWrapper.querySelectorAll('.checklist-item-row');
+                const lines = [];
+                rows.forEach(row => {
+                    const checkbox = row.querySelector('input[type="checkbox"]');
+                    const textInput = row.querySelector('input[type="text"]');
+                    if (!textInput) {
+                        return;
+                    }
+                    const text = textInput.value.trim();
+                    if (!text) {
+                        return;
+                    }
+                    const mark = checkbox && checkbox.checked ? 'x' : ' ';
+                    lines.push(`- [${mark}] ${text}`);
+                });
+                hidden.value = lines.join('\n');
+            }
+
+            function addItem(done, text) {
+                const row = document.createElement('div');
+                row.className = 'checklist-item-row';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = !!done;
+
+                const textInput = document.createElement('input');
+                textInput.type = 'text';
+                textInput.value = text || '';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.textContent = '✕';
+                removeBtn.className = 'checklist-remove-btn';
+
+                checkbox.addEventListener('change', syncHidden);
+                textInput.addEventListener('input', syncHidden);
+                removeBtn.addEventListener('click', () => {
+                    row.remove();
+                    syncHidden();
+                });
+
+                row.appendChild(checkbox);
+                row.appendChild(textInput);
+                row.appendChild(removeBtn);
+                itemsWrapper.appendChild(row);
+            }
+
+            const rawLines = (sec.content || '').split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            if (rawLines.length === 0) {
+                addItem(false, '');
+            } else {
+                rawLines.forEach(line => {
+                    const m = line.match(/^- \[([ x])\] (.+)$/);
+                    if (m) {
+                        const done = m[1] === 'x';
+                        const text = m[2];
+                        addItem(done, text);
+                    } else {
+                        addItem(false, line);
+                    }
+                });
+            }
+
+            addButton.addEventListener('click', () => {
+                const value = addInput.value.trim();
+                if (!value) {
+                    return;
+                }
+                addItem(false, value);
+                addInput.value = '';
+                syncHidden();
+            });
+
+            addInput.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = addInput.value.trim();
+                    if (!value) {
+                        return;
+                    }
+                    addItem(false, value);
+                    addInput.value = '';
+                    syncHidden();
+                }
+            });
+
+            syncHidden();
+
+            card.appendChild(container);
+            card.appendChild(hidden);
+        }
+
+        function buildFrontmatterListField(field, id, value) {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.id = id;
+            hidden.value = value || '';
+            field.appendChild(hidden);
+
+            const container = document.createElement('div');
+            container.className = 'checklist-container';
+
+            const itemsWrapper = document.createElement('div');
+            itemsWrapper.className = 'checklist-items';
+            container.appendChild(itemsWrapper);
+
+            const addRow = document.createElement('div');
+            addRow.className = 'checklist-add-row';
+            const addInput = document.createElement('input');
+            addInput.type = 'text';
+            addInput.placeholder = 'Novo item';
+            const addButton = document.createElement('button');
+            addButton.type = 'button';
+            addButton.textContent = '+';
+            addButton.className = 'btn btn-secondary';
+            addRow.appendChild(addInput);
+            addRow.appendChild(addButton);
+            container.appendChild(addRow);
+
+            function syncHidden() {
+                const rows = itemsWrapper.querySelectorAll('.checklist-item-row input[type="text"]');
+                const items = [];
+                rows.forEach(input => {
+                    const text = input.value.trim();
+                    if (text) {
+                        items.push(text);
+                    }
+                });
+                hidden.value = items.join(' | ');
+            }
+
+            function addItem(text) {
+                const row = document.createElement('div');
+                row.className = 'checklist-item-row';
+
+                const textInput = document.createElement('input');
+                textInput.type = 'text';
+                textInput.value = text || '';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.textContent = '✕';
+                removeBtn.className = 'checklist-remove-btn';
+
+                textInput.addEventListener('input', syncHidden);
+                removeBtn.addEventListener('click', () => {
+                    row.remove();
+                    syncHidden();
+                });
+
+                row.appendChild(textInput);
+                row.appendChild(removeBtn);
+                itemsWrapper.appendChild(row);
+            }
+
+            const parts = (value || '').split('|').map(p => p.trim()).filter(p => p.length > 0);
+            if (parts.length === 0) {
+                addItem('');
+            } else {
+                parts.forEach(part => addItem(part));
+            }
+
+            addButton.addEventListener('click', () => {
+                const text = addInput.value.trim();
+                if (!text) {
+                    return;
+                }
+                addItem(text);
+                addInput.value = '';
+                syncHidden();
+            });
+
+            addInput.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const text = addInput.value.trim();
+                    if (!text) {
+                        return;
+                    }
+                    addItem(text);
+                    addInput.value = '';
+                    syncHidden();
+                }
+            });
+
+            syncHidden();
+
+            field.appendChild(container);
+        }
 
         function render() {
             const titleEl = document.getElementById('title');
@@ -286,6 +558,7 @@
                         const value = f.value || '';
 
                         if (keyLower === 'status') {
+                            field.className = 'field field-inline';
                             const select = document.createElement('select');
                             select.id = id;
 
@@ -383,18 +656,23 @@
                             return;
                         }
 
+                        if (keyLower === 'stack' ||
+                            keyLower === 'goals' ||
+                            keyLower === 'especialidade' ||
+                            keyLower === 'especialidades') {
+                            buildFrontmatterListField(field, id, value);
+                            fmContainer.appendChild(field);
+                            return;
+                        }
+
                         let control;
 
-                        if (keyLower === 'stack' ||
-                            keyLower === 'role' ||
+                        if (keyLower === 'role' ||
                             keyLower === 'communication_style' ||
                             keyLower === 'communication-style' ||
-                            keyLower === 'goals' ||
                             keyLower === 'profile' ||
                             keyLower === 'personalidade' ||
                             keyLower === 'personalidade_ia' ||
-                            keyLower === 'especialidade' ||
-                            keyLower === 'especialidades' ||
                             keyLower === 'gatilhos_rapidos' ||
                             keyLower === 'gatilhos-rapidos' ||
                             keyLower === 'observacoes' ||
@@ -427,16 +705,24 @@
 
                     const label = document.createElement('div');
                     label.className = 'section-label';
-                    label.textContent = 'Markdown';
 
-                    const body = document.createElement('textarea');
-                    body.className = 'section-body';
-                    body.id = `section-${index}`;
-                    body.value = sec.content || '';
+                    const checklist = isChecklistSection(sec);
+                    if (checklist) {
+                        label.textContent = 'Checklist';
+                        card.appendChild(title);
+                        card.appendChild(label);
+                        buildChecklistSection(card, sec, index);
+                    } else {
+                        label.textContent = 'Markdown';
+                        const body = document.createElement('textarea');
+                        body.className = 'section-body';
+                        body.id = `section-${index}`;
+                        body.value = sec.content || '';
+                        card.appendChild(title);
+                        card.appendChild(label);
+                        card.appendChild(body);
+                    }
 
-                    card.appendChild(title);
-                    card.appendChild(label);
-                    card.appendChild(body);
                     sectionsContainer.appendChild(card);
                 });
             }

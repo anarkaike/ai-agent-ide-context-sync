@@ -419,11 +419,15 @@
         function handleDragStart(e) {
             draggedElement = this;
             this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
+            if (e.dataTransfer) {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', this.dataset.taskId || '');
+            }
         }
 
         function handleDragEnd(e) {
             this.classList.remove('dragging');
+            draggedElement = null;
         }
 
         function handleDragOver(e) {
@@ -450,12 +454,20 @@
                 const taskId = draggedElement.dataset.taskId;
                 const newStatus = this.parentElement.dataset.status;
 
-                // Update task status
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.status = newStatus;
+                }
+
+                this.appendChild(draggedElement);
+
                 vscode.postMessage({
                     command: 'updateTaskStatus',
-                    taskId: taskId,
+                    taskId,
                     status: newStatus
                 });
+
+                draggedElement = null;
             }
 
             return false;

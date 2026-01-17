@@ -1539,6 +1539,37 @@ status: active
                                 }
                             }
 
+                            if (Array.isArray(message.sections) && message.sections.length > 0) {
+                                const bodyLines = [];
+                                message.sections.forEach(sec => {
+                                    if (!sec || !sec.title) {
+                                        return;
+                                    }
+                                    bodyLines.push(`## ${sec.title}`);
+                                    const contentText = (sec.content || '').trim();
+                                    if (contentText) {
+                                        bodyLines.push('');
+                                        bodyLines.push(contentText);
+                                    }
+                                    bodyLines.push('');
+                                });
+
+                                let bodyContent = bodyLines.join('\n');
+                                bodyContent = bodyContent.replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
+
+                                if (updatedContent.startsWith('---')) {
+                                    const fmBlock = updatedContent.match(/^---[\s\S]*?---/);
+                                    if (fmBlock) {
+                                        const header = fmBlock[0];
+                                        updatedContent = `${header}\n\n${bodyContent}`;
+                                    } else {
+                                        updatedContent = bodyContent;
+                                    }
+                                } else {
+                                    updatedContent = bodyContent;
+                                }
+                            }
+
                             fs.writeFileSync(taskPath, updatedContent);
 
                             const newContent = fs.readFileSync(taskPath, 'utf-8');
