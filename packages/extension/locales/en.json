@@ -58,7 +58,15 @@
         "confirmDelete": "Are you sure you want to delete {0}?",
         "yes": "Yes",
         "no": "No",
-        "openFile": "Open File"
+        "openFile": "Open File",
+        "viewTask": "View Task",
+        "openKanban": "Open Kanban",
+        "openDashboard": "Open Dashboard",
+        "dismiss": "Dismiss",
+        "motivationalPersonaCreated": "🎉 New persona created: {0}. Another ally in your flow.",
+        "motivationalPersonaUpdated": "✨ Persona {0} updated. Your AI kernel just got sharper.",
+        "motivationalTaskCreated": "🚀 New task \"{0}\" created for {1}. Let’s push this chapter of the project forward.",
+        "motivationalChecklistUpdated": "✅ Progress on \"{0}\": {1}/{2} items completed. Small wins create big deliveries."
     },
     "timer": {
         "pauseTimer": "⏸️ Pause Timer",

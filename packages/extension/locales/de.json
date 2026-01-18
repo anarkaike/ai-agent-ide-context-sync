@@ -15,6 +15,14 @@
   "messages": {
     "workspaceInitialized": "✅ Arbeitsbereich initialisiert!",
     "taskCreated": "✅ Aufgabe erstellt!",
-    "pomodoroCompleted": "⏰ Pomodoro abgeschlossen! Zeit für eine Pause! 🎉"
+    "pomodoroCompleted": "⏰ Pomodoro abgeschlossen! Zeit für eine Pause! 🎉",
+    "viewTask": "Aufgabe anzeigen",
+    "openKanban": "Kanban öffnen",
+    "openDashboard": "Dashboard öffnen",
+    "dismiss": "Schließen",
+    "motivationalPersonaCreated": "🎉 Neue Persona erstellt: {0}. Noch ein Verbündeter in deinem Flow.",
+    "motivationalPersonaUpdated": "✨ Persona {0} aktualisiert. Dein AI-Kernel ist jetzt noch schärfer.",
+    "motivationalTaskCreated": "🚀 Neue Aufgabe \"{0}\" für {1} erstellt. Lass uns dieses Projektkapitel voranbringen.",
+    "motivationalChecklistUpdated": "✅ Fortschritt in \"{0}\": {1}/{2} Punkte erledigt. Kleine Schritte führen zu großen Releases."
   }
 }

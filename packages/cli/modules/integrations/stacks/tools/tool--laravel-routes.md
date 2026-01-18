@@ -1,3 +1,11 @@
+<!-- AI-DOC:CORE_START -->
+- Use MCP para listar rotas runtime antes de alterar auth/versionamento.
+- Compare runtime vs `routes/*.php` e registre apenas rotas-chave.
+- Ao achar divergência, converta em task com evidência.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # 🛤️ Tool: Laravel Routes & Guards
 Mapeia rotas, middlewares e guards usando os comandos MCP do Laravel Boost.
 
@@ -34,3 +42,5 @@ Mapeia rotas, middlewares e guards usando os comandos MCP do Laravel Boost.
 - `laravel-boost_terminal`
 - `routes/*.php`
 - `.ai-doc/data/live-state/`
+
+<!-- AI-DOC:FULL_END -->

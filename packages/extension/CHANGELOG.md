@@ -12,6 +12,11 @@ Related docs:
 - Extension README (EN): [README.md](./README.md)
 - Extension README (PT-BR): [README.pt-BR.md](./README.pt-BR.md)
 
+## [2.0.13] - 2026-01-18
+
+### Changed
+- Updated kernel integration docs and stack playbooks for Node/TS/React/Vue
+
 ## [2.0.12] - 2026-01-17
 
 ### Changed

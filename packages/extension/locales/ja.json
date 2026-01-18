@@ -15,6 +15,14 @@
   "messages": {
     "workspaceInitialized": "✅ ワークスペースが初期化されました！",
     "taskCreated": "✅ タスクが作成されました！",
-    "pomodoroCompleted": "⏰ ポモドーロ完了！休憩の時間です！🎉"
+    "pomodoroCompleted": "⏰ ポモドーロ完了！休憩の時間です！🎉",
+    "viewTask": "タスクを表示",
+    "openKanban": "カンバンを開く",
+    "openDashboard": "ダッシュボードを開く",
+    "dismiss": "閉じる",
+    "motivationalPersonaCreated": "🎉 新しいペルソナが作成されました: {0}。ワークフローに新しい仲間が増えました。",
+    "motivationalPersonaUpdated": "✨ ペルソナ {0} が更新されました。あなたのAIカーネルはさらに鋭くなりました。",
+    "motivationalTaskCreated": "🚀 新しいタスク \"{0}\" が {1} に作成されました。プロジェクトのこの章を前に進めましょう。",
+    "motivationalChecklistUpdated": "✅ 「{0}」の進捗: {1}/{2} 項目が完了しました。小さな勝利が大きな成果を生みます。"
   }
 }

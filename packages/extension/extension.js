@@ -17,6 +17,7 @@ let personasProvider = null;
 let statusProvider = null;
 let analyticsProvider = null;
 let statusBarManager = null;
+let timerProvider = null;
 
 /**
  * Ensure that personas existing in the global identity state
@@ -472,15 +473,40 @@ class AnalyticsTreeProvider {
         }
 
         if (!element) {
+            const items = [];
+            items.push(this.createActionItem(
+                '📊 Open Dashboard',
+                'ai-agent-sync.openDashboard',
+                'Open interactive analytics dashboard.\n\nPT-BR: Abre o dashboard interativo com gráficos em tempo real das suas personas, tasks e progresso.'
+            ));
+            items.push(this.createActionItem(
+                '📆 Weekly Report',
+                'ai-agent-sync.weeklyReport',
+                'View summarized analytics for the current week.\n\nPT-BR: Exibe um relatório resumido da semana, com foco em produtividade e progresso.'
+            ));
+            items.push(this.createActionItem(
+                '📅 Monthly Report',
+                'ai-agent-sync.monthlyReport',
+                'View summarized analytics for the current month.\n\nPT-BR: Exibe um relatório mensal de alto nível com tendências de trabalho e conclusão de tasks.'
+            ));
+            items.push(this.createActionItem(
+                '☁️ Cloud Sync',
+                'ai-agent-sync.cloudSync',
+                'Sync analytics and workspace data with the cloud service configured.\n\nPT-BR: Sincroniza dados do workspace e analytics com o serviço de nuvem configurado (quando disponível).'
+            ));
+            items.push(this.createActionItem(
+                '📦 Export Backup',
+                'ai-agent-sync.exportBackup',
+                'Export a backup of your workspace and analytics data.\n\nPT-BR: Exporta um backup dos dados do workspace/analytics para arquivamento ou migração.'
+            ));
             const stats = this.calculateStats(aiWorkspacePath);
-            return [
-                this.createStatItem('👥 Personas', stats.personas),
-                this.createStatItem('📋 Active Tasks', stats.activeTasks),
-                this.createStatItem('✅ Completed Tasks', stats.completedTasks),
-                this.createStatItem('📊 Total Checklist Items', stats.totalChecklistItems),
-                this.createStatItem('✓ Completed Items', stats.completedChecklistItems),
-                this.createStatItem('📈 Completion Rate', `${stats.completionRate}%`)
-            ];
+            items.push(this.createStatItem('👥 Personas', stats.personas));
+            items.push(this.createStatItem('📋 Active Tasks', stats.activeTasks));
+            items.push(this.createStatItem('✅ Completed Tasks', stats.completedTasks));
+            items.push(this.createStatItem('📊 Total Checklist Items', stats.totalChecklistItems));
+            items.push(this.createStatItem('✓ Completed Items', stats.completedChecklistItems));
+            items.push(this.createStatItem('📈 Completion Rate', `${stats.completionRate}%`));
+            return items;
         }
         return [];
     }
@@ -533,6 +559,17 @@ class AnalyticsTreeProvider {
         }
 
         return stats;
+    }
+
+    createActionItem(label, commandId, tooltip) {
+        const item = new vscode.TreeItem(label);
+        item.iconPath = new vscode.ThemeIcon('link-external');
+        item.command = {
+            command: commandId,
+            title: label
+        };
+        item.tooltip = tooltip;
+        return item;
     }
 
     createStatItem(label, value) {
@@ -592,6 +629,81 @@ class AnalyticsTreeProvider {
     }
 }
 
+class PomodoroTreeProvider {
+    constructor() {
+        this._onDidChangeTreeData = new vscode.EventEmitter();
+        this.onDidChangeTreeData = this._onDidChangeTreeData.event;
+    }
+
+    refresh() {
+        this._onDidChangeTreeData.fire();
+    }
+
+    getTreeItem(element) {
+        return element;
+    }
+
+    getChildren(element) {
+        if (element) {
+            return [];
+        }
+
+        const items = [];
+
+        const currentTask = statusBarManager ? statusBarManager.getCurrentTask() : null;
+        const timerRunning = statusBarManager ? statusBarManager.isTimerRunning() : false;
+        const timerSeconds = statusBarManager ? statusBarManager.getTimerSeconds() : 0;
+
+        let timerLabel = 'Timer: Stopped';
+        if (timerRunning || timerSeconds > 0) {
+            const minutes = Math.floor(timerSeconds / 60);
+            const seconds = timerSeconds % 60;
+            const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            timerLabel = timerRunning ? `Timer: ${timeStr} (Running)` : `Timer: ${timeStr} (Paused)`;
+        }
+
+        const timerItem = new vscode.TreeItem(timerLabel);
+        timerItem.iconPath = new vscode.ThemeIcon('watch');
+        timerItem.tooltip = 'Pomodoro timer status.\n\nPT-BR: Status do temporizador Pomodoro. Use os controles abaixo para iniciar, pausar ou redefinir sessões de foco e intervalo.';
+        items.push(timerItem);
+
+        const taskLabel = currentTask ? `Task: ${currentTask.label}` : 'Task: none selected';
+        const taskItem = new vscode.TreeItem(taskLabel);
+        taskItem.iconPath = new vscode.ThemeIcon('checklist');
+        taskItem.command = {
+            command: 'ai-agent-sync.quickPicker',
+            title: 'Select Active Task'
+        };
+        taskItem.tooltip = 'Select or change the active task used by the Pomodoro timer.\n\nPT-BR: Selecione ou troque a task ativa que será usada nas sessões de foco/Pomodoro.';
+        items.push(taskItem);
+
+        const controlsItem = new vscode.TreeItem('Open Timer Controls');
+        controlsItem.iconPath = new vscode.ThemeIcon('clock');
+        controlsItem.command = {
+            command: 'ai-agent-sync.timerMenu',
+            title: 'Open Timer Controls'
+        };
+        controlsItem.tooltip = 'Open the timer menu with Pomodoro, break and custom duration options.\n\nPT-BR: Abre o menu do timer com Pomodoro de 25 minutos, pausa de 5 minutos e duração personalizada.';
+        items.push(controlsItem);
+
+        let modeLabel = 'Mode: Idle (no active session)';
+        if (timerRunning && timerSeconds >= 15 * 60) {
+            modeLabel = 'Mode: Focus (Pomodoro)';
+        } else if (timerRunning && timerSeconds > 0 && timerSeconds <= 10 * 60) {
+            modeLabel = 'Mode: Break';
+        } else if (!timerRunning && timerSeconds > 0) {
+            modeLabel = 'Mode: Paused session';
+        }
+
+        const modeItem = new vscode.TreeItem(modeLabel);
+        modeItem.iconPath = new vscode.ThemeIcon('pulse');
+        modeItem.tooltip = 'High-level view of the current focus mode.\n\nPT-BR: Visão geral do modo atual (foco, pausa ou inativo) do seu ciclo de Pomodoro.';
+        items.push(modeItem);
+
+        return items;
+    }
+}
+
 /**
  * Get all tasks from all personas
  */
@@ -646,6 +758,7 @@ class StatusBarManager {
     }
 
     show() {
+        this.updateDisplay();
         this.statusBarItem.show();
     }
 
@@ -656,12 +769,18 @@ class StatusBarManager {
     updateTask(taskInfo) {
         if (taskInfo) {
             this.currentTask = taskInfo;
-            this.statusBarItem.text = `$(checklist) ${taskInfo.label}`;
+            const personaSettings = vscode.commands.executeCommand('ai-agent-sync.getPersonaSettings', taskInfo.persona);
+            const personaIcon = personaSettings && personaSettings.icon ? personaSettings.icon : '';
+            const prefix = personaIcon ? `${personaIcon} ` : '$(checklist) ';
+            this.statusBarItem.text = `${prefix}${taskInfo.label}`;
             this.statusBarItem.tooltip = `Task: ${taskInfo.label}\nPersona: ${taskInfo.persona}\nClick to switch task`;
         } else {
             this.currentTask = null;
             this.statusBarItem.text = '$(add) Select Task';
             this.statusBarItem.tooltip = 'Click to select a task';
+        }
+        if (timerProvider) {
+            timerProvider.refresh();
         }
     }
 
@@ -725,10 +844,17 @@ class StatusBarManager {
             this.statusBarItem.text = '$(add) Select Task';
             this.statusBarItem.tooltip = 'Click to select a task';
         }
+        if (timerProvider) {
+            timerProvider.refresh();
+        }
     }
 
     isTimerRunning() {
         return this.timerRunning;
+    }
+
+    getTimerSeconds() {
+        return this.timerSeconds;
     }
 }
 
@@ -759,10 +885,12 @@ function activate(context) {
     personasProvider = new PersonasTreeProvider();
     statusProvider = new StatusTreeProvider();
     analyticsProvider = new AnalyticsTreeProvider();
+    timerProvider = new PomodoroTreeProvider();
 
     vscode.window.registerTreeDataProvider('ai-agent-sync-personas', personasProvider);
     vscode.window.registerTreeDataProvider('ai-agent-sync-status', statusProvider);
     vscode.window.registerTreeDataProvider('ai-agent-sync-analytics', analyticsProvider);
+    vscode.window.registerTreeDataProvider('ai-agent-sync-timer', timerProvider);
 
     // Watch for file changes
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -820,7 +948,15 @@ function registerCommands(context) {
                 personasProvider.refresh();
                 statusProvider.refresh();
             } catch (error) {
-                vscode.window.showErrorMessage(`❌ Init failed: ${error.message}`);
+                const message = typeof error.message === 'string' ? error.message.toLowerCase() : '';
+                if (message.includes('ai-doc') || message.includes('not found') || message.includes('command not found')) {
+                    const terminal = vscode.window.createTerminal('AI Agent CLI + Init');
+                    terminal.show();
+                    terminal.sendText('npm install -g ai-agent-ide-context-sync && ai-doc init', true);
+                    vscode.window.showInformationMessage('Instalando ai-doc CLI globalmente e inicializando o workspace...');
+                } else {
+                    vscode.window.showErrorMessage(`❌ Init failed: ${error.message}`);
+                }
             }
         })
     );
@@ -1046,11 +1182,22 @@ Fonte: ai-doc status + leitura da pasta .ai-workspace do projeto atual.
                                         return `${match}\ndescription: "${description || 'AI Agent'}"`;
                                     });
                                 }
-                                fs.writeFileSync(personaPath, content);
-                            }
+                            fs.writeFileSync(personaPath, content);
+                        }
 
-                            vscode.window.showInformationMessage(`✅ Persona ${name} created!`);
-                        } else if (mode === 'edit' && persona && persona.path) {
+                        vscode.window.showInformationMessage(
+                            i18n.t('messages.motivationalPersonaCreated', name),
+                            i18n.t('messages.viewPersonaDetails'),
+                            i18n.t('messages.openDashboard'),
+                            i18n.t('messages.dismiss')
+                        ).then(selection => {
+                            if (selection === i18n.t('messages.viewPersonaDetails')) {
+                                vscode.commands.executeCommand('ai-agent-sync.viewPersonaDetails', personaPath);
+                            } else if (selection === i18n.t('messages.openDashboard')) {
+                                vscode.commands.executeCommand('ai-agent-sync.openDashboard');
+                            }
+                        });
+                    } else if (mode === 'edit' && persona && persona.path) {
                             const personaPath = persona.path;
                             if (fs.existsSync(personaPath)) {
                                 let content = fs.readFileSync(personaPath, 'utf-8');
@@ -1124,7 +1271,18 @@ Fonte: ai-doc status + leitura da pasta .ai-workspace do projeto atual.
                                 fs.writeFileSync(personaPath, content);
                             }
 
-                            vscode.window.showInformationMessage(`✅ Persona ${persona.name} updated!`);
+                            vscode.window.showInformationMessage(
+                                i18n.t('messages.motivationalPersonaUpdated', persona.name),
+                                i18n.t('messages.viewPersonaDetails'),
+                                i18n.t('messages.openDashboard'),
+                                i18n.t('messages.dismiss')
+                            ).then(selection => {
+                                if (selection === i18n.t('messages.viewPersonaDetails')) {
+                                    vscode.commands.executeCommand('ai-agent-sync.viewPersonaDetails', persona.path);
+                                } else if (selection === i18n.t('messages.openDashboard')) {
+                                    vscode.commands.executeCommand('ai-agent-sync.openDashboard');
+                                }
+                            });
                         }
 
                         personasProvider.refresh();
@@ -1276,7 +1434,22 @@ status: active
             const doc = await vscode.workspace.openTextDocument(taskPath);
             await vscode.window.showTextDocument(doc);
 
-            vscode.window.showInformationMessage(`✅ Task created!`);
+            vscode.window.showInformationMessage(
+                i18n.t('messages.motivationalTaskCreated', title, personaName),
+                i18n.t('messages.viewTask'),
+                i18n.t('messages.openKanban'),
+                i18n.t('messages.openDashboard'),
+                i18n.t('messages.dismiss')
+            ).then(selection => {
+                if (selection === i18n.t('messages.viewTask')) {
+                    vscode.commands.executeCommand('ai-agent-sync.showTaskDetails', taskPath);
+                } else if (selection === i18n.t('messages.openKanban')) {
+                    vscode.commands.executeCommand('ai-agent-sync.openKanban');
+                } else if (selection === i18n.t('messages.openDashboard')) {
+                    vscode.commands.executeCommand('ai-agent-sync.openDashboard');
+                }
+            });
+
             personasProvider.refresh();
             analyticsProvider.refresh();
         })
@@ -1289,6 +1462,11 @@ status: active
             const lines = content.split('\n');
 
             if (lines[lineNumber]) {
+                const original = lines[lineNumber];
+
+                const totalItems = (content.match(/^- \[[ x]\]/gm) || []).length;
+                const doneBefore = (content.match(/^- \[x\]/gm) || []).length;
+
                 lines[lineNumber] = lines[lineNumber].replace(
                     /^- \[[ x]\]/,
                     newState ? '- [x]' : '- [ ]'
@@ -1297,6 +1475,30 @@ status: active
                 fs.writeFileSync(taskPath, lines.join('\n'));
                 personasProvider.refresh();
                 analyticsProvider.refresh();
+
+                const contentAfter = lines.join('\n');
+                const doneAfter = (contentAfter.match(/^- \[x\]/gm) || []).length;
+
+                const titleMatch = content.match(/title:\s*["']?([^"'\n]+)["']?/);
+                const taskTitle = titleMatch ? titleMatch[1] : path.basename(taskPath);
+
+                vscode.window.showInformationMessage(
+                    i18n.t(
+                        'messages.motivationalChecklistUpdated',
+                        taskTitle,
+                        doneAfter,
+                        totalItems
+                    ),
+                    i18n.t('messages.viewTask'),
+                    i18n.t('messages.openDashboard'),
+                    i18n.t('messages.dismiss')
+                ).then(selection => {
+                    if (selection === i18n.t('messages.viewTask')) {
+                        vscode.commands.executeCommand('ai-agent-sync.showTaskDetails', taskPath);
+                    } else if (selection === i18n.t('messages.openDashboard')) {
+                        vscode.commands.executeCommand('ai-agent-sync.openDashboard');
+                    }
+                });
             }
         })
     );
@@ -1666,7 +1868,26 @@ status: active
                             });
 
                             analyticsProvider.refresh();
-                            vscode.window.showInformationMessage('✅ Task updated!');
+
+                            vscode.window.showInformationMessage(
+                                i18n.t(
+                                    'messages.motivationalTaskCreated',
+                                    updatedTask.title,
+                                    updatedTask.persona || 'Unknown'
+                                ),
+                                i18n.t('messages.viewTask'),
+                                i18n.t('messages.openKanban'),
+                                i18n.t('messages.openDashboard'),
+                                i18n.t('messages.dismiss')
+                            ).then(selection => {
+                                if (selection === i18n.t('messages.viewTask')) {
+                                    vscode.commands.executeCommand('ai-agent-sync.showTaskDetails', taskPath);
+                                } else if (selection === i18n.t('messages.openKanban')) {
+                                    vscode.commands.executeCommand('ai-agent-sync.openKanban');
+                                } else if (selection === i18n.t('messages.openDashboard')) {
+                                    vscode.commands.executeCommand('ai-agent-sync.openDashboard');
+                                }
+                            });
                         } catch (error) {
                             vscode.window.showErrorMessage(`❌ Failed to save task: ${error.message}`);
                         }

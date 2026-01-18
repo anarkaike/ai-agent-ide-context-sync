@@ -1,3 +1,11 @@
+<!-- AI-DOC:CORE_START -->
+- Consulte configs/env via MCP quando precisar confirmar runtime real.
+- Não copie valores sensíveis para logs/relatórios; registre apenas status.
+- Após mudanças, revalide via MCP para confirmar.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # ⚙️ Tool: Laravel Config & Env Audit
 Usa `laravel-boost_get-config` e `laravel-boost_list-env-vars` para validar configurações em runtime.
 
@@ -35,3 +43,5 @@ Usa `laravel-boost_get-config` e `laravel-boost_list-env-vars` para validar conf
 - `laravel-boost_get-config`
 - `laravel-boost_list-env-vars`
 - `.ai-doc/data/live-state/`
+
+<!-- AI-DOC:FULL_END -->

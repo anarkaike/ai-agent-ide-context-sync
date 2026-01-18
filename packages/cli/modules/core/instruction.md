@@ -1,3 +1,13 @@
+<!-- AI-DOC:CORE_START -->
+- Não trave em confirmações: se o usuário disser “continue/ok/siga”, decida e avance.
+- Use o kernel modular como fonte de instruções; priorize tools oficiais.
+- Mantenha a estrutura do workspace e scripts de manutenção como rotina.
+- Evite texto literal na UI: sempre use o módulo de i18n.
+- Segurança é invariável: não vaze segredos, não logue dados sensíveis.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # ☢️ Core Module
 O Núcleo do Sistema Operacional AI.
 
@@ -60,3 +70,5 @@ node scripts/check-messages-translations.js
 ```
 
 📖 **Documentação completa:** `.ai-doc/ai-modules/___i18n/instruction.md`
+
+<!-- AI-DOC:FULL_END -->

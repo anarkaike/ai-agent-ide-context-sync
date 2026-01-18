@@ -10,6 +10,11 @@ Outros idiomas e documentos relacionados:
 - README (EN): [README.md](./README.md)
 - README (PT-BR): [README.pt-BR.md](./README.pt-BR.md)
 
+## [2.0.13] - 2026-01-18
+
+### Alterado
+- Atualização das instruções de kernel e playbooks de stack para Node/TS/React/Vue
+
 ## [2.0.12] - 2026-01-17
 
 ### Alterado

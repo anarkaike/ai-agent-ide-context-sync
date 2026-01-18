@@ -153,6 +153,15 @@
             padding: 2px 6px;
             border-radius: 4px;
             margin-left: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .card-persona-color {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
         }
 
         .card-progress {
@@ -377,10 +386,22 @@
                 `;
             }
 
+            const personaConfig = personas.find(p => p.name === task.persona);
+            const personaLabel = personaConfig ? personaConfig.name : task.persona;
+            const personaIcon = personaConfig && personaConfig.icon ? personaConfig.icon : '';
+            const personaColor = personaConfig && personaConfig.color ? personaConfig.color : null;
+
+            const personaColorDot = personaColor
+                ? `<span class="card-persona-color" style="background:${personaColor};"></span>`
+                : '';
+
             card.innerHTML = `
                 <div class="card-header">
                     <div class="card-title">${task.title}</div>
-                    <div class="card-persona">${task.persona}</div>
+                    <div class="card-persona">
+                        ${personaColorDot}
+                        <span>${personaIcon ? personaIcon + ' ' : ''}${personaLabel}</span>
+                    </div>
                 </div>
                 <div class="card-progress">
                     <div class="progress-bar">
@@ -502,8 +523,11 @@
 
             personas.forEach(persona => {
                 const option = document.createElement('option');
-                option.value = persona;
-                option.textContent = persona;
+                option.value = persona.name || persona;
+                const label = persona.icon
+                    ? `${persona.icon} ${persona.name}`
+                    : (persona.name || persona);
+                option.textContent = label;
                 select.appendChild(option);
             });
         }

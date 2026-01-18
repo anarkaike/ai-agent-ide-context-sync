@@ -37,6 +37,196 @@ function findWorkspace() {
   return null;
 }
 
+function stripFrontmatter(md) {
+  return md.replace(/^---[\s\S]*?---\n*/, '');
+}
+
+function readTextIfExists(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  return fs.readFileSync(filePath, 'utf-8');
+}
+
+function ensureDir(dirPath) {
+  if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+}
+
+function writeFileEnsuringDir(filePath, content) {
+  ensureDir(path.dirname(filePath));
+  fs.writeFileSync(filePath, content);
+}
+
+function resolveModulesDir(source = 'auto') {
+  const fromGlobalKernel = path.join(KERNEL_PATH, 'modules');
+  const fromLocalPackage = path.join(__dirname, '..', 'modules');
+  const globalExists = fs.existsSync(fromGlobalKernel);
+  const localExists = fs.existsSync(fromLocalPackage);
+
+  if (source === 'global') return fromGlobalKernel;
+  if (source === 'local') return fromLocalPackage;
+  if (globalExists) return fromGlobalKernel;
+  if (localExists) return fromLocalPackage;
+  return fromGlobalKernel;
+}
+
+function extractBetweenMarkers(md, startMarker, endMarker) {
+  const startIndex = md.indexOf(startMarker);
+  const endIndex = md.indexOf(endMarker);
+  if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) return null;
+  return md.slice(startIndex + startMarker.length, endIndex).trim();
+}
+
+function extractCoreSection(md) {
+  const candidates = [
+    ['<!-- AI-DOC:CORE_START -->', '<!-- AI-DOC:CORE_END -->'],
+    ['<!-- CORE_START -->', '<!-- CORE_END -->']
+  ];
+  for (const [start, end] of candidates) {
+    const extracted = extractBetweenMarkers(md, start, end);
+    if (extracted) return extracted;
+  }
+  return null;
+}
+
+function extractFullSection(md) {
+  const candidates = [
+    ['<!-- AI-DOC:FULL_START -->', '<!-- AI-DOC:FULL_END -->'],
+    ['<!-- FULL_START -->', '<!-- FULL_END -->']
+  ];
+  for (const [start, end] of candidates) {
+    const extracted = extractBetweenMarkers(md, start, end);
+    if (extracted) return extracted;
+  }
+  return null;
+}
+
+function safeReadJson(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+function collectPackageNames(obj) {
+  if (!obj || typeof obj !== 'object') return new Set();
+  return new Set(Object.keys(obj));
+}
+
+function detectProjectStacks(projectRoot) {
+  const detected = new Set();
+
+  const packageJson = safeReadJson(path.join(projectRoot, 'package.json'));
+  if (packageJson) {
+    detected.add('node');
+    const deps = new Set([
+      ...collectPackageNames(packageJson.dependencies),
+      ...collectPackageNames(packageJson.devDependencies),
+      ...collectPackageNames(packageJson.peerDependencies)
+    ]);
+
+    if (fs.existsSync(path.join(projectRoot, 'tsconfig.json')) || deps.has('typescript') || deps.has('ts-node')) {
+      detected.add('typescript');
+    }
+    if (deps.has('react') || deps.has('next')) detected.add('react');
+    if (deps.has('vue') || deps.has('nuxt') || deps.has('@vue/cli-service')) detected.add('vue');
+    if (deps.has('svelte') || deps.has('@sveltejs/kit')) detected.add('svelte');
+    if (deps.has('angular') || deps.has('@angular/core')) detected.add('angular');
+  }
+
+  const composerJson = safeReadJson(path.join(projectRoot, 'composer.json'));
+  if (composerJson) {
+    detected.add('php');
+    const req = new Set([
+      ...collectPackageNames(composerJson.require),
+      ...collectPackageNames(composerJson['require-dev'])
+    ]);
+    if (req.has('laravel/framework')) detected.add('laravel');
+  }
+
+  if (fs.existsSync(path.join(projectRoot, 'Gemfile'))) detected.add('ruby');
+  if (fs.existsSync(path.join(projectRoot, 'go.mod'))) detected.add('go');
+  if (fs.existsSync(path.join(projectRoot, 'Cargo.toml'))) detected.add('rust');
+  if (fs.existsSync(path.join(projectRoot, 'pom.xml')) || fs.existsSync(path.join(projectRoot, 'build.gradle')) || fs.existsSync(path.join(projectRoot, 'build.gradle.kts'))) detected.add('java');
+  if (fs.existsSync(path.join(projectRoot, 'pyproject.toml')) || fs.existsSync(path.join(projectRoot, 'requirements.txt'))) detected.add('python');
+
+  return Array.from(detected);
+}
+
+function listAvailableStacks(modulesDir) {
+  const stacksDir = path.join(modulesDir, 'integrations', 'stacks');
+  if (!fs.existsSync(stacksDir)) return { stacksDir, available: [] };
+  const available = fs.readdirSync(stacksDir)
+    .filter(name => name.endsWith('.md'))
+    .map(name => name.replace(/\.md$/, ''));
+  return { stacksDir, available };
+}
+
+function pickStacksForProject(detectedStacks, availableStacks) {
+  const available = new Set(availableStacks);
+  return detectedStacks.filter(s => available.has(s));
+}
+
+function listStackToolFiles(stacksDir, stackId) {
+  const toolsDir = path.join(stacksDir, 'tools');
+  if (!fs.existsSync(toolsDir)) return [];
+  const normalized = (stackId || '').toLowerCase();
+  return fs.readdirSync(toolsDir)
+    .filter(name => name.endsWith('.md'))
+    .filter(name => name.toLowerCase().includes(normalized))
+    .map(name => path.join(toolsDir, name));
+}
+
+function compactWhitespace(text) {
+  const normalized = text
+    .replace(/\r\n/g, '\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  return normalized + '\n';
+}
+
+function parseBuildArgs(args) {
+  const options = {
+    fixBudget: false,
+    report: false,
+    onlyAgent: null,
+    profile: 'default',
+    modules: 'auto'
+  };
+
+  for (const arg of args || []) {
+    if (arg === '--fix-budget') options.fixBudget = true;
+    else if (arg === '--report') options.report = true;
+    else if (arg.startsWith('--only=')) options.onlyAgent = arg.slice('--only='.length).trim();
+    else if (arg.startsWith('--profile=')) options.profile = arg.slice('--profile='.length).trim() || 'default';
+    else if (arg.startsWith('--modules=')) options.modules = arg.slice('--modules='.length).trim() || 'auto';
+  }
+
+  return options;
+}
+
+function createBudgetReport({ projectRoot, detectedStacks, selectedStacks, modules, agents, outputs, full, profile }) {
+  return {
+    version: 1,
+    generatedAt: new Date().toISOString(),
+    projectRoot,
+    profile,
+    detectedStacks,
+    selectedStacks,
+    modules,
+    agents,
+    outputs,
+    full
+  };
+}
+
+function writeBudgetReport(projectRoot, report) {
+  const reportPath = path.join(projectRoot, '.ai-workspace', 'cache', 'compiled', 'budget-report.json');
+  writeFileEnsuringDir(reportPath, JSON.stringify(report, null, 2) + '\n');
+  return reportPath;
+}
+
 const commands = {
   status: () => {
     logSection('🔧 AI KERNEL (Global)');
@@ -58,62 +248,445 @@ const commands = {
     console.log();
   },
 
-  build: () => {
+  build: (args = []) => {
     const wsPath = findWorkspace();
     if (!wsPath) { log('❌ Nenhum workspace encontrado', 'red'); return; }
-    
-    log('🔨 Compilando instruções para múltiplos agentes...', 'cyan');
-    const projectRoot = path.dirname(wsPath);
-    
-    // Header
-    const header = `# AI Instructions - UNIVERSAL CONTEXT\n# Gerado por AI-DOC Kernel v2.0\n# Alvo: Suporte multi-agente (Cursor, Trae, Windsurf, Claude, Gemini, Antigravity)\n# Data: ${new Date().toISOString()}\n\n`;
 
-    // 1. Core Modules
-    let body = "";
-    const modulesDir = path.join(KERNEL_PATH, 'modules');
-    const order = ['core', 'identity', 'memory', 'tasks', 'analysis'];
-    order.forEach(mod => {
-      const file = path.join(modulesDir, mod, 'instruction.md');
-      if (fs.existsSync(file)) {
-        body += `\n## [MÓDULO] ${mod.toUpperCase()}\n${fs.readFileSync(file, 'utf-8').replace(/^---[\s\S]*?---\n*/, '')}\n`;
+    const options = parseBuildArgs(args);
+    log('🔨 Compilando instruções (Core + Full) para múltiplos agentes...', 'cyan');
+    const projectRoot = path.dirname(wsPath);
+
+    const modulesDir = resolveModulesDir(options.modules);
+    const moduleOrder = [
+      'core',
+      'core/autopriority',
+      'core/i18n',
+      'identity',
+      'memory',
+      'tasks',
+      'analysis',
+      'integrations/mcp',
+      'responses',
+      'templates'
+    ];
+
+    const moduleParts = moduleOrder.map(mod => {
+      const instructionPath = path.join(modulesDir, mod, 'instruction.md');
+      const raw = readTextIfExists(instructionPath);
+      if (!raw) return null;
+
+      const clean = stripFrontmatter(raw);
+      const coreFromMarkers = extractCoreSection(clean);
+      const fullFromMarkers = extractFullSection(clean);
+
+      const coreFallback = (() => {
+        if (mod === 'core') {
+          return [
+            '- Use o repositório como source of truth.',
+            '- Nunca invente dependências; confirme pelo código.',
+            '- Prefira mudanças pequenas e verificadas (lint/test).',
+            '- Não exponha segredos e não logue dados sensíveis.'
+          ].join('\n');
+        }
+        if (mod === 'identity') {
+          return [
+            '- Personas são “interfaces”; mantenha objetivos claros e curtos.',
+            '- Evite persona super genérica; foque em papéis do projeto.',
+            '- Mudanças em persona devem refletir no comportamento e nos outputs.'
+          ].join('\n');
+        }
+        if (mod === 'memory') {
+          return [
+            '- Memória serve para fatos estáveis e preferências do projeto.',
+            '- Registre decisões de arquitetura e invariantes, não conversas longas.',
+            '- Prefira referências para arquivos do projeto quando aplicável.'
+          ].join('\n');
+        }
+        if (mod === 'tasks') {
+          return [
+            '- Tasks devem ser pequenas, com critério de aceite claro.',
+            '- Sempre valide mudanças (lint/test/build) quando disponível.',
+            '- Atualize progresso e evite “tarefas eternas”.'
+          ].join('\n');
+        }
+        if (mod === 'analysis') {
+          return [
+            '- Antes de mudar código, entenda o fluxo e impactos.',
+            '- Prefira diagnóstico objetivo e evidência no repo.',
+            '- Gere propostas com trade-offs e validação.'
+          ].join('\n');
+        }
+        if (mod === 'responses') {
+          return [
+            '- Use templates de resposta e inclua evidências (arquivos/comandos).',
+            '- Mantenha próximos passos claros e controle de progresso.'
+          ].join('\n');
+        }
+        if (mod === 'integrations/mcp') {
+          return [
+            '- Use MCP para dados ao vivo quando necessário; senão use cache.',
+            '- Nunca exponha tokens; sanitize dados antes de persistir.'
+          ].join('\n');
+        }
+        if (mod === 'core/autopriority') {
+          return [
+            '- Priorize com sinais reais; gere ranking com justificativas.',
+            '- Promova critérios apenas após aprovação.'
+          ].join('\n');
+        }
+        if (mod === 'core/i18n') {
+          return [
+            '- Sempre propague chaves do idioma fonte e valide consistência.',
+            '- Preserve placeholders e evite inconsistências entre locais.'
+          ].join('\n');
+        }
+        return '';
+      })();
+
+      const fullBody = fullFromMarkers ? fullFromMarkers : clean.trim();
+      const coreBody = coreFromMarkers ? coreFromMarkers : coreFallback;
+
+      return {
+        id: mod,
+        instructionPath,
+        core: compactWhitespace(`## ${mod.toUpperCase()}\n${coreBody}`),
+        full: compactWhitespace(`## ${mod.toUpperCase()}\n${fullBody}`)
+      };
+    }).filter(Boolean);
+
+    const detectedStacks = detectProjectStacks(projectRoot);
+    const { stacksDir, available: availableStacks } = listAvailableStacks(modulesDir);
+    const selectedStacks = pickStacksForProject(detectedStacks, availableStacks);
+
+    const stackParts = selectedStacks.map(stackId => {
+      const stackPath = path.join(stacksDir, `${stackId}.md`);
+      const raw = readTextIfExists(stackPath);
+      if (!raw) return null;
+      const clean = stripFrontmatter(raw);
+      const coreFromMarkers = extractCoreSection(clean);
+      const fullFromMarkers = extractFullSection(clean);
+
+      const coreFallback = (() => {
+        if (stackId === 'laravel') {
+          return [
+            '- Siga padrões do Laravel (routes, controllers, requests, policies).',
+            '- Use migrations e Eloquent com consistência.',
+            '- Prefira validação via FormRequest e regras explícitas.',
+            '- Log e exceptions: mensagens claras, sem dados sensíveis.'
+          ].join('\n');
+        }
+        return `- Stack ${stackId}: use o Full como referência.`;
+      })();
+
+      const fullBody = fullFromMarkers ? fullFromMarkers : clean.trim();
+      const coreBody = coreFromMarkers ? coreFromMarkers : coreFallback;
+
+      const toolFiles = listStackToolFiles(stacksDir, stackId);
+      const toolsFull = toolFiles.map(toolPath => {
+        const toolRaw = readTextIfExists(toolPath);
+        if (!toolRaw) return '';
+        const toolClean = stripFrontmatter(toolRaw);
+        const toolFull = extractFullSection(toolClean) || toolClean.trim();
+        return compactWhitespace(`### TOOL ${path.basename(toolPath)}\n${toolFull}`);
+      }).filter(Boolean).join('\n');
+
+      return {
+        id: stackId,
+        stackPath,
+        core: compactWhitespace(`## STACK ${stackId.toUpperCase()}\n${coreBody}`),
+        full: compactWhitespace(`## STACK ${stackId.toUpperCase()}\n${fullBody}` + (toolsFull ? `\n\n## STACK ${stackId.toUpperCase()} TOOLS\n${toolsFull}` : ''))
+      };
+    }).filter(Boolean);
+
+    const compiledDir = path.join(projectRoot, '.ai-workspace', 'cache', 'compiled');
+    ensureDir(compiledDir);
+
+    const fullHeader = compactWhitespace([
+      '# AI Instructions (FULL)',
+      `Gerado: ${new Date().toISOString()}`,
+      `Projeto: ${path.basename(projectRoot)}`,
+      ''
+    ].join('\n'));
+
+    const coreHeader = compactWhitespace([
+      '# AI Rules (CORE)',
+      `Projeto: ${path.basename(projectRoot)}`,
+      `Stacks: ${selectedStacks.length ? selectedStacks.join(', ') : 'none'}`,
+      `Full: .ai-workspace/cache/compiled/ai-instructions.full.md`,
+      ''
+    ].join('\n'));
+
+    const fullBody = compactWhitespace(moduleParts.map(p => p.full).join('\n') + '\n' + stackParts.map(p => p.full).join('\n'));
+    const coreBody = compactWhitespace(moduleParts.map(p => p.core).join('\n') + '\n' + stackParts.map(p => p.core).join('\n'));
+    const fullContent = compactWhitespace(fullHeader + fullBody);
+    const coreContent = compactWhitespace(coreHeader + coreBody);
+
+    const fullOut = path.join(compiledDir, 'ai-instructions.full.md');
+    const coreOut = path.join(compiledDir, 'ai-instructions.core.md');
+    writeFileEnsuringDir(fullOut, fullContent);
+    writeFileEnsuringDir(coreOut, coreContent);
+
+    const profileName = (options.profile || 'default').toLowerCase();
+    const profile = profileName === 'strict'
+      ? {
+        maxFullChars: 250000,
+        agentBudgets: {
+          Cursor: 9000,
+          Windsurf: 9000,
+          Copilot: 6000,
+          Trae: 7000,
+          Claude: 12000,
+          Gemini: 12000,
+          'Generic/Antigravity': 12000
+        }
       }
+      : {
+        maxFullChars: 250000,
+        agentBudgets: {
+          Cursor: 12000,
+          Windsurf: 12000,
+          Copilot: 8000,
+          Trae: 10000,
+          Claude: 14000,
+          Gemini: 14000,
+          'Generic/Antigravity': 14000
+        }
+      };
+
+    const agentTargets = [
+      { name: 'Cursor', file: '.cursorrules', maxCoreChars: profile.agentBudgets.Cursor },
+      { name: 'Windsurf', file: '.windsurfrules', maxCoreChars: profile.agentBudgets.Windsurf },
+      { name: 'Copilot', file: '.github/copilot-instructions.md', maxCoreChars: profile.agentBudgets.Copilot },
+      { name: 'Trae', file: '.trae/rules/project_rules.md', maxCoreChars: profile.agentBudgets.Trae },
+      { name: 'Claude', file: '.claude/instructions.md', maxCoreChars: profile.agentBudgets.Claude },
+      { name: 'Gemini', file: '.google/instructions.md', maxCoreChars: profile.agentBudgets.Gemini },
+      { name: 'Generic/Antigravity', file: '.ai-workspace/cache/compiled/ai-instructions.md', maxCoreChars: profile.agentBudgets['Generic/Antigravity'] }
+    ];
+
+    const onlyAgent = options.onlyAgent ? options.onlyAgent.toLowerCase() : null;
+    const selectedAgents = agentTargets.filter(a => {
+      if (!onlyAgent) return true;
+      return a.name.toLowerCase() === onlyAgent || a.file.toLowerCase() === onlyAgent;
     });
 
-    // 2. Stacks & Heuristics
-    const stacksDir = path.join(modulesDir, 'integrations', 'stacks');
-    if (fs.existsSync(stacksDir)) {
-      body += `\n## [TECNOLOGIAS]\n`;
-      fs.readdirSync(stacksDir).filter(f => f.endsWith('.md')).forEach(file => {
-        body += `### STACK: ${file.replace('.md', '').toUpperCase()}\n${fs.readFileSync(path.join(stacksDir, file), 'utf-8').replace(/^---[\s\S]*?---\n*/, '')}\n`;
+    const outputs = [];
+    let budgetExceeded = false;
+    const fullOk = fullContent.length <= profile.maxFullChars;
+
+    for (const target of selectedAgents) {
+      const agentHeader = compactWhitespace([
+        '# AI Rules (CORE)',
+        `Agent: ${target.name}`,
+        `Projeto: ${path.basename(projectRoot)}`,
+        `Full: .ai-workspace/cache/compiled/ai-instructions.full.md`,
+        ''
+      ].join('\n'));
+
+      const agentOverride = (() => {
+        if (target.name === 'Trae') {
+          return compactWhitespace([
+            '## TRAE',
+            '- Prefira buscar contexto no repo antes de editar.',
+            '- Use SearchCodebase para localizar código; evite buscas manuais longas.',
+            '- Edite arquivos com patch; evite comandos de shell para escrever arquivos.',
+            '- Valide com lint/test quando existir script no projeto.',
+            '- Nunca invente dependências; confirme no código e manifests.'
+          ].join('\n'));
+        }
+        if (target.name === 'Copilot') {
+          return compactWhitespace([
+            '## COPILOT',
+            '- Siga estritamente padrões existentes do repo.',
+            '- Se faltar contexto, peça ou abra o arquivo relevante.',
+            '- Evite suposições sobre libs e APIs.'
+          ].join('\n'));
+        }
+        return '';
+      })();
+
+      let agentCore = compactWhitespace(agentHeader + agentOverride + coreBody);
+      if (agentCore.length > target.maxCoreChars && options.fixBudget) {
+        const withoutStacks = compactWhitespace(agentHeader + agentOverride + moduleParts.map(p => p.core).join('\n'));
+        agentCore = withoutStacks.length <= target.maxCoreChars ? withoutStacks : compactWhitespace(withoutStacks);
+      }
+
+      const ok = agentCore.length <= target.maxCoreChars;
+      if (!ok) budgetExceeded = true;
+
+      const fullPath = path.join(projectRoot, target.file);
+      writeFileEnsuringDir(fullPath, agentCore);
+      outputs.push({
+        agent: target.name,
+        file: target.file,
+        coreChars: agentCore.length,
+        maxCoreChars: target.maxCoreChars,
+        ok
       });
+      log(`   ✅ Sincronizado: ${target.name} (${target.file})`, 'green');
     }
 
-    const fullContent = header + body;
-    
-    // MAPA DE AGENTES E SEUS ARQUIVOS DE PREFERÊNCIA
-    const agentTargets = [
-      { name: 'Cursor', file: '.cursorrules' },
-      { name: 'Windsurf', file: '.windsurfrules' },
-      { name: 'Copilot', file: '.github/copilot-instructions.md' },
-      { name: 'Trae', file: '.trae/rules/project_rules.md' },
-      { name: 'Claude', file: '.claude/instructions.md' },
-      { name: 'Gemini', file: '.google/instructions.md' },
-      { name: 'Generic/Antigravity', file: '.ai-workspace/cache/compiled/ai-instructions.md' }
-    ];
-    
-    agentTargets.forEach(target => {
-      const fullPath = path.join(projectRoot, target.file);
-      const dir = path.dirname(fullPath);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(fullPath, fullContent);
-      log(`   ✅ Sincronizado: ${target.name} (${target.file})`, 'green');
+    const modulesMetrics = moduleParts.map(p => ({
+      id: p.id,
+      instructionPath: p.instructionPath,
+      coreChars: p.core.length,
+      fullChars: p.full.length
+    }));
+
+    const stacksMetrics = stackParts.map(p => ({
+      id: p.id,
+      stackPath: p.stackPath,
+      coreChars: p.core.length,
+      fullChars: p.full.length
+    }));
+
+    const report = createBudgetReport({
+      projectRoot,
+      profile: profileName,
+      detectedStacks,
+      selectedStacks,
+      modules: modulesMetrics,
+      agents: selectedAgents.map(a => ({ name: a.name, file: a.file, maxCoreChars: a.maxCoreChars })),
+      outputs,
+      full: { file: '.ai-workspace/cache/compiled/ai-instructions.full.md', fullChars: fullContent.length, maxFullChars: profile.maxFullChars, ok: fullOk }
     });
 
-    log('\n🚀 Sucesso! Todos os agentes agora compartilham o mesmo cérebro.', 'bright');
+    if (budgetExceeded || !fullOk || options.report) {
+      const reportPath = writeBudgetReport(projectRoot, report);
+      if (budgetExceeded) {
+        log(`\n❌ Budget excedido. Relatório: ${reportPath}`, 'red');
+        log('   Dica: rode "ai-doc build --fix-budget --report" para tentar compactar.', 'yellow');
+        return;
+      }
+      if (!fullOk) {
+        log(`\n❌ Full excedeu o budget (${fullContent.length}/${profile.maxFullChars}). Relatório: ${reportPath}`, 'red');
+        return;
+      }
+      log(`\n📦 Relatório gerado: ${reportPath}`, 'dim');
+    }
+
+    log('\n🚀 Sucesso! Core enxuto sincronizado. Full disponível no cache.', 'bright');
   },
 
-  init: () => { /* Mantido anterior */ },
-  identity: (args) => { /* Mantido anterior */ },
+  init: () => {
+    const projectRoot = process.cwd();
+    const wsPath = path.join(projectRoot, WORKSPACE_NAME);
+
+    if (fs.existsSync(wsPath)) {
+      log('⚠️  Workspace já existe neste projeto.', 'yellow');
+    } else {
+      fs.mkdirSync(wsPath, { recursive: true });
+      fs.mkdirSync(path.join(wsPath, 'personas'), { recursive: true });
+      fs.mkdirSync(path.join(wsPath, 'tasks', 'active'), { recursive: true });
+      fs.mkdirSync(path.join(wsPath, 'tasks', 'archive'), { recursive: true });
+      fs.mkdirSync(path.join(wsPath, 'analysis'), { recursive: true });
+
+      const configPath = path.join(wsPath, 'config.yaml');
+      if (!fs.existsSync(configPath)) {
+        const config = [
+          `name: ${path.basename(projectRoot)}`,
+          `created_at: ${new Date().toISOString()}`,
+          `kernel_version: 2.0.0`
+        ].join('\n');
+        fs.writeFileSync(configPath, config + '\n');
+      }
+
+      const personaSettingsPath = path.join(wsPath, '.persona-settings.json');
+      if (!fs.existsSync(personaSettingsPath)) {
+        fs.writeFileSync(personaSettingsPath, JSON.stringify({ personas: {} }, null, 2));
+      }
+
+      log('✅ Workspace inicializado!', 'green');
+    }
+
+    log('\n🔨 Construindo contexto inicial para todos os agentes...', 'cyan');
+    commands.build();
+    try {
+      execSync('code --install-extension junio-de-almeida-vitorino.ai-agent-ide-context-sync-vscode', { stdio: 'ignore' });
+      log('\n🧩 Extensão VS Code instalada/atualizada: AI Agent IDE Context Sync', 'green');
+    } catch (e) {
+      log('\nℹ️ Para usar a interface visual no VS Code, instale a extensão no VS Code:', 'cyan');
+      log('   code --install-extension junio-de-almeida-vitorino.ai-agent-ide-context-sync-vscode', 'dim');
+      log('   Open VSX: https://open-vsx.org/extension/junio-de-almeida-vitorino/ai-agent-ide-context-sync-vscode', 'dim');
+    }
+  },
+  identity: (args) => {
+    const sub = args[0];
+    if (!sub || sub === 'help') {
+      logSection('🎭 identity');
+      log('Comandos:', 'cyan');
+      log('  identity create <NOME>      Cria uma nova persona AI-<NOME>', 'green');
+      log('  identity list               Lista personas existentes', 'green');
+      return;
+    }
+
+    const projectRoot = process.cwd();
+    const wsPath = path.join(projectRoot, WORKSPACE_NAME);
+    if (!fs.existsSync(wsPath)) {
+      log('❌ Nenhum workspace encontrado. Rode "ai-doc init" primeiro.', 'red');
+      return;
+    }
+
+    const personasDir = path.join(wsPath, 'personas');
+    if (!fs.existsSync(personasDir)) {
+      fs.mkdirSync(personasDir, { recursive: true });
+    }
+
+    if (sub === 'create') {
+      const rawName = args[1];
+      if (!rawName) {
+        log('⚠️  Informe o nome da persona. Ex: ai-doc identity create AI-SAKURA', 'yellow');
+        return;
+      }
+
+      const personaName = rawName.startsWith('AI-') ? rawName : `AI-${rawName.toUpperCase()}`;
+      const personaFile = path.join(personasDir, `${personaName}.md`);
+
+      if (fs.existsSync(personaFile)) {
+        log(`⚠️  Persona ${personaName} já existe.`, 'yellow');
+        return;
+      }
+
+      const content = [
+        `# ${personaName}`,
+        '',
+        'description: Especialista em desenvolvimento do projeto',
+        '',
+        '## Responsabilidades',
+        '- Entender a arquitetura do projeto',
+        '- Sugerir melhorias técnicas',
+        '- Ajudar na tomada de decisão',
+        '',
+        '## Contexto',
+        '- Tecnologias principais',
+        '- Regras de negócio importantes',
+        '- Padrões e anti-padrões a evitar',
+        ''
+      ].join('\n');
+
+      fs.writeFileSync(personaFile, content);
+      log(`✅ Persona criada: ${personaName}`, 'green');
+      return;
+    }
+
+    if (sub === 'list') {
+      if (!fs.existsSync(personasDir)) {
+        log('Nenhuma persona encontrada.', 'yellow');
+        return;
+      }
+      const files = fs.readdirSync(personasDir).filter(f => f.endsWith('.md') && f.startsWith('AI-'));
+      if (files.length === 0) {
+        log('Nenhuma persona encontrada.', 'yellow');
+        return;
+      }
+      logSection('🎭 Personas registradas');
+      files.forEach(f => {
+        log(` • ${f.replace('.md', '')}`, 'cyan');
+      });
+      return;
+    }
+
+    log('Comando identity não reconhecido. Use "ai-doc identity help".', 'red');
+  },
   heuristics: () => {
     if (!HeuristicsEngine) {
       log('Heuristics engine not available', 'yellow');
@@ -144,7 +717,56 @@ const commands = {
       console.log();
     });
   },
-  soul: (args) => { /* Mantido anterior */ },
+  soul: (args) => {
+    const sub = args[0];
+    if (!sub || sub === 'help') {
+      logSection('🧠 soul');
+      log('Comandos:', 'cyan');
+      log('  soul export [arquivo]   Exporta o conhecimento para um .tar.gz', 'green');
+      log('  soul import <arquivo>   Importa um backup gerado anteriormente', 'green');
+      return;
+    }
+
+    if (sub === 'export') {
+      if (!fs.existsSync(SOUL_PATH)) {
+        fs.mkdirSync(SOUL_PATH, { recursive: true });
+      }
+      const outName = args[1] || `soul-backup-${new Date().toISOString().replace(/[-:T]/g, '').slice(0, 8)}.tar.gz`;
+      const outPath = path.join(process.cwd(), outName);
+      try {
+        execSync(`tar -czf "${outPath}" -C "${SOUL_PATH}" .`, { stdio: 'ignore' });
+        log(`✅ Soul exportada: ${outPath}`, 'green');
+      } catch (e) {
+        log('❌ Falha ao exportar a Soul. Verifique se o comando "tar" está disponível.', 'red');
+      }
+      return;
+    }
+
+    if (sub === 'import') {
+      const file = args[1];
+      if (!file) {
+        log('⚠️  Informe o arquivo de backup. Ex: ai-doc soul import soul-backup-20260116.tar.gz', 'yellow');
+        return;
+      }
+      const resolved = path.isAbsolute(file) ? file : path.join(process.cwd(), file);
+      if (!fs.existsSync(resolved)) {
+        log(`❌ Arquivo não encontrado: ${resolved}`, 'red');
+        return;
+      }
+      if (!fs.existsSync(SOUL_PATH)) {
+        fs.mkdirSync(SOUL_PATH, { recursive: true });
+      }
+      try {
+        execSync(`tar -xzf "${resolved}" -C "${SOUL_PATH}"`, { stdio: 'ignore' });
+        log(`✅ Soul importada a partir de: ${resolved}`, 'green');
+      } catch (e) {
+        log('❌ Falha ao importar a Soul. Verifique se o arquivo é um .tar.gz válido.', 'red');
+      }
+      return;
+    }
+
+    log('Comando soul não reconhecido. Use "ai-doc soul help".', 'red');
+  },
   help: () => {
     logSection('AI-DOC CLI v2.0.0');
     log('Comandos:', 'cyan');

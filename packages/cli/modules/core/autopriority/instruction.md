@@ -1,3 +1,12 @@
+<!-- AI-DOC:CORE_START -->
+- Priorize com sinais reais (tasks, queue, lint, preferências), não “achismo”.
+- Gere ranking com justificativas; registre histórico em signals-log.
+- Aprendizado cria drafts em pending; promoção para critérios ativos só após aprovação.
+- Se faltar informação, proponha defaults e avance com decisão explícita.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # ⚖️ AutoPriority Module
 > Inteligência de priorização adaptativa para o kernel IA.
 
@@ -104,3 +113,5 @@ Automatizar a análise de prioridades do agente usando sinais reais (queue, task
 | Data | Autor | Ação |
 | --- | --- | --- |
 | 2026-01-06 | AI-JAY | Criação do módulo AutoPriority com motor, aprendizado e aplicação.
+
+<!-- AI-DOC:FULL_END -->

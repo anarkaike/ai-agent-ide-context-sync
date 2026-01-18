@@ -1,3 +1,12 @@
+<!-- AI-DOC:CORE_START -->
+- Nunca deixe chave literal na UI: adicione em pt-BR e propague para os demais.
+- Valide consistência de chaves entre idiomas antes de entregar.
+- Preserve placeholders; não traduza termos técnicos onde não deve.
+- Prefira automação via scripts; evite edição manual em massa.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # 🌍 i18n Translation System Module
 
 > **Módulo de Internacionalização e Tradução Automática**
@@ -435,3 +444,5 @@ Use o fluxo automatizado completo (Cenário 1)
 
 **Mantenedor:** Sistema AI
 **Última atualização:** 2026-01-10
+
+<!-- AI-DOC:FULL_END -->

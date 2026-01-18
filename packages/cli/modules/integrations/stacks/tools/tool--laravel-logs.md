@@ -1,3 +1,11 @@
+<!-- AI-DOC:CORE_START -->
+- Use log processor via MCP para incident response e bugs não replicáveis.
+- Registre resumo + IDs; não cole logs crus sensíveis em tasks.
+- Se houver suspeita de DB/migrations, combine com schema.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # 📓 Tool: Laravel Logs via AI Processor
 Como usar `laravel-boost_ai-log-processor` para inspecionar logs (frontend/backend/database) e sintetizar achados.
 
@@ -35,3 +43,5 @@ Como usar `laravel-boost_ai-log-processor` para inspecionar logs (frontend/backe
 - `laravel-boost_ai-log-processor`
 - `.ai-doc/data/live-state/`
 - `AppServiceProvider@boot` (rotas `_boost/...`)
+
+<!-- AI-DOC:FULL_END -->

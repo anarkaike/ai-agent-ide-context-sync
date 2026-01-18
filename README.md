@@ -399,7 +399,9 @@ cd your-project
 ai-doc init
 ```
 
-This creates a `.ai-workspace/` directory with:
+This initializes the AI workspace **and already builds/syncs the initial context** for all supported IDEs.
+
+It creates a `.ai-workspace/` directory with:
 - `config.yaml` (project metadata)
 - `personas/` (AI agent identities)
 - `tasks/` (active work tracking)
@@ -409,12 +411,15 @@ This creates a `.ai-workspace/` directory with:
 
 ## 🛠️ Usage
 
-### Build Context for All Agents
+### Manually Rebuild Context for All Agents
 ```bash
 ai-doc build
 ```
 
-This compiles your kernel modules, stack integrations, and project context into a single, comprehensive instruction set and syncs it to all supported IDEs.
+`ai-doc init` already builds the initial context.  
+Use `ai-doc build` later whenever you want to **rebuild and resync** the context after changing rules, architecture, or stack integrations.
+
+This command compiles your kernel modules, stack integrations, and project context into a single, comprehensive instruction set and syncs it to all supported IDEs.
 
 ### Check Status
 ```bash

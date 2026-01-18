@@ -15,6 +15,14 @@
   "messages": {
     "workspaceInitialized": "✅ Työtila alustettu!",
     "taskCreated": "✅ Tehtävä luotu!",
-    "pomodoroCompleted": "⏰ Pomodoro valmis! Taukoaika! 🎉"
+    "pomodoroCompleted": "⏰ Pomodoro valmis! Taukoaika! 🎉",
+    "viewTask": "Näytä tehtävä",
+    "openKanban": "Avaa Kanban",
+    "openDashboard": "Avaa Dashboard",
+    "dismiss": "Sulje",
+    "motivationalPersonaCreated": "🎉 Uusi persona luotu: {0}. Yksi liittolainen lisää työnkulkuusi.",
+    "motivationalPersonaUpdated": "✨ Persona {0} päivitetty. AI-ytimesi on nyt entistä terävämpi.",
+    "motivationalTaskCreated": "🚀 Uusi tehtävä \"{0}\" luotu personalle {1}. Viedään projektin seuraava luku eteenpäin.",
+    "motivationalChecklistUpdated": "✅ Edistyminen \"{0}\": {1}/{2} kohtaa valmiina. Pienet voitot rakentavat isot julkaisut."
   }
 }

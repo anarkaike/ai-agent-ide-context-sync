@@ -1,13 +1,18 @@
 {
     "name": "ai-agent-ide-context-sync-vscode",
     "displayName": "AI Agent IDE Context Sync",
-    "description": "Complete AI Kernel management: personas, tasks, analytics, and context sync",
-    "version": "2.0.12",
+    "description": "AI Kernel para desenvolvedores: personas, tasks, Pomodoro, Kanban, analytics e contexto unificado para múltiplos IDEs e agentes. Sistema Operacional para sua IA de desenvolvimento ficar sempre sincronizada com o git do projeto.",
+    "icon": "resources/ai.png",
+    "version": "2.0.13",
     "engines": {
         "vscode": "^1.80.0"
     },
     "categories": [
-        "Other"
+        "Other",
+        "Chat",
+        "AI",
+        "Data Science",
+        "Machine Learning"
     ],
     "publisher": "junio-de-almeida-vitorino",
     "license": "MIT",
@@ -191,6 +196,10 @@
                 {
                     "id": "ai-agent-sync-status",
                     "name": "⚙️ Kernel Status"
+                },
+                {
+                    "id": "ai-agent-sync-timer",
+                    "name": "⏱️ Pomodoro & Focus"
                 }
             ]
         },

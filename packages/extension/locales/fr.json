@@ -15,6 +15,14 @@
   "messages": {
     "workspaceInitialized": "✅ Espace de travail initialisé!",
     "taskCreated": "✅ Tâche créée!",
-    "pomodoroCompleted": "⏰ Pomodoro terminé! Temps pour une pause! 🎉"
+    "pomodoroCompleted": "⏰ Pomodoro terminé! Temps pour une pause! 🎉",
+    "viewTask": "Voir la tâche",
+    "openKanban": "Ouvrir le Kanban",
+    "openDashboard": "Ouvrir le Dashboard",
+    "dismiss": "Fermer",
+    "motivationalPersonaCreated": "🎉 Nouvelle persona créée : {0}. Un allié de plus dans votre flux.",
+    "motivationalPersonaUpdated": "✨ Persona {0} mise à jour. Votre kernel d’IA est encore plus affûté.",
+    "motivationalTaskCreated": "🚀 Nouvelle tâche \"{0}\" créée pour {1}. Poussons ce chapitre du projet.",
+    "motivationalChecklistUpdated": "✅ Progrès sur \"{0}\" : {1}/{2} éléments complétés. Les petites victoires construisent les grandes livraisons."
   }
 }

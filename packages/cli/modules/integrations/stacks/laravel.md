@@ -1,3 +1,12 @@
+<!-- AI-DOC:CORE_START -->
+- Em projetos Laravel, prefira MCP (Laravel Boost) para introspecção antes de inferir.
+- Atualize caches de live-state quando fizer sentido; cite a fonte do dado.
+- Nunca registre segredos/envs em reports; sanitize antes.
+- Converta insights em tasks/análises com links bidirecionais.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # 🌀 Laravel Integration Module
 Centraliza instruções sobre introspecção do ecossistema Laravel usando o MCP Laravel Boost.
 
@@ -38,3 +47,5 @@ Oferecer um ponto único para diagnosticar o backend Laravel via ferramentas MCP
 | Data | Autor | Descrição |
 | :--- | :--- | :--- |
 | 2026-01-04 | AI Agent | Criação do módulo e migração do playbook Laravel Boost. |
+
+<!-- AI-DOC:FULL_END -->

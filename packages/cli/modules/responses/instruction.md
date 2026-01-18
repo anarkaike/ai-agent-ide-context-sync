@@ -1,3 +1,12 @@
+<!-- AI-DOC:CORE_START -->
+- Sempre escolha um template de resposta e siga header/body/footer.
+- Traga evidências: arquivos, comandos e resultados; sem “feito” vazio.
+- Mantenha controle de progresso e próximos passos acionáveis.
+- Se usuário disser “continue/ok/siga”, decida o próximo passo e avance.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # 💬 Responses Module
 Módulo responsável por gerenciar a estrutura e o formato das respostas do agente.
 
@@ -124,3 +133,5 @@ Widgets podem ser injetados após o Footer ou antes do bloco final quando necess
 
 ---
 *Módulo de Respostas v1.0*
+
+<!-- AI-DOC:FULL_END -->

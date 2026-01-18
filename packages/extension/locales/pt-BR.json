@@ -58,7 +58,15 @@
         "confirmDelete": "Tem certeza que deseja deletar {0}?",
         "yes": "Sim",
         "no": "Não",
-        "openFile": "Abrir Arquivo"
+        "openFile": "Abrir Arquivo",
+        "viewTask": "Ver Task",
+        "openKanban": "Abrir Kanban",
+        "openDashboard": "Abrir Dashboard",
+        "dismiss": "Fechar",
+        "motivationalPersonaCreated": "🎉 Nova persona criada: {0}! Mais um aliado para o seu fluxo.",
+        "motivationalPersonaUpdated": "✨ Persona {0} atualizada. Seu kernel de IA ficou ainda mais afiado.",
+        "motivationalTaskCreated": "🚀 Nova task \"{0}\" criada para {1}. Bora avançar mais um capítulo desse projeto?",
+        "motivationalChecklistUpdated": "✅ Progresso em \"{0}\": {1}/{2} itens concluídos. Pequenas vitórias constroem entregas gigantes."
     },
     "timer": {
         "pauseTimer": "⏸️ Pausar Timer",

@@ -1,3 +1,11 @@
+<!-- AI-DOC:CORE_START -->
+- Use MCP Laravel Boost para introspecção antes de inferir pelo código.
+- Cite a ferramenta usada e sanitize dados sensíveis antes de registrar.
+- Atualize caches live-state quando fizer sentido para reduzir re-trabalho.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # 🚀 Tool: Laravel Boost
 Instruções para uso da ferramenta de introspecção do Laravel.
 
@@ -18,3 +26,5 @@ Ao investigar um bug no backend:
 3.  Use `laravel-boost_get-config` para verificar conexões.
 
 > **Nota:** Prefira usar estas ferramentas antes de tentar `grep` ou ler arquivos de config manualmente, pois elas refletem o estado *em memória* do Laravel.
+
+<!-- AI-DOC:FULL_END -->

@@ -1,3 +1,11 @@
+<!-- AI-DOC:CORE_START -->
+- Use schema via MCP para evitar suposições sobre tabelas/colunas.
+- Registre apenas diffs relevantes; evite dump completo do schema em reports.
+- Combine com logs quando investigar migrations quebradas.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # 🧱 Tool: Laravel Schema Snapshot
 Documenta tabelas e colunas usando o MCP `laravel-boost_database-schema`.
 
@@ -31,3 +39,5 @@ Documenta tabelas e colunas usando o MCP `laravel-boost_database-schema`.
 - `laravel-boost_database-schema`
 - `.ai-doc/data/live-state/`
 - `tool--tool-laravel-boost.md`
+
+<!-- AI-DOC:FULL_END -->

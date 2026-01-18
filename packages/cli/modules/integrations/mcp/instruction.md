@@ -1,3 +1,12 @@
+<!-- AI-DOC:CORE_START -->
+- Prefira dados “live” via MCP quando o usuário pedir atual/ao vivo ou cache estiver velho.
+- Use cache em live-state como fallback; registre bloqueios e não invente dados.
+- Segurança: nunca exponha tokens/segredos; sanitize antes de persistir.
+- Ao usar MCP, cite a ferramenta/comando e atualize caches quando fizer sentido.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # 🔌 MCP Module (Model Context Protocol)
 Integração com servidores externos (Laravel Boost, ClickUp, etc.) e IDEs via MCP.
 
@@ -86,3 +95,5 @@ Integração com servidores externos (Laravel Boost, ClickUp, etc.) e IDEs via M
 - `tool--sys-clickup-merge.md`
 - `___laravel/tools/` (playbooks MCP do Laravel Boost)
 - Próximo módulo sugerido: `___clickup`
+
+<!-- AI-DOC:FULL_END -->

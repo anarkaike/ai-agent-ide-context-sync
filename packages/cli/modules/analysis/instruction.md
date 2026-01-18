@@ -1,3 +1,13 @@
+<!-- AI-DOC:CORE_START -->
+- Produza análises baseadas em fatos verificáveis; evite suposições.
+- Use fingerprinting/scanners para detectar stack e padrões antes de concluir.
+- Registre saída em formato estruturado (active-state + findings quando necessário).
+- Mantenha referência cruzada docs ↔ código como invariável de qualidade.
+- Se achar bug/lacuna crítica, converta em task com links bidirecionais.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # 🔬 Analysis Micro-Kernel
 
 Este sub-kernel define como realizar análises técnicas, diagnósticos de projeto e auditorias de código.
@@ -78,3 +88,5 @@ Ele serve como "Cache de Contexto" para não precisarmos reler todo o código a 
 - `tools/`: playbooks de ações (QA Lint, Health Check, etc.).
 - `templates/`: modelos de scanners e do `tech-profile`.
 - `scripts/`: reservado para utilitários internos (registre README se adicionar scripts).
+
+<!-- AI-DOC:FULL_END -->

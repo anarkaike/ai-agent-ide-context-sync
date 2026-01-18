@@ -2,6 +2,16 @@
 type: action
 ---
 
+<!-- AI-DOC:CORE_START -->
+- Colete título, objetivo e (se aplicável) persona; avance com defaults quando usuário disser “siga/ok”.
+- Evite duplicidade: busque tasks/análises existentes antes de criar algo novo.
+- Sempre gere checklist atômico e critérios de pronto (DoD).
+- Mapeie contexto do projeto (docs, análises, tasks e arquivos foco) dentro da task.
+- Ao concluir e sincronizar, remova o arquivo local e registre a evidência no sistema externo.
+<!-- AI-DOC:CORE_END -->
+
+<!-- AI-DOC:FULL_START -->
+
 # 📝 Protocolo: Criar Nova Task
 
 > **ID**: `NOVA-TASK`
@@ -128,3 +138,5 @@ Após criar o arquivo:
 | :--- | :--- | :--- |
 | 2025-12-30 | AI System | Padronização automática de estrutura e metadados. |
 | 2026-01-07 | AI-JAY | Regra adicionada: remover arquivos locais após sincronizar tasks concluídas com o ClickUp. |
+
+<!-- AI-DOC:FULL_END -->

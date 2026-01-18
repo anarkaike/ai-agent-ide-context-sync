@@ -111,9 +111,28 @@ class KanbanManager {
         const personasPath = path.join(this.aiWorkspacePath, 'personas');
         if (!fs.existsSync(personasPath)) return [];
 
-        return fs.readdirSync(personasPath)
+        const personas = fs.readdirSync(personasPath)
             .filter(f => f.endsWith('.md') && f.startsWith('AI-'))
             .map(f => f.replace('.md', ''));
+
+        const settingsPath = path.join(this.aiWorkspacePath, '.persona-settings.json');
+        let settings = {};
+        if (fs.existsSync(settingsPath)) {
+            try {
+                settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+            } catch (e) {
+                settings = {};
+            }
+        }
+
+        return personas.map(name => {
+            const cfg = settings[name] || {};
+            return {
+                name,
+                color: cfg.color || null,
+                icon: cfg.icon || null
+            };
+        });
     }
 
     async handleMessage(message) {
