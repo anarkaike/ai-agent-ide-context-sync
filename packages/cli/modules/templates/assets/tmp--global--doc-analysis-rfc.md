@@ -34,6 +34,11 @@ status: in_progress
 | H1 | O problema é no banco de dados (lock) | Alta | ⏳ Em validação |
 | H2 | O problema é na rede (timeout) | Baixa | ❌ Descartada |
 
+## 🧭 Escopo da Investigação
+
+- **Inclui**: [Áreas cobertas]
+- **Não inclui**: [Fora do escopo]
+
 ## 🔍 Processo de Investigação
 
 ### Mapa de Investigação
@@ -74,6 +79,22 @@ SELECT * FROM huge_table WHERE non_indexed_col = 'X';
 **Recomendação Técnica**:
 1.  Criar índice na coluna X.
 2.  Refatorar query para usar paginação.
+
+## 🧩 Alternativas Consideradas
+
+| Alternativa | Prós | Contras |
+| :--- | :--- | :--- |
+| [Alternativa A] | [Prós] | [Contras] |
+
+## 📈 Métricas de Validação
+
+- **Antes**: [Métrica base]
+- **Depois**: [Meta]
+
+## 🧪 Plano de Teste e Observabilidade
+
+- **Testes**: [Tipos]
+- **Monitoramento**: [Alertas]
 
 ## 📅 Plano de Ação (Próximos Passos)
 

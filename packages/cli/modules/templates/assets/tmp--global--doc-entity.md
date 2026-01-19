@@ -57,6 +57,22 @@ erDiagram
 > [!IMPORTANT]
 > **Atenção**: O campo `business_id` é preenchido automaticamente pelo `TenantObserver` e nunca deve ser enviado pelo frontend.
 
+## 🔁 Ciclo de Vida e Estados
+
+| Estado | Descrição | Transições |
+| :--- | :--- | :--- |
+| [Rascunho] | [Descrição] | [Próximos estados] |
+
+## ✅ Regras e Invariantes
+
+- [Regra crítica 1]
+- [Regra crítica 2]
+
+## 📈 Índices e Performance
+
+- **Índices**: [Lista]
+- **Consultas críticas**: [Queries]
+
 ## 🔒 Regras de Negócio & Policies
 
 > [!NOTE]

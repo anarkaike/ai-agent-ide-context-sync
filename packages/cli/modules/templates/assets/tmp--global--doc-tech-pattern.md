@@ -49,6 +49,22 @@ graph TD
 1.  **[Princípio 1]**: [Descrição]
 2.  **[Princípio 2]**: [Descrição]
 
+## ✅ Quando Usar
+
+- [Cenário ideal]
+- [Pré-condição]
+
+## ❌ Quando Evitar
+
+- [Cenário que não se beneficia]
+- [Sinal de overengineering]
+
+## ⚖️ Trade-offs
+
+| Benefício | Custo |
+| :--- | :--- |
+| [Benefício] | [Custo] |
+
 ## 🛠️ Implementação
 
 ### Estrutura de Arquivos
@@ -73,6 +89,21 @@ export class Example implements Pattern {
     }
 }
 ```
+
+## 🧪 Testes e Qualidade
+
+- **Casos críticos**: [Lista]
+- **Estratégia**: [Unit/Integration/E2E]
+
+## 📈 Observabilidade
+
+- **Logs**: [O que registrar]
+- **Métricas**: [O que medir]
+
+## 🚀 Migração e Rollout
+
+- **Passos**: [Etapas]
+- **Rollback**: [Estratégia]
 
 ## ⚠️ Anti-Patterns (O que NÃO fazer)
 

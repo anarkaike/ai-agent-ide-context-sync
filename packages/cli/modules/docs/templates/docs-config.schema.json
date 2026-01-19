@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Docs Config",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recipe": {
+      "type": "string",
+      "description": "Identificador da recipe usada para gerar/atualizar /docs"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["analyze", "generate", "update"],
+      "description": "Modo de operação do pipeline de docs"
+    },
+    "depth": {
+      "type": "string",
+      "enum": ["minimal", "standard", "full"],
+      "description": "Profundidade da documentação"
+    },
+    "readmePolicy": {
+      "type": "string",
+      "enum": ["all-folders", "roots-only", "none"],
+      "description": "Política de README por pasta"
+    },
+    "language": {
+      "type": "string",
+      "description": "Idioma principal da documentação"
+    },
+    "linkPolicy": {
+      "type": "string",
+      "enum": ["strict", "relaxed"],
+      "description": "Exigência de links cruzados e breadcrumbs"
+    },
+    "outputDir": {
+      "type": "string",
+      "description": "Diretório alvo da documentação"
+    }
+  },
+  "required": ["recipe", "mode", "depth", "readmePolicy", "language", "linkPolicy", "outputDir"]
+}

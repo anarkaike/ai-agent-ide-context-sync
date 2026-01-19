@@ -1,0 +1,9 @@
+{
+  "recipe": "fullstack",
+  "mode": "update",
+  "depth": "standard",
+  "readmePolicy": "all-folders",
+  "language": "pt-BR",
+  "linkPolicy": "strict",
+  "outputDir": "docs"
+}

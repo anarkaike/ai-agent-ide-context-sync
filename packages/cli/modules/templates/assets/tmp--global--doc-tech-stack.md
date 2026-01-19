@@ -60,6 +60,42 @@ path/to/folder/
 
 ---
 
+## 🔧 Configurações Críticas
+
+| Item | Descrição | Exemplo |
+| :--- | :--- | :--- |
+| [Variável ENV] | [Uso] | `[valor]` |
+| [Feature Flag] | [Uso] | `[valor]` |
+
+## 🗺️ Ambientes
+
+| Ambiente | URL | Observações |
+| :--- | :--- | :--- |
+| dev | [URL] | [Notas] |
+| staging | [URL] | [Notas] |
+| prod | [URL] | [Notas] |
+
+## 📦 Dependências e Versionamento
+
+- **Regra de versão**: [SemVer, Fixado, Range]
+- **Atualização**: [Ciclo e responsável]
+
+## 🔒 Segurança
+
+- **Gerenciamento de secrets**: [Vault, ENV]
+- **Políticas**: [LGPD/GDPR]
+
+## 📈 Observabilidade
+
+- **Logs**: [Formato e destino]
+- **Métricas**: [Stack]
+- **Tracing**: [Ferramenta]
+
+## 🚀 Deploy e Rollback
+
+- **Pipeline**: [CI/CD]
+- **Rollback**: [Estratégia]
+
 ## 📚 Recursos & Referências
 
 ### 🔗 Links Oficiais

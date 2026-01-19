@@ -1,0 +1,30 @@
+{
+  "id": "fullstack",
+  "version": 1,
+  "type": "fullstack",
+  "description": "Estrutura base para projetos fullstack.",
+  "readmePolicy": "all-folders",
+  "structure": [
+    { "type": "folder", "path": "00--intro", "readmeTemplate": "tmp--global--doc-folder-readme.md" },
+    { "type": "folder", "path": "30--user-manual", "readmeTemplate": "tmp--global--doc-folder-readme.md" },
+    { "type": "folder", "path": "40--tech-manual", "readmeTemplate": "tmp--global--doc-folder-readme.md" },
+    { "type": "folder", "path": "40--tech-manual/20--project-architecture-patterns", "readmeTemplate": "tmp--global--doc-folder-readme.md" },
+    { "type": "folder", "path": "40--tech-manual/20--project-architecture-patterns/backend-patterns", "readmeTemplate": "tmp--global--doc-folder-readme.md" },
+    { "type": "folder", "path": "40--tech-manual/20--project-architecture-patterns/frontend-patterns", "readmeTemplate": "tmp--global--doc-folder-readme.md" },
+    { "type": "folder", "path": "40--tech-manual/30--design-system", "readmeTemplate": "tmp--global--doc-folder-readme.md" },
+    { "type": "folder", "path": "40--tech-manual/40--entities", "readmeTemplate": "tmp--global--doc-folder-readme.md" },
+    { "type": "folder", "path": "55--tech-stack", "readmeTemplate": "tmp--global--doc-folder-readme.md" }
+  ],
+  "files": [
+    { "path": "README.md", "template": "tmp--global--doc-context-root.md" },
+    { "path": "40--tech-manual/README.md", "template": "tmp--global--doc-folder-readme.md" },
+    { "path": "40--tech-manual/20--project-architecture-patterns/README.md", "template": "tmp--global--doc-folder-readme.md" },
+    { "path": "40--tech-manual/40--entities/README.md", "template": "tmp--global--doc-folder-readme.md" },
+    { "path": "40--tech-manual/30--design-system/README.md", "template": "tmp--global--doc-folder-readme.md" },
+    { "path": "55--tech-stack/README.md", "template": "tmp--global--doc-folder-readme.md" }
+  ],
+  "requiredLinks": [
+    { "from": "README.md", "to": "40--tech-manual/README.md" },
+    { "from": "README.md", "to": "55--tech-stack/README.md" }
+  ]
+}

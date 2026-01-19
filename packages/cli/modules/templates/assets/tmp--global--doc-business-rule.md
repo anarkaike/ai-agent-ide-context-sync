@@ -30,6 +30,28 @@ status: done
 > [!IMPORTANT]
 > **Motivação**: Evitar conflitos de agenda e duplicidade de faturamento.
 
+## ✅ Critérios da Regra
+
+- **Condição**: [Quando a regra se aplica]
+- **Ação**: [O que deve acontecer]
+- **Resultado**: [Saída esperada]
+
+## 🧮 Fórmulas e Cálculos
+
+| Campo | Fórmula | Observação |
+| :--- | :--- | :--- |
+| [Campo] | [Fórmula] | [Nota] |
+
+## 📥 Entradas e Fontes de Dados
+
+- **Dados obrigatórios**: [Lista]
+- **Fonte**: [Sistema/Tabela/Serviço]
+
+## 🧾 Invariantes e Garantias
+
+- [Invariante 1]
+- [Invariante 2]
+
 ## 🧪 Cenários de Teste (Gherkin)
 
 Utilizamos a sintaxe Gherkin para descrever os cenários de aceitação.

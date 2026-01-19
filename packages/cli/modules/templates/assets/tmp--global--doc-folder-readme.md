@@ -46,6 +46,29 @@ Regras específicas para arquivos neste diretório:
 
 ---
 
+## 👥 Público-alvo
+
+- [Equipe técnica]
+- [Equipe de negócio]
+
+## 🧪 Critérios de Qualidade
+
+- [Padrões mínimos de conteúdo]
+- [Nível de detalhe esperado]
+
+## 🔄 Processo de Atualização
+
+- **Quando atualizar**: [Eventos gatilho]
+- **Quem atualiza**: [Responsável]
+
+## ✅ Checklist rápido
+
+- [ ] Breadcrumbs revisados
+- [ ] Links cruzados atualizados
+- [ ] Nome e descrições consistentes
+
+---
+
 ## 🔗 Links Relacionados
 
 > 🔗 **Veja também**:

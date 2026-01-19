@@ -1,74 +1,66 @@
 ---
-title: Guia - [Título do Guia]
-subtitle: [Subtítulo Opcional]
-description: [Descrição curta]
+title: Manual do Usuário: [Funcionalidade]
+subtitle: Guia passo-a-passo para utilização do sistema
+description: Instruções detalhadas para usuários finais utilizarem a funcionalidade X.
 author: [Nome]
-status: done
+status: draft
+tags: [user-guide, manual, tutorial]
 ---
 
-> 🍞 **Caminho**: [Home](../../README.md) > [Manuais](../README.md) > [Título do Guia]
+> **Breadcrumbs**: [Index](../../README.md) > [User Manual](../README.md) > [Funcionalidade](./README.md)
 
-# 📖 Guia: [Título do Fluxo/Funcionalidade]
+# Manual do Usuário: [Funcionalidade]
 
-**[Objetivo: O que o usuário vai aprender a fazer com este guia?]**
+## 1. 👋 Introdução
+<!-- AI-SESSION: intro -->
+Esta funcionalidade permite que você realize [Objetivo Principal].
+É destinada a perfis de usuário: [Admin, Cliente, Operador].
 
-> 📅 **Última Atualização**: YYYY-MM-DD
->
-> ![Público](https://img.shields.io/badge/Público-Todos-green?style=flat-square) <!-- Admin, Médico, Recepcionista -->
+### O que você vai aprender
+- Como acessar a funcionalidade
+- Como configurar X
+- Como exportar relatórios Y
 
----
+## 2. 🛠️ Pré-requisitos
+<!-- AI-SESSION: prerequisites -->
+Antes de começar, certifique-se de que:
+- [ ] Você está logado no sistema
+- [ ] Seu perfil possui a permissão `ACCESS_X`
+- [ ] Você tem os dados Z em mãos
 
-> [!NOTE]
-> **Pré-requisitos**:
-> *   Estar logado no sistema.
-> *   Ter permissão de acesso ao módulo **[Nome Módulo]**.
+## 3. 👣 Passo-a-Passo
+<!-- AI-SESSION: walkthrough -->
 
-## 👣 Passo a Passo
+### Passo 1: Acessar a Tela
+1. No menu lateral, clique em **Módulo X**.
+2. Selecione a opção **Nova Operação**.
 
-### 1. Acessando a Funcionalidade
+### Passo 2: Preencher o Formulário
+Preencha os campos conforme a tabela abaixo:
 
-1.  No menu lateral, clique em **[Menu Principal]**.
-2.  Selecione a opção **[Submenu]**.
+| Campo | Descrição | Obrigatório? |
+|-------|-----------|--------------|
+| Nome | Nome completo do registro | Sim |
+| Tipo | Categoria do item | Sim |
+| Obs | Informações adicionais | Não |
 
-![Screenshot do Menu](./assets/menu-example.png)
+> **Dica**: Use o botão de "Ajuda" (?) ao lado de cada campo para mais detalhes.
 
-### 2. Preenchendo os Dados
+### Passo 3: Confirmar e Salvar
+1. Revise os dados.
+2. Clique no botão **Salvar** no canto inferior direito.
+3. Aguarde a mensagem de confirmação: *"Registro salvo com sucesso!"*.
 
-Na tela que se abrir, preencha as informações:
+## 4. ❓ Perguntas Frequentes (FAQ)
+<!-- AI-SESSION: faq -->
 
-*   **Campo A**: Descrição do que colocar aqui.
-*   **Campo B**: Atenção, este campo é obrigatório.
+**Q: Posso editar o registro depois de salvar?**
+A: Sim, basta acessar a listagem e clicar no ícone de lápis.
 
-> [!TIP]
-> **Dica**: Use o botão "Importar" para agilizar o cadastro se você já tiver os dados em Excel.
+**Q: O que fazer se aparecer um erro vermelho?**
+A: Verifique se todos os campos obrigatórios foram preenchidos. Se persistir, contate o suporte.
 
-### 3. Finalizando
-
-1.  Clique no botão **Salvar** no canto inferior direito.
-2.  Aguarde a mensagem de confirmação: *"Registro salvo com sucesso!"*.
-
-## ❓ Solução de Problemas Comuns (FAQ)
-
-<details>
-<summary>🔴 Recebi um erro de "Dados Inválidos". O que fazer?</summary>
-
-Verifique se todos os campos marcados com * (asterisco) foram preenchidos corretamente. Datas devem estar no formato DD/MM/AAAA.
-</details>
-
-<details>
-<summary>🟡 O botão "Salvar" está desabilitado.</summary>
-
-Isso acontece quando falta preencher algum campo obrigatório ou você não tem permissão de escrita nesta tela.
-</details>
-
-## 📜 Histórico de Alterações
-
-| Data | Versão | Autor | Descrição |
-| :--- | :---: | :--- | :--- |
-| YYYY-MM-DD | 1.0.0 | [Nome] | Criação inicial. |
-
-## 🔗 Veja Também
-
-> 🔗 **Links Relacionados**:
-> *   **[Como editar um registro](./editar-registro.md)**: Instruções de edição.
-> *   **[Manual Completo](../30--user-manual/README.md)**: Índice do manual.
+## 5. 🔍 Glossário
+<!-- AI-SESSION: glossary -->
+- **Termo A**: Definição do termo A.
+- **Termo B**: Definição do termo B.

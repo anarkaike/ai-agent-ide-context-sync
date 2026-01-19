@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const readline = require('readline');
 const { execSync } = require('child_process');
 
 // Paths globais
@@ -44,6 +45,20 @@ function stripFrontmatter(md) {
 function readTextIfExists(filePath) {
   if (!fs.existsSync(filePath)) return null;
   return fs.readFileSync(filePath, 'utf-8');
+}
+
+function resolveDocTemplateContent(modulesDir, templateName) {
+  if (!templateName) return null;
+  const candidates = [
+    path.join(modulesDir, 'docs', 'templates', templateName),
+    path.join(modulesDir, 'templates', 'assets', templateName)
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return fs.readFileSync(candidate, 'utf-8');
+    }
+  }
+  return null;
 }
 
 function ensureDir(dirPath) {
@@ -186,6 +201,99 @@ function compactWhitespace(text) {
   return normalized + '\n';
 }
 
+function isInteractive() {
+  return Boolean(process.stdin.isTTY && process.stdout.isTTY);
+}
+
+function createQuestionInterface() {
+  return readline.createInterface({ input: process.stdin, output: process.stdout });
+}
+
+function askQuestion(rl, prompt) {
+  return new Promise(resolve => rl.question(prompt, answer => resolve(answer)));
+}
+
+function normalizeYesNo(value, fallback) {
+  const raw = (value || '').trim().toLowerCase();
+  if (['s', 'sim', 'y', 'yes'].includes(raw)) return 's';
+  if (['n', 'nao', 'não', 'no'].includes(raw)) return 'n';
+  return fallback;
+}
+
+function normalizeChoice(value, allowed, fallback) {
+  const raw = (value || '').trim().toLowerCase();
+  if (allowed.includes(raw)) return raw;
+  return fallback;
+}
+
+function decideRecipeFromStacks(detectedStacks) {
+  const hasBackend = detectedStacks.includes('laravel') || detectedStacks.includes('php') || detectedStacks.includes('go') || detectedStacks.includes('rust') || detectedStacks.includes('python') || detectedStacks.includes('java');
+  const hasFrontend = detectedStacks.includes('react') || detectedStacks.includes('vue') || detectedStacks.includes('angular') || detectedStacks.includes('svelte');
+  if (hasBackend && hasFrontend) return 'fullstack';
+  if (hasFrontend) return 'frontend';
+  if (hasBackend) return 'backend';
+  return 'fullstack';
+}
+
+async function runDocsWizard({ projectRoot, wsPath }) {
+  if (!isInteractive()) return null;
+
+  const rl = createQuestionInterface();
+  try {
+    const detectedStacks = detectProjectStacks(projectRoot);
+    const defaultRecipe = decideRecipeFromStacks(detectedStacks);
+    const defaultMode = 'update';
+    const defaultDepth = 'standard';
+    const defaultReadmePolicy = 'all-folders';
+    const defaultLanguage = 'pt-BR';
+    const defaultLinkPolicy = 'strict';
+    const defaultOutputDir = 'docs';
+
+    const startAnswer = await askQuestion(rl, 'Deseja configurar docs agora? (s/n) [s]: ');
+    const startChoice = normalizeYesNo(startAnswer, 's');
+    if (startChoice !== 's') return null;
+
+    const recipeAnswer = await askQuestion(rl, `Recipe (backend|frontend|fullstack|monorepo|lib|mobile) [${defaultRecipe}]: `);
+    const recipe = normalizeChoice(recipeAnswer, ['backend', 'frontend', 'fullstack', 'monorepo', 'lib', 'mobile'], defaultRecipe);
+
+    const modeAnswer = await askQuestion(rl, `Modo (analyze|generate|update) [${defaultMode}]: `);
+    const mode = normalizeChoice(modeAnswer, ['analyze', 'generate', 'update'], defaultMode);
+
+    const depthAnswer = await askQuestion(rl, `Profundidade (minimal|standard|full) [${defaultDepth}]: `);
+    const depth = normalizeChoice(depthAnswer, ['minimal', 'standard', 'full'], defaultDepth);
+
+    const readmeAnswer = await askQuestion(rl, `README policy (all-folders|roots-only|none) [${defaultReadmePolicy}]: `);
+    const readmePolicy = normalizeChoice(readmeAnswer, ['all-folders', 'roots-only', 'none'], defaultReadmePolicy);
+
+    const languageAnswer = await askQuestion(rl, `Idioma [${defaultLanguage}]: `);
+    const language = (languageAnswer || '').trim() || defaultLanguage;
+
+    const linkAnswer = await askQuestion(rl, `Link policy (strict|relaxed) [${defaultLinkPolicy}]: `);
+    const linkPolicy = normalizeChoice(linkAnswer, ['strict', 'relaxed'], defaultLinkPolicy);
+
+    const outputAnswer = await askQuestion(rl, `Diretório de saída [${defaultOutputDir}]: `);
+    const outputDir = (outputAnswer || '').trim() || defaultOutputDir;
+
+    return { recipe, mode, depth, readmePolicy, language, linkPolicy, outputDir };
+  } finally {
+    rl.close();
+  }
+}
+
+function buildDefaultDocsConfig(projectRoot) {
+  const detectedStacks = detectProjectStacks(projectRoot);
+  const recipe = decideRecipeFromStacks(detectedStacks);
+  return {
+    recipe,
+    mode: 'update',
+    depth: 'standard',
+    readmePolicy: 'all-folders',
+    language: 'pt-BR',
+    linkPolicy: 'strict',
+    outputDir: 'docs'
+  };
+}
+
 function parseBuildArgs(args) {
   const options = {
     fixBudget: false,
@@ -265,6 +373,7 @@ const commands = {
       'memory',
       'tasks',
       'analysis',
+      'docs',
       'integrations/mcp',
       'responses',
       'templates'
@@ -567,7 +676,9 @@ const commands = {
     log('\n🚀 Sucesso! Core enxuto sincronizado. Full disponível no cache.', 'bright');
   },
 
-  init: () => {
+  docs: (args) => runDocsCommand(args),
+
+  init: async () => {
     const projectRoot = process.cwd();
     const wsPath = path.join(projectRoot, WORKSPACE_NAME);
 
@@ -596,6 +707,15 @@ const commands = {
       }
 
       log('✅ Workspace inicializado!', 'green');
+    }
+
+    const docsConfigPath = path.join(wsPath, 'docs-config.json');
+    const existingDocsConfig = fs.existsSync(docsConfigPath);
+    const docsConfig = existingDocsConfig ? null : await runDocsWizard({ projectRoot, wsPath });
+    const finalDocsConfig = docsConfig || (existingDocsConfig ? null : buildDefaultDocsConfig(projectRoot));
+    if (finalDocsConfig) {
+      fs.writeFileSync(docsConfigPath, JSON.stringify(finalDocsConfig, null, 2) + '\n');
+      log(`📚 Docs config salvo em: ${docsConfigPath}`, 'cyan');
     }
 
     log('\n🔨 Construindo contexto inicial para todos os agentes...', 'cyan');
@@ -770,11 +890,132 @@ const commands = {
   help: () => {
     logSection('AI-DOC CLI v2.0.0');
     log('Comandos:', 'cyan');
-    log('  init, status, build, sync, heuristics, identity, soul');
+    log('  init, status, build, docs, sync, heuristics, identity, soul');
   }
 };
 
+function runDocsCommand(args) {
+  const wsPath = findWorkspace();
+  if (!wsPath) { log('❌ Nenhum workspace encontrado', 'red'); return; }
+  const projectRoot = path.dirname(wsPath);
+
+  logSection('📚 AI-DOC DOCS MANAGER');
+
+  // 1. Carregar configuração
+  const configPath = path.join(wsPath, 'docs-config.json');
+  let config = safeReadJson(configPath);
+  if (!config) {
+    log('⚠️  Configuração não encontrada. Gerando padrão...', 'yellow');
+    config = buildDefaultDocsConfig(projectRoot);
+    writeFileEnsuringDir(configPath, JSON.stringify(config, null, 2));
+  }
+  
+  log(`   Recipe: ${config.recipe}`, 'cyan');
+  log(`   Mode: ${config.mode}`, 'cyan');
+  log(`   Output: ${config.outputDir}`, 'dim');
+
+  // 2. Carregar Recipe
+  const modulesDir = resolveModulesDir('auto');
+  const recipePath = path.join(modulesDir, 'docs', 'recipes', `recipe-${config.recipe}.json`);
+  const recipe = safeReadJson(recipePath);
+
+  if (!recipe) {
+    log(`❌ Recipe "${config.recipe}" não encontrada em ${recipePath}`, 'red');
+    return;
+  }
+
+  const outputBase = path.join(projectRoot, config.outputDir || 'docs');
+  ensureDir(outputBase);
+  const folderReadmeTemplateByPath = new Map();
+  for (const item of recipe.structure || []) {
+    if (item.type === 'folder' && item.readmeTemplate) {
+      folderReadmeTemplateByPath.set(item.path, item.readmeTemplate);
+    }
+  }
+
+  // 3. Processar Estrutura (Pastas)
+  log('\n   Verificando estrutura de pastas...', 'bright');
+  let missingFolders = 0;
+  for (const item of recipe.structure || []) {
+    if (item.type === 'folder') {
+      const folderPath = path.join(outputBase, item.path);
+      if (!fs.existsSync(folderPath)) {
+        if (config.mode === 'generate' || config.mode === 'update') {
+          ensureDir(folderPath);
+          log(`   [+] Pasta criada: ${item.path}`, 'green');
+        } else {
+          log(`   [!] Pasta faltando: ${item.path}`, 'yellow');
+          missingFolders++;
+        }
+      }
+    }
+  }
+
+  log('\n   Verificando arquivos...', 'bright');
+  let missingFiles = 0;
+  for (const item of recipe.files || []) {
+    const filePath = path.join(outputBase, item.path);
+    if (!fs.existsSync(filePath)) {
+      if (config.mode === 'generate' || config.mode === 'update') {
+        let content = `# ${path.basename(item.path)}\n\nGerado automaticamente pelo AI-DOC.\n`;
+        const resolved = resolveDocTemplateContent(modulesDir, item.template);
+        if (resolved) content = resolved;
+        writeFileEnsuringDir(filePath, content);
+        log(`   [+] Arquivo criado: ${item.path}`, 'green');
+      } else {
+        log(`   [!] Arquivo faltando: ${item.path}`, 'yellow');
+        missingFiles++;
+      }
+    }
+  }
+
+  if (config.readmePolicy === 'all-folders') {
+    log('\n   Validando política de READMEs...', 'bright');
+    const allFolders = [outputBase]; // Começa pela raiz
+    // Coleta todas subpastas da estrutura
+    (recipe.structure || []).forEach(i => {
+      if (i.type === 'folder') allFolders.push(path.join(outputBase, i.path));
+    });
+
+    for (const folder of allFolders) {
+      if (fs.existsSync(folder)) {
+        const readmePath = path.join(folder, 'README.md');
+        if (!fs.existsSync(readmePath)) {
+          if (config.mode === 'generate' || config.mode === 'update') {
+             const relativeFolder = path.relative(outputBase, folder) || '';
+             const templateName = folderReadmeTemplateByPath.get(relativeFolder) || 'tmp--global--doc-folder-readme.md';
+             const resolved = resolveDocTemplateContent(modulesDir, templateName);
+             const content = resolved || `# README\n\nDocumentação da pasta: ${path.basename(folder)}`;
+             fs.writeFileSync(readmePath, content);
+             log(`   [+] README criado em: ${path.relative(projectRoot, folder)}`, 'green');
+          } else {
+             log(`   [!] README faltando em: ${path.relative(projectRoot, folder)}`, 'red');
+          }
+        }
+      }
+    }
+  }
+
+  logSection('🏁 Docs Check Finalizado');
+  if (missingFolders > 0 || missingFiles > 0) {
+    log(`   ⚠️  Pendências: ${missingFolders} pastas, ${missingFiles} arquivos.`, 'yellow');
+    if (config.mode === 'analyze') {
+      log('   Dica: Mude o modo para "generate" ou "update" no docs-config.json para corrigir automaticamente.', 'dim');
+    }
+  } else {
+    log('   ✨ Tudo parece estar em ordem conforme a recipe.', 'green');
+  }
+  console.log();
+}
+
 const args = process.argv.slice(2);
 const cmd = args[0] || 'help';
-if (commands[cmd]) commands[cmd](args.slice(1));
-else commands.help();
+if (commands[cmd]) {
+  const result = commands[cmd](args.slice(1));
+  if (result && typeof result.then === 'function') {
+    result.catch((error) => {
+      log(`❌ ${error && error.message ? error.message : 'Falha inesperada'}`, 'red');
+      process.exitCode = 1;
+    });
+  }
+} else commands.help();
