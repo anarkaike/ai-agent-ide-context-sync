@@ -30,7 +30,7 @@ Usa `laravel-boost_get-config` e `laravel-boost_list-env-vars` para validar conf
    ```
    - Filtre apenas chaves necessárias. Não copie valores sensíveis para relatórios.
 4. **Comparar com `.env.example`**
-   - Registre diferenças críticas em `.ai-doc/data/live-state/laravel-config.json`.
+   - Registre diferenças críticas em `.ai-workspace/live-state/laravel-config.json`.
 5. **Documentar decisão**
    - Abra task ou atualize a atual com o resumo do que precisa mudar (ex.: trocar driver de queue, ajustar mailer).
 
@@ -42,6 +42,6 @@ Usa `laravel-boost_get-config` e `laravel-boost_list-env-vars` para validar conf
 ## 🔗 Referências
 - `laravel-boost_get-config`
 - `laravel-boost_list-env-vars`
-- `.ai-doc/data/live-state/`
+- `.ai-workspace/live-state/`
 
 <!-- AI-DOC:FULL_END -->

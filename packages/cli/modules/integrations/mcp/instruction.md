@@ -19,7 +19,7 @@ Integração com servidores externos (Laravel Boost, ClickUp, etc.) e IDEs via M
 2. **Verificar servidores disponíveis**
    - Rode `npm run ai:list-ids` ou `npx mcp list` (quando suportado) para ver servers ativos.
 3. **Fallback**
-   - Se o MCP estiver indisponível: registre o bloqueio na task/resposta e trabalhe com os caches em `.ai-doc/data/live-state/`.
+   - Se o MCP estiver indisponível: registre o bloqueio na task/resposta e trabalhe com os caches em `.ai-workspace/live-state/`.
 
 ---
 
@@ -32,7 +32,7 @@ Integração com servidores externos (Laravel Boost, ClickUp, etc.) e IDEs via M
    - O usuário pedir dados “atuais/ao vivo”.
    - Houver inconsistências e você precise validar contra a fonte real.
 3. **Atualize o cache**  
-   Após usar MCP, rode scripts como `npm run ai:active-state:sync` ou escreva o resultado em `data/live-state/` para próxima execução.
+   Após usar MCP, rode scripts como `npm run ai:active-state:sync` ou escreva o resultado em `.ai-workspace/live-state/` para próxima execução.
 
 ---
 
@@ -57,7 +57,7 @@ Integração com servidores externos (Laravel Boost, ClickUp, etc.) e IDEs via M
    - Laravel: `laravel-boost_database-schema`, `laravel-boost_ai-log-processor`.
    - ClickUp: `mcp2_clickup_create_task`, `mcp2_clickup_get_task`, etc.
 3. **Registrar resultados**  
-   - Atualize o cache (`.ai-doc/data/live-state/*.json`) ou escreva em `analysis/findings`.
+   - Atualize o cache (`.ai-workspace/live-state/*.json`) ou escreva em `analysis/findings`.
    - Cite o comando usado no corpo da task/report.
 4. **Mesclar dados externos**  
    - Use `npm run ai:clickup-merge -- diff|apply` para manter descrições em sincronia.
@@ -84,7 +84,7 @@ Integração com servidores externos (Laravel Boost, ClickUp, etc.) e IDEs via M
 ## 🆘 Troubleshooting
 | Situação | Ação |
 | :--- | :--- |
-| Servidor MCP não responde | Registre bloqueio na task, use cache (`data/live-state`) e re-tente após `npm run ai:presence`. |
+| Servidor MCP não responde | Registre bloqueio na task, use cache (`.ai-workspace/live-state/`) e re-tente após `npm run ai:presence`. |
 | Token inválido | Rode `npm run ai:clickup-merge -- config` ou atualize `.env`/`mcp.config.json`. |
 | Diferenças grandes entre local e remoto | Execute `npm run ai:clickup-merge -- scan` e anexe diff na task antes de aplicar. |
 

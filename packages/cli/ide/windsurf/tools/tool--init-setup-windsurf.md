@@ -18,7 +18,7 @@ Configurar regras específicas para a IDE Windsurf (Cascades), criando ou atuali
 Execute o script de setup:
 
 ```bash
-node .ai-doc/kernel/scripts/system/setup-windsurf.js
+node ~/.ai-doc/kernel/scripts/system/setup-windsurf.js
 ```
 
 ### 2. 📝 O que ele faz?

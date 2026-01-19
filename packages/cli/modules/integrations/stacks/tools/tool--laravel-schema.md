@@ -12,7 +12,7 @@ Documenta tabelas e colunas usando o MCP `laravel-boost_database-schema`.
 ## 🧭 Quando usar?
 - Antes de criar migrations ou refatorar relações.
 - Quando houver dúvidas se o banco local está sincronizado com o ambiente ativo.
-- Para gerar `data/live-state/laravel-schema.json` de referência rápida.
+- Para gerar `.ai-workspace/live-state/laravel-schema.json` de referência rápida.
 
 ## ⚙️ Passo a Passo
 1. **Garantir cache**
@@ -23,7 +23,7 @@ Documenta tabelas e colunas usando o MCP `laravel-boost_database-schema`.
    ```bash
    mcp call laravel-boost_database-schema --pretty
    ```
-3. **Exportar** o resultado para `.ai-doc/data/live-state/laravel-schema.json` (ou anexe ao relatório/analysis atual).
+3. **Exportar** o resultado para `.ai-workspace/live-state/laravel-schema.json` (ou anexe ao relatório/analysis atual).
 4. **Analisar**:
    - Contagem de tabelas e colunas sensíveis.
    - Campos `nullable`, defaults e índices.
@@ -37,7 +37,7 @@ Documenta tabelas e colunas usando o MCP `laravel-boost_database-schema`.
 
 ## 🔗 Referências
 - `laravel-boost_database-schema`
-- `.ai-doc/data/live-state/`
+- `.ai-workspace/live-state/`
 - `tool--tool-laravel-boost.md`
 
 <!-- AI-DOC:FULL_END -->

@@ -14,9 +14,9 @@ description: Scanner primário para fingerprint do projeto antes de executar an�
 - **ID**: `scanner--project-id.md`
 - **Categoria**: core
 - **Dependências**:
-  - Scripts: `node .ai-doc/kernel/scripts/reports/analyze-project.js`
+  - Scripts: `node ~/.ai-doc/kernel/scripts/reports/analyze-project.js`
   - Ferramentas MCP: FileSystem (listar/ler arquivos), code_search
-  - Arquivos de cache: `.ai-doc/data/analysis/active-state.json` (se inexistente, inicialize com `templates/tech-profile.json`)
+  - Arquivos de cache: `.ai-workspace/analysis/active-state.json` (se inexistente, inicialize com `templates/tech-profile.json`)
 
 ---
 
@@ -40,8 +40,8 @@ description: Scanner primário para fingerprint do projeto antes de executar an�
    2. Mapear frontend (Vue/React/etc.) e toolchain (Vite/Webpack).
    3. Checar infraestrutura mínima: Dockerfile, docker-compose, `.github/workflows`, `.env.example`.
 4. **Síntese & Ações**
-   - Atualize `.ai-doc/data/analysis/active-state.json` com `tech_stack` e `architecture` (crie a partir do template se não existir).
-   - Gerar finding curto em `.ai-doc/data/analysis/findings/analysis--fingerprint--YYYYMMDD.md`.
+   - Atualize `.ai-workspace/analysis/active-state.json` com `tech_stack` e `architecture` (crie a partir do template se não existir).
+   - Gerar finding curto em `.ai-workspace/analysis/findings/analysis--fingerprint--YYYYMMDD.md`.
    - Se detectar inconsistências (ex.: falta de manifesto), abrir task em `___tasks`.
 
 > **Dica**: priorize leitura direta dos manifestos atuais. Se detectar divergência entre lockfiles e manifests, registrar no relatório.
@@ -49,8 +49,8 @@ description: Scanner primário para fingerprint do projeto antes de executar an�
 ---
 
 ## 📤 Saídas Esperadas
-- `.ai-doc/data/analysis/findings/analysis--fingerprint--YYYYMMDD.md`
-- `.ai-doc/data/analysis/active-state.json` atualizado
+- `.ai-workspace/analysis/findings/analysis--fingerprint--YYYYMMDD.md`
+- `.ai-workspace/analysis/active-state.json` atualizado
 - Comentário/log no quadro de tasks ativo descrevendo mudanças relevantes.
 
 ---
@@ -72,7 +72,7 @@ description: Scanner primário para fingerprint do projeto antes de executar an�
 ---
 
 ## 📚 Referências
-- `.ai-doc/ai-modules/___analysis/templates/tmp--analytics--scanner.md`
+- `~/.ai-doc/kernel/modules/analysis/templates/tmp--analytics--scanner.md`
 - `docs/40--tech-manual/20--project-architecture-patterns/README.md`
 
 ---
@@ -94,8 +94,8 @@ description: Scanner primário para fingerprint do projeto antes de executar an�
 - [ ] Antes de qualquer scanner especializado (Laravel, Vue, Infra).
 
 ## 📋 Checklist de Preparação
-1. Confirmar contexto atualizado em `.ai-doc/data/analysis/active-state.json`.
-2. Verificar se existe relatório prévio relacionado em `.ai-doc/data/analysis/findings/`.
+1. Confirmar contexto atualizado em `.ai-workspace/analysis/active-state.json`.
+2. Verificar se existe relatório prévio relacionado em `.ai-workspace/analysis/findings/`.
 3. (Opcional) Conferir tasks abertas vinculadas (linkar IDs).
 
 ## 🔬 Pontos de Análise
@@ -142,6 +142,6 @@ description: Scanner primário para fingerprint do projeto antes de executar an�
 ```
 
 ## ✅ Pós-execução
-1. Atualize o arquivo em `.ai-doc/data/analysis/findings/analysis--fingerprint--{{YYYYMMDD}}.md`.
+1. Atualize o arquivo em `.ai-workspace/analysis/findings/analysis--fingerprint--{{YYYYMMDD}}.md`.
 2. Caso tenha atualizado estado perene, sincronize `active-state.json`.
 3. Informe stakeholders (task/comment) com principais achados.

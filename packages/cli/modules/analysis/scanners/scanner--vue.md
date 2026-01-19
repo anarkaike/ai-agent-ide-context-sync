@@ -16,7 +16,7 @@ description: Scanner voltado ao ecossistema Vue.js quando `package.json` contém
 - **Dependências**:
   - Scripts: `npm list vue`, `npx vite --version` (se aplicável)
   - Ferramentas MCP: FileSystem para `resources/js`, `src/`, `package.json`
-  - Arquivos de cache: `.ai-doc/data/analysis/active-state.json` (use `templates/tech-profile.json` se precisar criar)
+  - Arquivos de cache: `.ai-workspace/analysis/active-state.json` (use `templates/tech-profile.json` se precisar criar)
 
 ---
 
@@ -49,7 +49,7 @@ description: Scanner voltado ao ecossistema Vue.js quando `package.json` contém
 ---
 
 ## 📤 Saídas Esperadas
-- `.ai-doc/data/analysis/findings/analysis--vue--{{YYYYMMDD}}.md`
+- `.ai-workspace/analysis/findings/analysis--vue--{{YYYYMMDD}}.md`
 - Bloco `vue` atualizado em `active-state.json`.
 - Insights registrados no board (task/comment) se necessário.
 
@@ -73,7 +73,7 @@ description: Scanner voltado ao ecossistema Vue.js quando `package.json` contém
 
 ## 📚 Referências
 - `docs/55--tech-stack/vue.md`
-- `.ai-doc/ai-modules/___analysis/templates/tmp--analytics--scanner.md`
+- `~/.ai-doc/kernel/modules/analysis/templates/tmp--analytics--scanner.md`
 
 ---
 

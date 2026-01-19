@@ -26,4 +26,4 @@ Descreva claramente o que precisa ser feito e por quê.
 
 ## 🗂️ Pós-execução
 - Atualizar task referenciada
-- Mover este arquivo para `.ai-doc/queue/archive/`
+- Mover este arquivo para `~/.ai-doc/data/queue/archive/`

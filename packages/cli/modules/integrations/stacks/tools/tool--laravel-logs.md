@@ -29,7 +29,7 @@ Como usar `laravel-boost_ai-log-processor` para inspecionar logs (frontend/backe
    - `sources.frontend/backend/database` → logs crus + resumo.
 4. **Documentar**
    - Em tasks/analysis, cole apenas o resumo + IDs de log relevantes.
-   - Se necessário, anexe os trechos em `.ai-doc/data/live-state/laravel-logs.json` (evite dados sensíveis).
+   - Se necessário, anexe os trechos em `.ai-workspace/live-state/laravel-logs.json` (evite dados sensíveis).
 5. **Ações**
    - Abrir task se houver bug claro.
    - Atualizar `tool--qa-health-check` > seção “Status Geral”.
@@ -41,7 +41,7 @@ Como usar `laravel-boost_ai-log-processor` para inspecionar logs (frontend/backe
 
 ## 🔗 Referências
 - `laravel-boost_ai-log-processor`
-- `.ai-doc/data/live-state/`
+- `.ai-workspace/live-state/`
 - `AppServiceProvider@boot` (rotas `_boost/...`)
 
 <!-- AI-DOC:FULL_END -->

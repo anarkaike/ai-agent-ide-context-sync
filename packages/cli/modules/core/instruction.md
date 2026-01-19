@@ -14,7 +14,7 @@ O Núcleo do Sistema Operacional AI.
 ## 🎯 Responsabilidades
 1.  **Boot:** Carregar módulos (`boot.js`).
 2.  **Manutenção:** Rodar scripts de limpeza e organização.
-3.  **Estrutura:** Garantir a integridade das pastas `.ai-doc`.
+3.  **Estrutura:** Garantir a integridade das pastas `~/.ai-doc` (Global) e `.ai-workspace` (Local).
 
 ## 🧠 Protocolo de Decisão Automática
 Sempre que o usuário responder apenas “continue”, “ok”, “siga” (ou variações equivalentes) quando solicitado a escolher caminho/ordem/prioridade, o agente deve:
@@ -28,7 +28,6 @@ Consulte os tools desta pasta conforme a necessidade:
 
 | Tool | Objetivo | Quando usar |
 | :--- | :--- | :--- |
-| `tool--init-bootstrap.md` | Boot inicial do AI-OS | Primeira entrada em um projeto ou após copiar `.ai-doc` |
 | `tool--init-analyze.md` | Snapshot rápido do projeto | Sempre que precisar atualizar contexto técnico |
 | `tool--init-understand.md` | Resumo executivo combinando análise + memória | Antes de responder perguntas amplas sobre o projeto |
 | `tool--space-root.md` | Menu principal | Descobrir próximos passos (Scaffold, Qualidade, Conhecimento) |
@@ -37,7 +36,7 @@ Consulte os tools desta pasta conforme a necessidade:
 | `tool--space-knowledge.md` | Consulta a manuais e nomenclaturas | Tirar dúvidas de regras e arquitetura |
 | `tool--sys-autoconfig.md` | Auto-configuração completa | Após mudar regras ou contextos das IDEs |
 | `tool--sys-update-rules.md` | Atualizar regras nas IDEs | Quando precisar sincronizar `.cursorrules`, `.windsurfrules`, etc. |
-| `tool--sys-build.md` | Recompilar kernel | Depois de editar módulos em `.ai-doc/ai-modules` |
+| `tool--sys-build.md` | Recompilar kernel | Depois de editar módulos em `~/.ai-doc/kernel/modules` |
 | `tool--sys-gen-structure.md` | Regenerar `/docs` | Sempre que a estrutura publicada estiver desatualizada |
 | `tool--sys-migrate-refs.md` | Migrar referências/links | Após renomeações de templates ou actions |
 | `tool--sys-migrate-tpl.md` | Ajustar `type` nos MDs | Para padronizar arquivos legados e permitir lint automático |
@@ -69,6 +68,6 @@ node scripts/complete-translations.js
 node scripts/check-messages-translations.js
 ```
 
-📖 **Documentação completa:** `.ai-doc/ai-modules/___i18n/instruction.md`
+📖 **Documentação completa:** `~/.ai-doc/kernel/modules/core/i18n/instruction.md`
 
 <!-- AI-DOC:FULL_END -->

@@ -35,9 +35,9 @@ Sempre use os parciais padrão:
 
 > **Exemplo rápido**  
 > ```bash
-> node .ai-doc/kernel/scripts/responses/format.cjs \
+> node ~/.ai-doc/kernel/scripts/responses/format.cjs \
 >   --template default \
->   --data .ai-doc/tmp/response-data.json \
+>   --data ~/.ai-doc/tmp/response-data.json \
 >   --set SUMMARY_GOAL="Validar kernel" \
 >   --set SUMMARY_SCOPE="Queue + formatter" \
 >   --out /tmp/resp.md
@@ -76,21 +76,21 @@ Independente do template escolhido, mantenha estes blocos presentes (o template 
 3. **Execução & Evidências** – ações realizadas, arquivos tocados (`@arquivo#L1-L20`), logs, comandos.
 4. **Decisões & Trade-offs** – motivos, impactos, alternativas descartadas.
 5. **Próximos Passos & Perguntas Abertas** – plano acionável + dúvidas para o usuário/time.
-6. **Controle de Progresso** – mapa atualizado do que já foi feito vs. o que falta; use exatamente o checklist real da task (ClickUp ou `.ai-doc/data/tasks/AI-...`) sincronizado com `✅`/`▫️`.
+6. **Controle de Progresso** – mapa atualizado do que já foi feito vs. o que falta; use exatamente o checklist real da task (ClickUp ou `.ai-workspace/tasks/active/AI-...`) sincronizado com `✅`/`▫️`.
 7. **Auto Consciência** – bloco obrigatório listando insights de autoaperfeiçoamento (diagnósticos, correções futuras, automações ou tasks a criar) para mostrar a evolução contínua do agente.
 
 > Regra de ouro: nunca responda apenas com “feito” ou “veja acima”. Sempre enriqueça com insights, referências e possíveis riscos.
 
 ### 📊 Contexto Cruzado Automatizado
-- Rode `npm run ai:context:sync` (alias para `.ai-doc/kernel/scripts/context/sync-graph.js`) sempre que iniciar/encerrar um bloco de trabalho relevante para manter `.ai-doc/data/context/context-graph.json` atualizado.
+- Rode `npm run ai:context:sync` (alias para `~/.ai-doc/kernel/scripts/context/sync-graph.js`) sempre que iniciar/encerrar um bloco de trabalho relevante para manter `~/.ai-doc/data/context/context-graph.json` atualizado.
 - O formatter (`responses/format.cjs`) lê esse grafo e preenche automaticamente o bloco **“Contexto Cruzado & Recomendações”** nos templates. Se precisar forçar outro conteúdo, sobrescreva `CONTEXT_BLOCK` via `--set`.
 - Quando o grafo estiver indisponível, o formatter injeta `_Context graph indisponível._`; investigue antes de entregar.
 - Use o bloco gerado para citar impactos estratégicos, dependências e oportunidades. Se surgir insight adicional, acrescente após a lista automática.
 
 ### 🔥 Blocos Dinâmicos Obrigatórios
 
-1. **Task Ativa 🔥** – aparece sempre que houver task em `.ai-doc/data/tasks/`. Inclua título, objetivo curto e status atual (pode citar blocos da task).
-2. **🧬 Análise Ativa** – se existir arquivo em `.ai-doc/data/analysis/` vinculado ao trabalho, liste nome + foco + próximos checkpoints.
+1. **Task Ativa 🔥** – aparece sempre que houver task em `.ai-workspace/tasks/active/`. Inclua título, objetivo curto e status atual (pode citar blocos da task).
+2. **🧬 Análise Ativa** – se existir arquivo em `.ai-workspace/analysis/` vinculado ao trabalho, liste nome + foco + próximos checkpoints.
 3. **🟢 Checklist de Progresso** – logo abaixo da Task Ativa. Comece com a linha “O que falta para fechar a task?” e replique cada item real usando `✅` para concluído e `▫️` para pendente. Emojis no fim da linha podem sinalizar sentimento/alerta.
 4. **💜 Meus Passos** – liste em ordem os últimos arquivos `.md` tocados ou consultados na sessão (até 3 itens) para manter rastreabilidade local.
 5. **⚙️ Modo Auto-Drive** – indique se o agente está operando em execução prolongada. Campos mínimos: `Status (Ativo/Inativo)`, `Contexto` (ex.: “Timer 30m” ou “Até concluir AI-FOO...”), `Expira/Termina`, `Origem` (chat, workflow, CLI).

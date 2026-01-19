@@ -219,7 +219,7 @@ status: done
 [Área de espaço para facilmente ao assumir a identidade, saber o próximo passo e onde está parado. Sempre mantenha o `updated` sincronizado após ajustes aqui.]
 
 **Task Ativa:**
-- **Arquivo**: [Link para o arquivo da task em `.ai-doc/data/tasks/33--in-dev/`]
+- **Arquivo**: [Link para o arquivo da task em `.ai-workspace/tasks/33--in-dev/`]
 - **Objetivo**: [Resumo do objetivo principal]
 - **Próximo Passo**: [Qual é o próximo passo específico a executar]
 - **Bloqueios**: [Algum bloqueio ou dependência?]

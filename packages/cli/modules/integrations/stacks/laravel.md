@@ -25,13 +25,13 @@ Oferecer um ponto único para diagnosticar o backend Laravel via ferramentas MCP
 > Sempre adicione novos playbooks específicos (ex: logs, rotas) na subpasta `tools/`.
 
 ## 🔍 Fluxo Recomendado
-1. **Valide o contexto** lendo `.ai-doc/data/live-state/laravel.json` (se existir).
+1. **Valide o contexto** lendo `.ai-workspace/live-state/laravel.json` (se existir).
 2. **Execute** as ferramentas MCP conforme o objetivo:
    - `laravel-boost_ai-log-processor` para investigar erros recentes.
    - `laravel-boost_database-schema` para inspecionar tabelas/colunas.
    - `laravel-boost_get-config` e `laravel-boost_list-env-vars` para conferir configs sensíveis.
-3. **Atualize o cache** em `.ai-doc/data/live-state/` com os dados obtidos (quando fizer sentido).
-4. **Propague o insight** criando análises em `.ai-doc/data/analysis/findings/` ou tasks (`___tasks`). Cite o playbook utilizado.
+3. **Atualize o cache** em `.ai-workspace/live-state/` com os dados obtidos (quando fizer sentido).
+4. **Propague o insight** criando análises em `.ai-workspace/analysis/findings/` ou tasks (`___tasks`). Cite o playbook utilizado.
 
 ## 🔗 Integrações
 - **___analysis**: Referencie este módulo quando um scanner depender de dados runtime (evite duplicação de instruções).

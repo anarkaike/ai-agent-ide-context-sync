@@ -31,17 +31,17 @@ Pergunte ao usuário as seguintes informações (uma pergunta por vez ou em bloc
 1.  **Título da Task**: Um nome curto e descritivo (ex: "Implementar Login Social").
 2.  **Objetivo Principal**: O que deve ser alcançado?
 3.  **Persona (Opcional)**: Qual IA deve assumir a task?
-    *   *Instrução*: Liste as opções via `npm run ai:list-ids` (SSoT: `.ai-doc/data/identity/identities.json`).
+    *   *Instrução*: Liste as opções via `npm run ai:list-ids` (SSoT: `~/.ai-doc/data/identity/identities.json`).
     *   *Opção Extra*: Adicione uma última opção "Criar Nova IA" (Se escolhida, sugira executar a action `CRIAR IA NOVA`).
     *   *Sugestão*: Se não informado, sugira com base no tipo da task (ex: Sasuke para Backend/Segurança).
 4.  **Tipo de Task**: Feature, Bugfix, Refactor, Test, Docs?
-5.  **Epic Relacionado (Opcional)**: Se fizer parte de um epic ativo, registrar `epic_id` ou link para o arquivo em `.ai-doc/data/epics/`.
+5.  **   *Epic Relacionado (Opcional)*: Se fizer parte de um epic ativo, registrar `epic_id` ou link para o arquivo em `.ai-workspace/epics/`.
 
 #### 🤖 Sugestão Automática (quando o usuário apenas disser “siga”)
 
 Se qualquer um dos campos acima não for respondido explicitamente:
 
-1. Consulte o histórico recente (`.ai-doc/data/tasks/`, `project-state.json`, `lint-report.md`) para inferir o título/objetivo mais provável.
+1. Consulte o histórico recente (`.ai-workspace/tasks/`, `project-state.json`, `lint-report.md`) para inferir o título/objetivo mais provável.
 2. Proponha valores default com justificativa curta (ex.: “Título sugerido: PoC Vitest 4 — mantendo alinhamento com a task-mãe AI-INUYASHA…”).
 3. Caso o usuário apenas confirme com “siga/ok”, use os valores sugeridos e registre essa decisão no histórico da nova task.
 
@@ -51,9 +51,9 @@ Se qualquer um dos campos acima não for respondido explicitamente:
 
 Antes de criar o arquivo, verifique se a task já existe ou se há material de análise prévio:
 
-1.  **Busca**: Pesquise por palavras-chave do título/objetivo na pasta raiz `.ai-doc/data/tasks/`.
+1.  **Busca**: Pesquise por palavras-chave do título/objetivo na pasta raiz `.ai-workspace/tasks/`.
 2.  **Cenário A: Encontrado em Backlog ou Análises**
-    *   **Onde**: `.ai-doc/data/analysis/findings/` (procure por arquivos recentes)
+    *   **Onde**: `.ai-workspace/analysis/findings/` (procure por arquivos recentes)
     *   **Ação**: **NÃO CRIE** um arquivo duplicado se for apenas uma evolução direta.
     *   **Procedimento**:
         1.  Crie a nova task normalmente (passo 3).
@@ -62,7 +62,7 @@ Antes de criar o arquivo, verifique se a task já existe ou se há material de a
         4.  Adicione link reverso na Análise: "Migrado para [Link da Nova Task]".
 
 3.  **Cenário B: Encontrado Task Ativa**
-    *   *Onde*: `.ai-doc/data/tasks/` (arquivos soltos).
+65→    *   *Onde*: `.ai-workspace/tasks/` (arquivos soltos).
     *   *Ação**: **NÃO CRIE** um novo arquivo.
     *   *Procedimento*:
         1.  Leia o arquivo existente.
@@ -93,14 +93,14 @@ Durante a criação da task, você **DEVE** buscar conexões em todo o projeto e
 
 ### 4.  Definição de Caminho
 
-Se a task não existir (ou for criada a partir de backlog/análise), defina o nome do arquivo na raiz de `.ai-doc/data/tasks/`:
+Se a task não existir (ou for criada a partir de backlog/análise), defina o nome do arquivo na raiz de `.ai-workspace/tasks/`:
 
-*   **Padrão**: `.ai-doc/data/tasks/AI-{PERSONA}--TASK-{YYYYMMDD}--{TITULO-SLUG}.md`
-*   **Exemplo**: `.ai-doc/data/tasks/AI-SASUKE--TASK-20251228--implementar-login-social.md`
+*   **Padrão**: `.ai-workspace/tasks/AI-{PERSONA}--TASK-{YYYYMMDD}--{TITULO-SLUG}.md`
+*   **Exemplo**: `.ai-workspace/tasks/AI-SASUKE--TASK-20251228--implementar-login-social.md`
 
 ### 5. 📄 Geração do Arquivo
 
-Crie o arquivo usando o template padrão: `.ai-doc/ai-modules/___tasks/template.md`.
+Crie o arquivo usando o template padrão: `~/.ai-doc/kernel/modules/tasks/templates/template.md`.
 
 **Conteúdo Obrigatório no Frontmatter:**
 ```yaml
@@ -128,7 +128,7 @@ Após criar o arquivo:
 
 ### 7. 🧼 Pós-Conclusão e Sincronização
 
-1.  Ao concluir a task e sincronizá-la com o ClickUp (card criado/atualizado, evidências anexadas), **remova o arquivo local correspondente de `.ai-doc/data/tasks/`**.
+1.  Ao concluir a task e sincronizá-la com o ClickUp (card criado/atualizado, evidências anexadas), **remova o arquivo local correspondente de `.ai-workspace/tasks/`**.
 2.  Registre essa remoção no comentário final do ClickUp e (se aplicável) nas seções de histórico da task-mãe/analysis.
 3.  Mantenha somente tasks ativas em disco; tasks concluídas devem existir apenas como histórico no ClickUp/sistemas externos.
 

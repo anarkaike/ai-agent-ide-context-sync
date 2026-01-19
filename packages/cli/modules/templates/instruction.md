@@ -10,7 +10,7 @@
 Central de modelos padronizados.
 
 ## 📂 Localização
-Os templates estão em `.ai-doc/ai-modules/___templates/assets/`.
+Os templates estão em `~/.ai-doc/kernel/modules/templates/assets/` (Global) ou podem ser acessados via CLI.
 
 ## 🚀 Como Usar
 1.  Identifique o tipo de arquivo necessário (Doc, Task, Script).

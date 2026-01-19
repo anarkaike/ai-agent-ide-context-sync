@@ -11,7 +11,7 @@
 - **Resumo:** {{TASK_ACTIVE.SUMMARY}}
 - **Status atual:** {{TASK_ACTIVE.STATUS}}
 {{else}}
-- *Nenhuma task ativa registrada em `.ai-doc/data/tasks/` no momento.*
+- *Nenhuma task ativa registrada em `.ai-workspace/tasks/` no momento.*
 {{/if}}
 
 ### 🧬 Análise Ativa
@@ -86,7 +86,7 @@ O que falta para fechar a task?
 
 ---
 ### 📌 Checklist Rápido
-- [ ] Task atual atualizada em `.ai-doc/data/tasks/`
+- [ ] Task atual atualizada em `.ai-workspace/tasks/`
 - [ ] Documentação sincronizada? {{DOC_SYNC_STATUS}}
 - [ ] Necessita follow-up humano? {{FOLLOWUP_FLAG}}
 

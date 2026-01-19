@@ -16,7 +16,7 @@ description: Scanner especializado para projetos Laravel quando `laravel/framewo
 - **Dependências**:
   - Scripts: `php artisan list`, `php artisan route:list` (se ambiente permitir)
   - Ferramentas MCP: FileSystem para app/, database/, routes/, config/ + playbooks do módulo `___laravel` (Laravel Boost)
-  - Arquivos de cache: `.ai-doc/data/analysis/active-state.json` (use `templates/tech-profile.json` se precisar criar)
+  - Arquivos de cache: `.ai-workspace/analysis/active-state.json` (use `templates/tech-profile.json` se precisar criar)
 
 ---
 
@@ -49,7 +49,7 @@ description: Scanner especializado para projetos Laravel quando `laravel/framewo
 ---
 
 ## 📤 Saídas Esperadas
-- `.ai-doc/data/analysis/findings/analysis--laravel--{{YYYYMMDD}}.md`
+- `.ai-workspace/analysis/findings/analysis--laravel--{{YYYYMMDD}}.md`
 - Bloco `laravel` atualizado em `active-state.json`.
 - Tópicos de follow-up (tasks) linkados ao finding.
 
@@ -73,7 +73,7 @@ description: Scanner especializado para projetos Laravel quando `laravel/framewo
 
 ## 📚 Referências
 - `docs/40--tech-manual/20--project-architecture-patterns/laravel.md`
-- `.ai-doc/ai-modules/___analysis/templates/tmp--analytics--scanner.md`
+- `~/.ai-doc/kernel/modules/analysis/templates/tmp--analytics--scanner.md`
 
 ---
 

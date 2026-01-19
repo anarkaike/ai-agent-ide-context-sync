@@ -1,6 +1,6 @@
 # 📋 Templates do Kernel
 
-> **SSoT:** todos os templates vivem neste diretório (`.ai-doc/ai-modules/___templates/assets/`).  
+> **SSoT:** todos os templates vivem neste diretório (`~/.ai-doc/kernel/modules/templates/assets/`).  
 > Use-os como base ao criar tasks, análises, scanners ou ações antes de mover para `.ai-doc/data/...`.
 
 ---
@@ -9,10 +9,10 @@
 
 | Template | Descrição | Onde usar |
 | --- | --- | --- |
-| `tmp--analytics--scanner.md` | Template genérico para scanners do módulo ___analysis. | `.ai-doc/ai-modules/___analysis/templates/` (copiar e adaptar) |
-| `tech-profile.json` | Cache base para `active-state` do módulo ___analysis. | `.ai-doc/ai-modules/___analysis/templates/` |
-| `tmp--queue--playlist.md` | Playlist em Markdown para `.ai-doc/queue/queue.md`. | `.ai-doc/queue/queue.md` |
-| `tmp--queue--inbox.md` | Item individual da queue (inbox). | `.ai-doc/queue/inbox/*.md` |
+| `tmp--analytics--scanner.md` | Template genérico para scanners do módulo ___analysis. | `~/.ai-doc/kernel/modules/analysis/templates/` (copiar e adaptar) |
+| `tech-profile.json` | Cache base para `active-state` do módulo ___analysis. | `~/.ai-doc/kernel/modules/analysis/templates/` |
+| `tmp--queue--playlist.md` | Playlist em Markdown para `~/.ai-doc/data/queue/queue.md`. | `~/.ai-doc/data/queue/queue.md` |
+| `tmp--queue--inbox.md` | Item individual da queue (inbox). | `~/.ai-doc/data/queue/inbox/*.md` |
 
 > ⚠️ Se adicionar novos templates, registre-os aqui com descrição e destino recomendado.
 

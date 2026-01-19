@@ -23,13 +23,13 @@ Automatizar a análise de prioridades do agente usando sinais reais (queue, task
 
 ## 🧱 Estrutura
 ```
-.ai-doc/ai-modules/___autopriority/
+.ai-doc/kernel/modules/autopriority/
   instruction.md
-.ai-doc/data/autopriority/
+~/.ai-doc/data/autopriority/
   criteria.json              # critérios confirmados
   pending/                   # drafts aguardando aprovação
   signals-log.json           # histórico das avaliações
-.ai-doc/kernel/scripts/autopriority/
+~/.ai-doc/kernel/scripts/autopriority/
   evaluate-priority.cjs      # motor principal
   learn-signals.cjs          # gera novos critérios sugeridos
   apply-criteria.cjs         # promove drafts após aprovação
@@ -41,7 +41,7 @@ Automatizar a análise de prioridades do agente usando sinais reais (queue, task
 1. **Coleta de Sinais** (`evaluate-priority`)
    - Tasks abertas, idade, prioridade, status.
    - Itens na playlist/inbox da queue.
-   - Último relatório de lint (`.ai-doc/data/reports/lint-report.md`).
+   - Último relatório de lint (`.ai-workspace/reports/lint-report.md`).
    - Preferências do usuário (ex.: emojis obrigatórios).
 2. **Motor de Priorização**
    - Aplica critérios ativos (`criteria.json`), cada um com `condition`, `weight` e histórico.
@@ -49,7 +49,7 @@ Automatizar a análise de prioridades do agente usando sinais reais (queue, task
    - Registra resultado em `signals-log.json` (mantém histórico recente).
 3. **Aprendizado Adaptativo** (`learn-signals`)
    - Detecta padrões ainda não cobertos (ex.: tasks > 72h sem atualização, lint crítico).
-   - Cria drafts em `data/autopriority/pending/` e informa o usuário para aprovar.
+   - Cria drafts em `~/.ai-doc/data/autopriority/pending/` e informa o usuário para aprovar.
 4. **Confirmação** (`apply-criteria`)
    - Usuário escolhe um draft (`--id` ou `--file`) e promove para `criteria.json`.
    - Histórico atualizado com autor/motivo.
@@ -96,7 +96,7 @@ Automatizar a análise de prioridades do agente usando sinais reais (queue, task
 
 ## 🤖 Como Aprovar Novos Critérios
 1. Execute `npm run ai:auto-priority:learn`.
-2. Se houver sugestão, será criado um draft em `.ai-doc/data/autopriority/pending/` com explicação.
+2. Se houver sugestão, será criado um draft em `~/.ai-doc/data/autopriority/pending/` com explicação.
 3. Revise o conteúdo e confirme com `npm run ai:auto-priority:apply -- --file pending/draft-XYZ.json`.
 4. Rode `npm run ai:build` + `npm run ai:health` para propagar regras.
 

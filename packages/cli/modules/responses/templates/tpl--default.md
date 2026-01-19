@@ -39,7 +39,7 @@ description: Resposta completa para coding/tasks explicativas.
 ---
 
 ## 🔗 **Contexto Cruzado & Recomendações**
-_Bloco preenchido automaticamente a partir de `.ai-doc/data/context/context-graph.json` (rode `npm run ai:context:sync` antes de responder). Acrescente observações extras abaixo se necessário._
+_Bloco preenchido automaticamente a partir de `~/.ai-doc/data/context/context-graph.json` (rode `npm run ai:context:sync` antes de responder). Acrescente observações extras abaixo se necessário._
 {{CONTEXT_BLOCK}}
 
 ---

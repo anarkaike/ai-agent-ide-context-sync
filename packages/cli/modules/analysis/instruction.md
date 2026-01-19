@@ -45,8 +45,8 @@ Ao receber uma solicitação de análise ou ao iniciar um novo contexto:
     *   Se Infra detectada -> Execute `scanner--infra.md`.
 
 3.  **Consolidação (Output):**
-    *   **Para Estado Perene:** Atualize o arquivo `.ai-doc/data/analysis/active-state.json` usando o template `tech-profile.json`. Se o arquivo não existir, copie o template da pasta `templates/` antes de preencher.
-    *   **Para Relatório Pontual:** Crie um arquivo em `.ai-doc/data/analysis/findings/` com o padrão `analysis--[topico]--[data].md`.
+    *   **Para Estado Perene:** Atualize o arquivo `.ai-workspace/analysis/active-state.json` usando o template `tech-profile.json`. Se o arquivo não existir, copie o template da pasta `templates/` antes de preencher.
+    *   **Para Relatório Pontual:** Crie um arquivo em `.ai-workspace/analysis/findings/` com o padrão `analysis--[topico]--[data].md`.
 4.  **Auto-Consciência (telemetria humana):**
     *   Execute `npm run ai:scan-proactive` (ou scripts equivalentes) para que o sistema registre automaticamente o estado inicial/final no `memory-log` e no Coffee-Break.
     *   Esses registros incluem humor, foco atual e sinais vitais (diferenças detectadas, falhas de scanners, etc.), permitindo auditoria rápida do kernel.
@@ -60,7 +60,7 @@ Ao receber uma solicitação de análise ou ao iniciar um novo contexto:
 | `scanner--project-id.md` | Sempre | Identificar Stack, Linguagens e Frameworks base. |
 | `scanner--laravel.md` | `composer.json` tem `laravel/framework` | Estrutura de Pastas, Models, Rotas, Pacotes. |
 | `scanner--vue.md` | `package.json` tem `vue` | Components, Stores, Router, Build Tool. |
-| `scanner--docs.md` | Sob demanda | Comparar código existente vs documentação em `.ai-doc/`. |
+| `scanner--docs.md` | Sob demanda | Comparar código existente vs documentação em `~/.ai-doc/`. |
 | *Templates* (`templates/`) | Sempre | Use `tmp--analytics--scanner.md` e `tech-profile.json` como base ao criar novos scanners/cache. |
 
 ---

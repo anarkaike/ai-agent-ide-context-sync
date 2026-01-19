@@ -27,7 +27,7 @@ Mapeia rotas, middlewares e guards usando os comandos MCP do Laravel Boost.
 3. **Comparar com arquivos locais**
    - Verifique `routes/web.php`, `routes/api.php`, `routes/channels.php`, `routes/console.php`.
 4. **Registrar achados**
-   - Atualize `.ai-doc/data/live-state/laravel-routes.json` com rotas-chave (prefixos, middleware, controllers).
+   - Atualize `.ai-workspace/live-state/laravel-routes.json` com rotas-chave (prefixos, middleware, controllers).
    - Documente mudanças/alertas na task ou análise.
 5. **Decidir próximos passos**
    - Se faltarem rotas → alinhar migrations/feature flags.
@@ -41,6 +41,6 @@ Mapeia rotas, middlewares e guards usando os comandos MCP do Laravel Boost.
 ## 🔗 Referências
 - `laravel-boost_terminal`
 - `routes/*.php`
-- `.ai-doc/data/live-state/`
+- `.ai-workspace/live-state/`
 
 <!-- AI-DOC:FULL_END -->

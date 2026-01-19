@@ -56,7 +56,7 @@ description: Formato para incidentes, hotfixes e relatos de erro.
 ---
 
 ## 🔗 Contexto Cruzado & Recomendações
-_Bloco preenchido automaticamente a partir de `.ai-doc/data/context/context-graph.json` (rode `npm run ai:context:sync` antes da resposta). Acrescente observações extras abaixo se necessário._
+_Bloco preenchido automaticamente a partir de `~/.ai-doc/data/context/context-graph.json` (rode `npm run ai:context:sync` antes da resposta). Acrescente observações extras abaixo se necessário._
 {{CONTEXT_BLOCK}}
 
 ---
