@@ -25,6 +25,29 @@ class PromptGenerator {
         this.cache = SmartCache ? new SmartCache(this.projectRoot) : null;
     }
 
+    toNumber(value) {
+        if (!value) return null;
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    getBudget(optionsBudget = {}) {
+        return {
+            maxChars: this.toNumber(optionsBudget.maxChars || process.env.AI_DOC_PROMPT_MAX_CHARS),
+            maxRuleChars: this.toNumber(optionsBudget.maxRuleChars || process.env.AI_DOC_PROMPT_MAX_RULE_CHARS),
+            maxRules: this.toNumber(optionsBudget.maxRules || process.env.AI_DOC_PROMPT_MAX_RULES),
+            maxContextFiles: this.toNumber(optionsBudget.maxContextFiles || process.env.AI_DOC_PROMPT_MAX_CONTEXT_FILES),
+            maxHistoryItems: this.toNumber(optionsBudget.maxHistoryItems || process.env.AI_DOC_PROMPT_MAX_HISTORY_ITEMS)
+        };
+    }
+
+    trimText(text, maxChars, notice) {
+        if (!maxChars || text.length <= maxChars) return text;
+        const suffix = notice || '\n\n⚠️ Conteúdo truncado por orçamento de contexto.';
+        const available = Math.max(0, maxChars - suffix.length);
+        return text.slice(0, available) + suffix;
+    }
+
     /**
      * Gera um prompt estruturado completo
      * @param {Object} options
@@ -36,7 +59,8 @@ class PromptGenerator {
      * @returns {Promise<string>} Prompt formatado
      */
     async generate(options = {}) {
-        const { goal, contextFiles = [], mentions = [], history = [], autoContext = true } = options;
+        const { goal, contextFiles = [], mentions = [], history = [], autoContext = true, budget: optionsBudget = {} } = options;
+        const budget = this.getBudget(optionsBudget);
 
         let finalContextFiles = [...contextFiles];
 
@@ -62,6 +86,12 @@ class PromptGenerator {
             }
         }
 
+        if (budget.maxContextFiles && finalContextFiles.length > budget.maxContextFiles) {
+            finalContextFiles = finalContextFiles.slice(0, budget.maxContextFiles);
+        }
+
+        const limitedHistory = budget.maxHistoryItems ? history.slice(0, budget.maxHistoryItems) : history;
+
         // 0.5 Verifica Cache
         if (this.cache) {
             const cached = this.cache.getCachedPrompt(goal, finalContextFiles);
@@ -71,17 +101,29 @@ class PromptGenerator {
         }
 
         // 1. Coleta regras aplicáveis via RulesManager (Async)
-        const rules = await this.collectRules(finalContextFiles, mentions, goal);
+        let rules = await this.collectRules(finalContextFiles, mentions, goal);
+        if (budget.maxRules && rules.length > budget.maxRules) {
+            rules = rules.slice(0, budget.maxRules);
+        }
+        if (budget.maxRuleChars) {
+            rules = rules.map(rule => ({
+                ...rule,
+                content: this.trimText(rule.content || '', budget.maxRuleChars, '\n\n[...]')
+            }));
+        }
 
         // 2. Monta seções
         const sections = [
             this.buildGoalSection(goal),
-            this.buildContextSection(finalContextFiles, rules, history),
+            this.buildContextSection(finalContextFiles, rules, limitedHistory),
             this.buildConstraintsSection(rules)
         ];
 
         // 3. Junta tudo
-        const finalPrompt = sections.filter(Boolean).join('\n\n');
+        let finalPrompt = sections.filter(Boolean).join('\n\n');
+        if (budget.maxChars) {
+            finalPrompt = this.trimText(finalPrompt, budget.maxChars);
+        }
 
         // Salva cache
         if (this.cache) {

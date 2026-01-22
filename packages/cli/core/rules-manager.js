@@ -266,17 +266,51 @@ class RulesManager {
      * Verifica se um path faz match com globs
      */
     matchesGlobs(filePath, globs) {
-        // Implementação simples - pode ser melhorada com biblioteca como 'minimatch'
         const relativePath = path.relative(this.projectRoot, filePath);
 
         return globs.some(glob => {
-            // Suporte básico para wildcards
-            const pattern = glob
-                .replace(/\*/g, '.*')
-                .replace(/\?/g, '.');
-            const regex = new RegExp(`^${pattern}$`);
-            return regex.test(relativePath);
+            const normalized = glob.replace(/\\/g, '/');
+            const regex = this.globToRegex(normalized);
+            return regex.test(relativePath.replace(/\\/g, '/'));
         });
+    }
+
+    globToRegex(glob) {
+        let regex = '';
+        let i = 0;
+        while (i < glob.length) {
+            const char = glob[i];
+            const next = glob[i + 1];
+
+            if (char === '*' && next === '*') {
+                regex += '.*';
+                i += 2;
+                continue;
+            }
+
+            if (char === '*') {
+                regex += '[^/]*';
+                i += 1;
+                continue;
+            }
+
+            if (char === '?') {
+                regex += '.';
+                i += 1;
+                continue;
+            }
+
+            if ('\\.[]{}()+-^$|'.includes(char)) {
+                regex += `\\${char}`;
+                i += 1;
+                continue;
+            }
+
+            regex += char;
+            i += 1;
+        }
+
+        return new RegExp(`^${regex}$`);
     }
 
     /**

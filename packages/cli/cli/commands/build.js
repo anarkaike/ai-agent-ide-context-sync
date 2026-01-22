@@ -5,8 +5,77 @@
 const fs = require('fs');
 const path = require('path');
 
-function build(kernelPath, wsPath, projectRoot) {
+const CORE_START = '<!-- AI-DOC:CORE_START -->';
+const CORE_END = '<!-- AI-DOC:CORE_END -->';
+const FULL_START = '<!-- AI-DOC:FULL_START -->';
+const FULL_END = '<!-- AI-DOC:FULL_END -->';
+
+function toNumber(value) {
+  if (!value) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function applyBudget(header, blocks, maxChars) {
+  if (!maxChars || maxChars <= 0) {
+    return header + blocks.join('\n\n---\n');
+  }
+
+  const separator = '\n\n---\n';
+  const notice = '\n\n## ⚠️ Contexto truncado\nEste arquivo excedeu o orçamento de contexto e foi reduzido.';
+  let currentBlocks = [...blocks];
+  let content = header + currentBlocks.join(separator);
+
+  if (content.length <= maxChars) return content;
+
+  while (currentBlocks.length > 0) {
+    currentBlocks.pop();
+    content = header + currentBlocks.join(separator) + notice;
+    if (content.length <= maxChars) return content;
+  }
+
+  const truncatedHeader = header.slice(0, Math.max(0, maxChars - notice.length));
+  return truncatedHeader + notice;
+}
+
+function stripFrontmatter(content) {
+  return content.replace(/^---[\s\S]*?---\n*/, '');
+}
+
+function extractSection(content, startTag, endTag) {
+  const startIndex = content.indexOf(startTag);
+  const endIndex = content.indexOf(endTag);
+  if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) return '';
+  return content
+    .slice(startIndex + startTag.length, endIndex)
+    .trim();
+}
+
+function normalizeModuleContent(content, variant) {
+  const cleanContent = stripFrontmatter(content);
+  const core = extractSection(cleanContent, CORE_START, CORE_END);
+  const full = extractSection(cleanContent, FULL_START, FULL_END);
+
+  if (!core && !full) {
+    return cleanContent.trim();
+  }
+
+  if (variant === 'core') {
+    return core.trim();
+  }
+
+  if (core && full) {
+    return `${core.trim()}\n\n${full.trim()}`.trim();
+  }
+
+  return (core || full).trim();
+}
+
+function build(kernelPath, wsPath, projectRoot, options = {}) {
   const now = new Date().toISOString();
+  const variant = options.variant || 'full';
+  const budget = options.budget || {};
+  const maxChars = toNumber(budget.maxChars || process.env.AI_DOC_BUILD_MAX_CHARS);
   
   // Ler config do workspace
   const configPath = path.join(wsPath, 'config.yaml');
@@ -27,6 +96,7 @@ function build(kernelPath, wsPath, projectRoot) {
   const header = `# AI Instructions - ${projectName}
 # Gerado automaticamente pelo AI-DOC Kernel v2.0
 # Data: ${now}
+# Variante: ${variant.toUpperCase()}
 # ⚠️ NÃO EDITE MANUALMENTE - Use 'ai-doc build' para regenerar
 
 `;
@@ -43,9 +113,10 @@ function build(kernelPath, wsPath, projectRoot) {
     
     if (fs.existsSync(instructionFile)) {
       const content = fs.readFileSync(instructionFile, 'utf-8');
-      // Remover frontmatter se existir
-      const cleanContent = content.replace(/^---[\s\S]*?---\n*/, '');
-      instructions.push(`\n## Módulo: ${modName.toUpperCase()}\n\n${cleanContent}`);
+      const normalized = normalizeModuleContent(content, variant);
+      if (normalized) {
+        instructions.push(`\n## Módulo: ${modName.toUpperCase()}\n\n${normalized}`);
+      }
     }
   });
   
@@ -55,15 +126,17 @@ function build(kernelPath, wsPath, projectRoot) {
     fs.readdirSync(stacksPath).forEach(file => {
       if (file.endsWith('.md')) {
         const content = fs.readFileSync(path.join(stacksPath, file), 'utf-8');
-        const cleanContent = content.replace(/^---[\s\S]*?---\n*/, '');
+        const cleanContent = stripFrontmatter(content).trim();
         const stackName = file.replace('.md', '').toUpperCase();
-        instructions.push(`\n## Stack: ${stackName}\n\n${cleanContent}`);
+        if (cleanContent) {
+          instructions.push(`\n## Stack: ${stackName}\n\n${cleanContent}`);
+        }
       }
     });
   }
   
   // Montar conteúdo final
-  const finalContent = header + instructions.join('\n\n---\n');
+  const finalContent = applyBudget(header, instructions, maxChars);
   
   return finalContent;
 }
