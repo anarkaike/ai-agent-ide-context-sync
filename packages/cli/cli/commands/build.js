@@ -16,6 +16,23 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function trimText(text, maxChars, notice) {
+  if (!maxChars || text.length <= maxChars) return text;
+  const suffix = notice || '\n\n⚠️ Conteúdo truncado por orçamento de contexto.';
+  const available = Math.max(0, maxChars - suffix.length);
+  return text.slice(0, available) + suffix;
+}
+
+function parseBudgetMap(value) {
+  if (!value) return {};
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (e) {
+    return {};
+  }
+}
+
 function applyBudget(header, blocks, maxChars) {
   if (!maxChars || maxChars <= 0) {
     return header + blocks.join('\n\n---\n');
@@ -76,6 +93,8 @@ function build(kernelPath, wsPath, projectRoot, options = {}) {
   const variant = options.variant || 'full';
   const budget = options.budget || {};
   const maxChars = toNumber(budget.maxChars || process.env.AI_DOC_BUILD_MAX_CHARS);
+  const moduleBudgets = parseBudgetMap(budget.moduleBudgets || process.env.AI_DOC_BUILD_MODULE_BUDGETS);
+  const stackBudgets = parseBudgetMap(budget.stackBudgets || process.env.AI_DOC_BUILD_STACK_BUDGETS);
   
   // Ler config do workspace
   const configPath = path.join(wsPath, 'config.yaml');
@@ -115,7 +134,9 @@ function build(kernelPath, wsPath, projectRoot, options = {}) {
       const content = fs.readFileSync(instructionFile, 'utf-8');
       const normalized = normalizeModuleContent(content, variant);
       if (normalized) {
-        instructions.push(`\n## Módulo: ${modName.toUpperCase()}\n\n${normalized}`);
+        const budgetLimit = toNumber(moduleBudgets[modName]);
+        const trimmed = trimText(normalized, budgetLimit);
+        instructions.push(`\n## Módulo: ${modName.toUpperCase()}\n\n${trimmed}`);
       }
     }
   });
@@ -129,7 +150,9 @@ function build(kernelPath, wsPath, projectRoot, options = {}) {
         const cleanContent = stripFrontmatter(content).trim();
         const stackName = file.replace('.md', '').toUpperCase();
         if (cleanContent) {
-          instructions.push(`\n## Stack: ${stackName}\n\n${cleanContent}`);
+          const budgetLimit = toNumber(stackBudgets[file.replace('.md', '')]);
+          const trimmed = trimText(cleanContent, budgetLimit);
+          instructions.push(`\n## Stack: ${stackName}\n\n${trimmed}`);
         }
       }
     });

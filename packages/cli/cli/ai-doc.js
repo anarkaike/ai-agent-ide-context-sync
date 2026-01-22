@@ -29,6 +29,7 @@ const log = (msg, color = 'white') => {
 
 const { build } = require('./commands/build');
 const RulesManager = require('../core/rules-manager');
+const yaml = require('js-yaml');
 
 const writeFileSafely = (filePath, content) => {
   const dir = path.dirname(filePath);
@@ -89,12 +90,37 @@ const buildBudgetSnapshot = () => {
   const env = process.env;
   return {
     buildMaxChars: env.AI_DOC_BUILD_MAX_CHARS || '-',
+    buildModuleBudgets: env.AI_DOC_BUILD_MODULE_BUDGETS || '-',
+    buildStackBudgets: env.AI_DOC_BUILD_STACK_BUDGETS || '-',
     promptMaxChars: env.AI_DOC_PROMPT_MAX_CHARS || '-',
     promptMaxRuleChars: env.AI_DOC_PROMPT_MAX_RULE_CHARS || '-',
     promptMaxRules: env.AI_DOC_PROMPT_MAX_RULES || '-',
     promptMaxContextFiles: env.AI_DOC_PROMPT_MAX_CONTEXT_FILES || '-',
     promptMaxHistoryItems: env.AI_DOC_PROMPT_MAX_HISTORY_ITEMS || '-'
   };
+};
+
+const getRulePath = (projectRoot, rule) => {
+  if (rule.level === 'user') {
+    return path.join(require('os').homedir(), '.ai-doc', 'rules', 'user', rule.filename);
+  }
+  if (rule.level === 'project') {
+    return path.join(projectRoot, '.ai-context', 'rules', 'project', rule.filename);
+  }
+  return path.join(projectRoot, '.ai-context', 'rules', 'path-specific', rule.filename);
+};
+
+const updateRuleAlwaysApply = (projectRoot, rule, enabled) => {
+  const rulePath = getRulePath(projectRoot, rule);
+  const content = fs.existsSync(rulePath) ? fs.readFileSync(rulePath, 'utf-8') : '';
+  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  const body = match ? match[2].trim() : rule.content || content;
+  const frontmatter = match ? yaml.load(match[1]) || {} : {};
+  frontmatter.description = frontmatter.description || rule.description || '';
+  frontmatter.alwaysApply = !!enabled;
+  frontmatter.globs = frontmatter.globs || rule.globs || [];
+  const nextContent = `---\n${yaml.dump(frontmatter).trim()}\n---\n\n${body}\n`;
+  writeFileSafely(rulePath, nextContent);
 };
 
 const commands = {
@@ -168,10 +194,34 @@ const commands = {
     }
 
     if (subcommand === 'rules') {
+      const promoteMin = Number(process.env.AI_DOC_RULE_PROMOTE_MIN || 5);
+      const applyPromotions = args.includes('--apply-promotions') || args.includes('--apply');
+      const ruleStats = stats?.rules || {};
+      const allRules = rulesManager.getAllRules();
+      const promotions = allRules.filter(rule => {
+        const usage = ruleStats[rule.id]?.suggestions || 0;
+        return usage >= promoteMin && rule.mode === 'manual';
+      });
+
       log('\n=== 📏 Regras ===\n');
       log(`Total: ${rulesStats.total}`);
       Object.entries(rulesStats.byLevel).forEach(([level, count]) => log(`${level}: ${count}`));
       Object.entries(rulesStats.byMode).forEach(([mode, count]) => log(`${mode}: ${count}`));
+
+      if (promotions.length > 0) {
+        log('\nSugestões de promoção para always:');
+        promotions.forEach(rule => {
+          const usage = ruleStats[rule.id]?.suggestions || 0;
+          log(`- ${rule.id} (${usage} usos)`);
+        });
+      } else {
+        log('\nSem sugestões de promoção.');
+      }
+
+      if (applyPromotions && promotions.length > 0) {
+        promotions.forEach(rule => updateRuleAlwaysApply(projectRoot, rule, true));
+        log('\nPromoções aplicadas.');
+      }
       return;
     }
 
