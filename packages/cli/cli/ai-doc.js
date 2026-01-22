@@ -323,6 +323,25 @@ const runAssistant = async (args = [], commandsRef) => {
   const wantsWorkflow = /workflow|run\s+/.test(normalized);
   const wantsRitual = /ritual/.test(normalized);
   const wantsScan = /scan|scanner|placeholders|verificar docs/.test(normalized);
+  const wantsTask = /task|tarefa|todo/.test(normalized);
+
+  if (wantsTask) {
+    const subArgs = [];
+    if (/nova|criar|iniciar|start|new|add/.test(normalized)) subArgs.push('start');
+    else if (/lista|ver|mostrar|list|ls/.test(normalized)) subArgs.push('list');
+    else if (/complet|conclui|finish|done/.test(normalized)) subArgs.push('complete');
+    else if (/status/.test(normalized)) subArgs.push('status');
+    
+    // Extract title if it's a start command
+    const title = message.replace(/nova task|criar task|iniciar task|task start|task add/i, '').trim();
+    if (subArgs[0] === 'start' && title) subArgs.push(title);
+
+    if (subArgs.length > 0) {
+      actions.push({ command: 'task', args: subArgs });
+    } else {
+      actions.push({ command: 'task', args: ['list'] });
+    }
+  }
 
   if (wantsScan) {
     const args = message.split(' ').slice(1);
@@ -395,6 +414,8 @@ const commands = {
   prompt: require('../commands/prompt'),
   run: require('../commands/run'),
   docs: require('./commands/docs'),
+  task: require('./commands/task'),
+  version: require('./commands/version'),
   scan: async (args = []) => {
     try {
       const { scanDirectory } = require('../modules/docs/tools/placeholder-scanner');
@@ -689,30 +710,43 @@ const commands = {
   init: async () => {
     const projectRoot = process.cwd();
     const wsPath = path.join(projectRoot, '.ai-workspace');
+    const docsPath = path.join(projectRoot, 'docs');
+
     if (fs.existsSync(wsPath)) {
       log('⚠️ Workspace já existe.', 'yellow');
-      return;
+    } else {
+      fs.mkdirSync(path.join(wsPath, 'cache', 'compiled'), { recursive: true });
+      fs.mkdirSync(path.join(wsPath, 'rules', 'project'), { recursive: true });
+      fs.mkdirSync(path.join(wsPath, 'tasks', 'active'), { recursive: true });
+      fs.mkdirSync(path.join(wsPath, 'tasks', 'completed'), { recursive: true });
+      writeJsonSafe(path.join(wsPath, 'stats.json'), { sessions: 0, rules: {} });
+      log('✅ Workspace inicializado em .ai-workspace', 'green');
     }
-    fs.mkdirSync(path.join(wsPath, 'cache', 'compiled'), { recursive: true });
-    fs.mkdirSync(path.join(wsPath, 'rules', 'project'), { recursive: true });
-    writeJsonSafe(path.join(wsPath, 'stats.json'), { sessions: 0, rules: {} });
-    log('✅ Workspace inicializado em .ai-workspace', 'green');
+
+    if (!fs.existsSync(docsPath)) {
+      fs.mkdirSync(docsPath, { recursive: true });
+      fs.writeFileSync(path.join(docsPath, 'README.md'), '# Documentação do Projeto\n\nGerado via ai-doc init.');
+      log('✅ Pasta docs/ criada.', 'green');
+    }
   },
   status: async () => { console.log("AI CLI v2.0 Refactored"); },
   help: () => {
     log('\n🤖 AI Agent Context Sync CLI', 'bright');
     log('\nComandos:', 'yellow');
     log('  ai-doc prompt "..."   Gera prompt estruturado com contexto inteligente');
+    log('  ai-doc task <cmd>     Gerencia tasks (start|list|complete|status)');
     log('  ai-doc run <wf>       Executa workflow de automação');
     log('  ai-doc docs [recipe]  Gera estrutura de documentação (backend|frontend|fullstack)');
+    log('  ai-doc scan [dir]     Verifica placeholders na documentação');
     log('  ai-doc build          Compila e sincroniza regras e instruções');
     log('  ai-doc kernel         Navegação e status do kernel');
     log('  ai-doc ritual         Roda auto-ritual (evolução + kernel + build)');
     log('  ai-doc evolve         Roda ciclo de autoevolução e registra sinais');
     log('  ai-doc chat "..."     Interpreta intenção e executa comandos');
     log('  ai-doc assist "..."   Alias de chat');
-    log('  ai-doc init           Inicializa workspace (Legacy)');
+    log('  ai-doc init           Inicializa workspace e docs');
     log('  ai-doc status         Status do Kernel');
+    log('  ai-doc version        Exibe versão');
   }
 };
 
