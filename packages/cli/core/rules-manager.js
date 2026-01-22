@@ -391,6 +391,23 @@ ${content}`;
             }
         };
     }
+
+    static runCLI() {
+        const manager = new RulesManager();
+        const stats = manager.stats();
+
+        console.log('\n=== Sistema de Regras Multi-Nível ===\n');
+        console.log(`Total: ${stats.total} regras\n`);
+        console.log('Por nível:');
+        Object.entries(stats.byLevel).forEach(([level, count]) => {
+            console.log(`  ${level}: ${count}`);
+        });
+        console.log('\nPor modo:');
+        Object.entries(stats.byMode).forEach(([mode, count]) => {
+            console.log(`  ${mode}: ${count}`);
+        });
+        console.log();
+    }
 }
 
 // Exporta para uso em outros scripts
@@ -400,18 +417,5 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // CLI quando executado diretamente
 if (require.main === module) {
-    const manager = new RulesManager();
-    const stats = manager.stats();
-
-    console.log('\n=== Sistema de Regras Multi-Nível ===\n');
-    console.log(`Total: ${stats.total} regras\n`);
-    console.log('Por nível:');
-    Object.entries(stats.byLevel).forEach(([level, count]) => {
-        console.log(`  ${level}: ${count}`);
-    });
-    console.log('\nPor modo:');
-    Object.entries(stats.byMode).forEach(([mode, count]) => {
-        console.log(`  ${mode}: ${count}`);
-    });
-    console.log();
+    RulesManager.runCLI();
 }

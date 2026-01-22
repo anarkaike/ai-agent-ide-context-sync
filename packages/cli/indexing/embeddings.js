@@ -25,12 +25,19 @@ class EmbeddingsGenerator {
 
         try {
             // Import dinâmico pois é ESM
-            const { pipeline } = await import('@xenova/transformers');
+            const { pipeline } = await this._loadTransformer();
             this.pipeline = await pipeline('feature-extraction', this.modelName);
         } catch (err) {
             console.error('Erro ao carregar modelo de embeddings:', err);
             throw new Error('Falha ao inicializar Xenova. Verifique se @xenova/transformers está instalado.');
         }
+    }
+
+    /**
+     * Wrapper para import dinâmico para facilitar testes
+     */
+    async _loadTransformer() {
+        return await import('@xenova/transformers');
     }
 
     /**

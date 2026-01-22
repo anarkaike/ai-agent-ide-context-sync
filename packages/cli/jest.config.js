@@ -1,8 +1,20 @@
 module.exports = {
     testEnvironment: 'node',
     verbose: true,
-    roots: ['<rootDir>/tests'],
     collectCoverage: true,
     coverageDirectory: 'coverage',
-    coverageReporters: ['text', 'lcov']
+    coverageReporters: ['text', 'lcov'],
+    collectCoverageFrom: [
+        '<rootDir>/core/**/*.js',
+        '<rootDir>/cli/**/*.js',
+        '<rootDir>/commands/**/*.js',
+        '<rootDir>/heuristics/**/*.js',
+        '<rootDir>/indexing/**/*.js',
+        '<rootDir>/parsers/**/*.js',
+        '<rootDir>/workflows/**/*.js',
+        '<rootDir>/evolution/**/*.js',
+        '!**/node_modules/**',
+        '!**/tests/**',
+        '!**/coverage/**'
+    ]
 };

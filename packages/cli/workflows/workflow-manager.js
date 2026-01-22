@@ -168,7 +168,9 @@ class WorkflowManager {
                 break;
 
             case 'append_file':
-                // TODO: Implementar append
+                this.ensureDir(path.dirname(path.join(this.projectRoot, pathSolved)));
+                fs.appendFileSync(path.join(this.projectRoot, pathSolved), contentSolved);
+                console.log(`   Appended to: ${pathSolved}`);
                 break;
 
             default:

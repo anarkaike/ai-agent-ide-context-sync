@@ -144,6 +144,19 @@ class HeuristicsEngine {
 
         return { total, byType };
     }
+
+    static runCLI() {
+        const engine = new HeuristicsEngine();
+        const stats = engine.stats();
+
+        console.log('\n=== Heurísticas do Kernel ===\n');
+        console.log(`Total: ${stats.total} heurísticas`);
+        console.log('\nPor tipo:');
+        Object.entries(stats.byType).forEach(([type, count]) => {
+            console.log(`  ${type}: ${count}`);
+        });
+        console.log();
+    }
 }
 
 // Exporta para uso em outros scripts
@@ -153,14 +166,5 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // CLI quando executado diretamente
 if (require.main === module) {
-    const engine = new HeuristicsEngine();
-    const stats = engine.stats();
-
-    console.log('\n=== Heurísticas do Kernel ===\n');
-    console.log(`Total: ${stats.total} heurísticas`);
-    console.log('\nPor tipo:');
-    Object.entries(stats.byType).forEach(([type, count]) => {
-        console.log(`  ${type}: ${count}`);
-    });
-    console.log();
+    HeuristicsEngine.runCLI();
 }
