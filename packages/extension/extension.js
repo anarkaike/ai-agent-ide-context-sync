@@ -5,6 +5,7 @@ const path = require('path');
 const os = require('os');
 const { I18n, SmartNotifications } = require('./modules');
 const { KanbanManager, AdvancedAnalytics, ThemeManager, CloudSyncManager } = require('./advanced-modules');
+const { AutomationTreeProvider, handleGeneratePrompt, handleRunWorkflow } = require('./automation-modules');
 
 // Global Management Instances
 let i18n = null;
@@ -18,6 +19,7 @@ let statusProvider = null;
 let analyticsProvider = null;
 let statusBarManager = null;
 let timerProvider = null;
+let automationProvider = null;
 
 /**
  * Ensure that personas existing in the global identity state
@@ -864,6 +866,17 @@ class StatusBarManager {
 function activate(context) {
     console.log('AI Agent IDE Context Sync extension activated!');
 
+    // --- Automation Module (New Core) ---
+    automationProvider = new AutomationTreeProvider();
+    vscode.window.registerTreeDataProvider('ai-agent-sync-automation', automationProvider);
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.generatePrompt', handleGeneratePrompt),
+        vscode.commands.registerCommand('ai-agent-sync.runWorkflow', handleRunWorkflow),
+        vscode.commands.registerCommand('ai-agent-sync.runWorkflowInput', handleRunWorkflow)
+    );
+    // -------------------------------------
+
     // Initialize i18n
     i18n = new I18n(context.extensionPath);
 
@@ -1140,13 +1153,13 @@ Fonte: ai-doc status + leitura da pasta .ai-workspace do projeto atual.
 
         panel.webview.onDidReceiveMessage(
             async message => {
-                        if (message.command === 'ready') {
-                            panel.webview.postMessage({
-                                mode,
-                                persona,
-                                sections,
-                                frontmatter
-                            });
+                if (message.command === 'ready') {
+                    panel.webview.postMessage({
+                        mode,
+                        persona,
+                        sections,
+                        frontmatter
+                    });
                 } else if (message.command === 'save') {
                     const name = (message.name || '').trim();
                     const description = (message.description || '').trim();
@@ -1182,22 +1195,22 @@ Fonte: ai-doc status + leitura da pasta .ai-workspace do projeto atual.
                                         return `${match}\ndescription: "${description || 'AI Agent'}"`;
                                     });
                                 }
-                            fs.writeFileSync(personaPath, content);
-                        }
-
-                        vscode.window.showInformationMessage(
-                            i18n.t('messages.motivationalPersonaCreated', name),
-                            i18n.t('messages.viewPersonaDetails'),
-                            i18n.t('messages.openDashboard'),
-                            i18n.t('messages.dismiss')
-                        ).then(selection => {
-                            if (selection === i18n.t('messages.viewPersonaDetails')) {
-                                vscode.commands.executeCommand('ai-agent-sync.viewPersonaDetails', personaPath);
-                            } else if (selection === i18n.t('messages.openDashboard')) {
-                                vscode.commands.executeCommand('ai-agent-sync.openDashboard');
+                                fs.writeFileSync(personaPath, content);
                             }
-                        });
-                    } else if (mode === 'edit' && persona && persona.path) {
+
+                            vscode.window.showInformationMessage(
+                                i18n.t('messages.motivationalPersonaCreated', name),
+                                i18n.t('messages.viewPersonaDetails'),
+                                i18n.t('messages.openDashboard'),
+                                i18n.t('messages.dismiss')
+                            ).then(selection => {
+                                if (selection === i18n.t('messages.viewPersonaDetails')) {
+                                    vscode.commands.executeCommand('ai-agent-sync.viewPersonaDetails', personaPath);
+                                } else if (selection === i18n.t('messages.openDashboard')) {
+                                    vscode.commands.executeCommand('ai-agent-sync.openDashboard');
+                                }
+                            });
+                        } else if (mode === 'edit' && persona && persona.path) {
                             const personaPath = persona.path;
                             if (fs.existsSync(personaPath)) {
                                 let content = fs.readFileSync(personaPath, 'utf-8');

@@ -1,0 +1,10 @@
+---
+description: "Padrões React"
+alwaysApply: false
+globs: ["src/**/*.tsx"]
+---
+
+# React Patterns
+Use functional components.
+Use hooks.
+Evite class components.

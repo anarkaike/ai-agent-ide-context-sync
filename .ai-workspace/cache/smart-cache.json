@@ -1,0 +1,10 @@
+{
+  "prompts": {
+    "c2e8aa520b77436d7cb1c1e5e2e86bc4": {
+      "prompt": "## 🎯 OBJETIVO\ncache test\n\n## 📋 CONTEXTO\n### 📏 Regras Aplicadas\n- **clean-code** (project): Padrões de código limpo\n\n## ⚠️ CONSTRAINTS & REGRAS DETALHADAS\n\n### clean-code\n# Clean Code\nMantenha o código limpo e legível.\nUse nomes significativos.\nFunções pequenas.",
+      "timestamp": 1769101850470,
+      "fileSnapshots": {}
+    }
+  },
+  "files": {}
+}

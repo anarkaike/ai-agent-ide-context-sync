@@ -159,19 +159,19 @@
                 "icon": "$(graph-line)"
             },
             {
-                "command": "ai-agent-sync.monthlyReport",
-                "title": "AI Agent Sync: Monthly Report",
-                "icon": "$(graph)"
-            },
-            {
-                "command": "ai-agent-sync.cloudSync",
-                "title": "AI Agent Sync: Cloud Sync",
-                "icon": "$(cloud-upload)"
-            },
-            {
                 "command": "ai-agent-sync.exportBackup",
                 "title": "AI Agent Sync: Export Backup",
                 "icon": "$(database)"
+            },
+            {
+                "command": "ai-agent-sync.generatePrompt",
+                "title": "AI Agent Sync: Generate Smart Prompt",
+                "icon": "$(sparkle)"
+            },
+            {
+                "command": "ai-agent-sync.runWorkflow",
+                "title": "AI Agent Sync: Run Workflow",
+                "icon": "$(play)"
             }
         ],
         "viewsContainers": {
@@ -200,6 +200,10 @@
                 {
                     "id": "ai-agent-sync-timer",
                     "name": "⏱️ Pomodoro & Focus"
+                },
+                {
+                    "id": "ai-agent-sync-automation",
+                    "name": "⚡ Automation & AI"
                 }
             ]
         },

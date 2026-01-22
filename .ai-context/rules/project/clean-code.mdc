@@ -1,0 +1,10 @@
+---
+description: "Padrões de código limpo"
+alwaysApply: true
+globs: []
+---
+
+# Clean Code
+Mantenha o código limpo e legível.
+Use nomes significativos.
+Funções pequenas.

@@ -1,0 +1,37 @@
+name: Create Component
+description: Scaffold a basic React component
+params:
+  - name: name
+    required: true
+    description: Component name (PascalCase)
+
+steps:
+  - name: Create Component File
+    action: create_file
+    path: src/components/${name}.tsx
+    content: |
+      import React from 'react';
+
+      interface ${name}Props {
+        children?: React.ReactNode;
+      }
+
+      export const ${name}: React.FC<${name}Props> = ({ children }) => {
+        return (
+          <div className="${name}">
+            {children}
+          </div>
+        );
+      };
+
+  - name: Create Test File
+    action: create_file
+    path: src/components/__tests__/${name}.test.tsx
+    content: |
+      import React from 'react';
+      import { render } from '@testing-library/react';
+      import { ${name} } from '../${name}';
+
+      test('renders ${name}', () => {
+        render(<${name} />);
+      });

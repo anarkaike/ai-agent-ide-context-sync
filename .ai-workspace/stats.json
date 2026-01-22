@@ -1,0 +1,11 @@
+{
+  "rules": {
+    "clean-code": {
+      "suggestions": 1,
+      "byReasons": {
+        "always-apply": 1
+      }
+    }
+  },
+  "sessions": 0
+}

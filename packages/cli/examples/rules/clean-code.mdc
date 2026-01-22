@@ -1,0 +1,32 @@
+---
+description: "Padrões de código limpo e boas práticas gerais"
+alwaysApply: true
+globs: []
+---
+
+# Clean Code Principles
+
+Sempre siga estes princípios ao escrever código:
+
+## Nomenclatura
+- Use nomes descritivos e pronunciáveis
+- Evite abreviações obscuras
+- Classes: PascalCase
+- Funções/variáveis: camelCase
+- Constantes: UPPER_SNAKE_CASE
+
+## Funções
+- Mantenha funções pequenas (< 20 linhas idealmente)
+- Uma função deve fazer apenas uma coisa
+- Use parâmetros nomeados para clareza
+- Evite efeitos colaterais
+
+## Comentários
+- Código deve ser auto-explicativo
+- Comente apenas o "porquê", não o "o quê"
+- Mantenha comentários atualizados
+
+## Testes
+- Escreva testes antes de implementar (TDD quando possível)
+- Um assert por teste
+- Nomes de testes devem descrever o comportamento esperado

@@ -1,0 +1,53 @@
+---
+description: "Padrões específicos para componentes React"
+alwaysApply: false
+globs:
+  - "src/components/**/*.tsx"
+  - "src/components/**/*.jsx"
+---
+
+# React Component Patterns
+
+## Estrutura de Componente
+
+```tsx
+// 1. Imports
+import React from 'react';
+import { ComponentProps } from './types';
+
+// 2. Interface de Props
+interface Props {
+  title: string;
+  onAction?: () => void;
+}
+
+// 3. Componente
+export const MyComponent: React.FC<Props> = ({ title, onAction }) => {
+  // 4. Hooks
+  const [state, setState] = useState();
+  
+  // 5. Handlers
+  const handleClick = () => {
+    onAction?.();
+  };
+  
+  // 6. Render
+  return (
+    <div>
+      <h1>{title}</h1>
+    </div>
+  );
+};
+
+// 7. Estilos (se inline)
+const styles = {
+  container: { /* ... */ }
+};
+```
+
+## Regras
+- Use TypeScript sempre
+- Props devem ter interface explícita
+- Componentes funcionais com hooks
+- Evite lógica complexa no JSX
+- Use memo() para componentes pesados

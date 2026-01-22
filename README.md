@@ -140,6 +140,28 @@ ai-doc soul export
 ai-doc soul import soul-backup-20260116.tar.gz
 ```
 
+### 🤖 Smart Prompt
+Gere prompts otimizados para IA que já incluem automaticamente todo o contexto relevante do seu projeto. O sistema usa busca semântica para encontrar arquivos e regras.
+
+```bash
+ai-doc prompt "Criar testes unitários para a autenticação"
+```
+
+O comando gera um prompt estruturado contendo:
+- 🎯 **Objetivo**: O que deve ser feito
+- 📋 **Contexto**: Arquivos relevantes encontrados via embeddings
+- 📏 **Regras**: Diretrizes de projeto e usuário aplicáveis
+- ⚠️ **Constraints**: Restrições técnicas importantes
+
+### ⚡ Workflows de Automação
+Automatize tarefas repetitivas de desenvolvimento com workflows parametrizáveis.
+
+```bash
+ai-doc run create-component name=Header
+```
+
+Workflows são definidos em `.ai-agent/workflows/` e podem criar arquivos, rodar comandos e manipular o sistema de arquivos.
+
 ---
 
 ## 🎨 VS Code Extension
