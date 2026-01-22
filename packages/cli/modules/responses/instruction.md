@@ -1,8 +1,8 @@
 <!-- AI-DOC:CORE_START -->
 - Sempre escolha um template de resposta e siga header/body/footer padronizados.
-- O header deve trazer status do agente, auto-evolução e task ativa (se houver).
-- O footer deve trazer checklist, próximos passos e raciocínio resumido.
-- Títulos de sessão sempre com emoticons para leitura rápida.
+- O header deve trazer status do agente, auto-evolução e task ativa (se houver), sempre em linhas separadas.
+- O footer deve trazer checklist (use emojis `✅` e `⬜`), próximos passos e raciocínio resumido.
+- **Títulos de sessão e listas devem ter emoticons obrigatórios** para leitura rápida e redução de carga cognitiva.
 - Traga evidências: arquivos, comandos e resultados; sem “feito” vazio.
 - Mantenha controle de progresso e próximos passos acionáveis.
 - Se usuário disser “continue/ok/siga”, decida o próximo passo e avance.
@@ -95,7 +95,7 @@ Independente do template escolhido, mantenha estes blocos presentes (o template 
 
 1. **Task Ativa 🔥** – aparece sempre que houver task em `.ai-workspace/tasks/active/`. Inclua título, objetivo curto e status atual (pode citar blocos da task).
 2. **🧬 Análise Ativa** – se existir arquivo em `.ai-workspace/analysis/` vinculado ao trabalho, liste nome + foco + próximos checkpoints.
-3. **🟢 Checklist de Progresso** – logo abaixo da Task Ativa. Comece com a linha “O que falta para fechar a task?” e replique cada item real usando `✅` para concluído e `▫️` para pendente. Emojis no fim da linha podem sinalizar sentimento/alerta.
+3. **🟢 Checklist de Progresso** – logo abaixo da Task Ativa. Comece com a linha “O que falta para fechar a task?” e replique cada item real usando emojis (`✅` para feito e `⬜` para pendente). Emojis no fim da linha podem sinalizar sentimento/alerta.
 4. **💜 Meus Passos** – liste em ordem os últimos arquivos `.md` tocados ou consultados na sessão (até 3 itens) para manter rastreabilidade local.
 5. **⚙️ Modo Auto-Drive** – indique se o agente está operando em execução prolongada. Campos mínimos: `Status (Ativo/Inativo)`, `Contexto` (ex.: “Timer 30m” ou “Até concluir AI-FOO...”), `Expira/Termina`, `Origem` (chat, workflow, CLI).
 

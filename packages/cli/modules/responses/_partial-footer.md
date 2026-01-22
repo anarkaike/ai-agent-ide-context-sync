@@ -27,7 +27,7 @@
 ### 🟢 Checklist de Progresso
 O que falta para fechar a task?
 {{#each PROGRESS_CHECKLIST}}
-- {{#if this.done}}✅{{else}}▫️{{/if}}  {{this.label}} {{this.comment}}
+- {{#if this.done}}✅{{else}}⬜{{/if}} {{this.label}} {{this.comment}}
 {{/each}}
 
 ### 💜 Meus Passos
@@ -92,9 +92,9 @@ O que falta para fechar a task?
 
 ---
 ### 📌 Checklist Rápido
-- [ ] Task atual atualizada em `.ai-workspace/tasks/`
-- [ ] Documentação sincronizada? {{DOC_SYNC_STATUS}}
-- [ ] Necessita follow-up humano? {{FOLLOWUP_FLAG}}
+- ⬜ Task atual atualizada em `.ai-workspace/tasks/`
+- ⬜ Documentação sincronizada? {{DOC_SYNC_STATUS}}
+- ⬜ Necessita follow-up humano? {{FOLLOWUP_FLAG}}
 
 ---
 ### 💗 Empatia Contextual (Multi-Perspectiva)

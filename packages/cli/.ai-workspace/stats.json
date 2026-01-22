@@ -1,0 +1,26 @@
+{
+  "sessions": 0,
+  "rules": {},
+  "autoEvolutionLog": [
+    {
+      "timestamp": "2026-01-22T19:21:06.509Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 1,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": []
+      }
+    }
+  ],
+  "lastUpdated": "2026-01-22T19:21:06.509Z",
+  "lastRitual": "2026-01-22T19:21:06.524Z"
+}

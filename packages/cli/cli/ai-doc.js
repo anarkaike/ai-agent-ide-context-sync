@@ -388,6 +388,7 @@ const runAssistant = async (args = [], commandsRef) => {
 const commands = {
   prompt: require('../commands/prompt'),
   run: require('../commands/run'),
+  docs: require('./commands/docs'),
   build: async () => {
     const projectRoot = process.cwd();
     const kernelPath = path.resolve(__dirname, '..');
@@ -587,19 +588,26 @@ const commands = {
     const statsPath = path.join(wsPath, 'stats.json');
 
     if (!fs.existsSync(wsPath)) {
-      log('❌ Workspace não encontrado. Rode "ai-doc init" primeiro.', 'red');
-      return;
+      log('🔄 Workspace não encontrado. Inicializando...', 'cyan');
+      await commands.init();
     }
+
+    log('\n🕯️ Iniciando Ritual de Manutenção...\n', 'magenta');
 
     runEvolution(projectRoot, statsPath);
     await commands.kernel([]);
-    await commands.kernel(['rules']);
+    
+    log('\n🔧 Auto-Repair: Verificando regras...', 'cyan');
+    await commands.kernel(['rules', '--apply', '--demote']);
+
     await commands.kernel(['cache']);
     await commands.build();
 
     const stats = readJsonSafe(statsPath) || {};
     stats.lastRitual = new Date().toISOString();
     writeJsonSafe(statsPath, stats);
+
+    log('\n✨ Ritual concluído.', 'green');
   },
   evolve: async () => {
     const projectRoot = process.cwd();
@@ -615,13 +623,25 @@ const commands = {
   },
   chat: async (args = []) => runAssistant(args, commands),
   assist: async (args = []) => runAssistant(args, commands),
-  init: async () => { log('Init não migrado nesta versão. Use o init legado ou crie .ai-workspace manualmente.'); },
+  init: async () => {
+    const projectRoot = process.cwd();
+    const wsPath = path.join(projectRoot, '.ai-workspace');
+    if (fs.existsSync(wsPath)) {
+      log('⚠️ Workspace já existe.', 'yellow');
+      return;
+    }
+    fs.mkdirSync(path.join(wsPath, 'cache', 'compiled'), { recursive: true });
+    fs.mkdirSync(path.join(wsPath, 'rules', 'project'), { recursive: true });
+    writeJsonSafe(path.join(wsPath, 'stats.json'), { sessions: 0, rules: {} });
+    log('✅ Workspace inicializado em .ai-workspace', 'green');
+  },
   status: async () => { console.log("AI CLI v2.0 Refactored"); },
   help: () => {
     log('\n🤖 AI Agent Context Sync CLI', 'bright');
     log('\nComandos:', 'yellow');
     log('  ai-doc prompt "..."   Gera prompt estruturado com contexto inteligente');
     log('  ai-doc run <wf>       Executa workflow de automação');
+    log('  ai-doc docs [recipe]  Gera estrutura de documentação (backend|frontend|fullstack)');
     log('  ai-doc build          Compila e sincroniza regras e instruções');
     log('  ai-doc kernel         Navegação e status do kernel');
     log('  ai-doc ritual         Roda auto-ritual (evolução + kernel + build)');

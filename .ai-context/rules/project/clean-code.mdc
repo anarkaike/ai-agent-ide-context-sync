@@ -1,6 +1,6 @@
 ---
-description: "Padrões de código limpo"
-alwaysApply: true
+description: Padrões de código limpo
+alwaysApply: false
 globs: []
 ---
 
