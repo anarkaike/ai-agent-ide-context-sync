@@ -7,6 +7,7 @@
 ---
 ### 🔥 Task Ativa
 {{#if TASK_ACTIVE}}
+- **Título:** {{#if TASK_ACTIVE.LINK}}[{{TASK_ACTIVE.TITLE}}]({{TASK_ACTIVE.LINK}}){{else}}{{TASK_ACTIVE.TITLE}}{{/if}}
 - **Arquivo:** {{TASK_ACTIVE.FILE}}
 - **Resumo:** {{TASK_ACTIVE.SUMMARY}}
 - **Status atual:** {{TASK_ACTIVE.STATUS}}
@@ -62,6 +63,11 @@ O que falta para fechar a task?
 {{else}}
 *Nenhuma reflexão registrada além do plano atual.*
 {{/if}}
+
+### 🧠 Raciocínio Resumido
+- **Hipótese:** {{RATIONALE_HYPOTHESIS}}
+- **Decisão:** {{RATIONALE_DECISION}}
+- **Riscos/Assunções:** {{RATIONALE_RISKS}}
 
 ### 🔮 Próximos passos sugeridos
 {{#if SUGGESTED_STEPS.length}}

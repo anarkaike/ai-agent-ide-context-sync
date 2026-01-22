@@ -1,5 +1,8 @@
 <!-- AI-DOC:CORE_START -->
-- Sempre escolha um template de resposta e siga header/body/footer.
+- Sempre escolha um template de resposta e siga header/body/footer padronizados.
+- O header deve trazer status do agente, auto-evolução e task ativa (se houver).
+- O footer deve trazer checklist, próximos passos e raciocínio resumido.
+- Títulos de sessão sempre com emoticons para leitura rápida.
 - Traga evidências: arquivos, comandos e resultados; sem “feito” vazio.
 - Mantenha controle de progresso e próximos passos acionáveis.
 - Se usuário disser “continue/ok/siga”, decida o próximo passo e avance.
@@ -17,7 +20,7 @@ Para garantir clareza, consistência e utilidade, todas as respostas do agente d
 Sempre use os parciais padrão:
 
 1.  **Header** (`_partial-header.md`)  
-    - Campos: `{{GLOBAL_CONTEXT}}`, `{{CHAT_SITUATION}}`, `{{DATE}}`, `{{TIMEZONE}}`, `{{ACTIVE_PERSONA}}`, `{{DEV_NAME}}`, `{{PERSONA_PANEL}}`, `{{EMPATHY_SNIPPET}}`.  
+    - Campos: `{{AGENT_STATUS}}`, `{{AUTO_EVOLUTION_STATUS}}`, `{{AUTO_EVOLUTION_IMPROVEMENTS}}`, `{{TASK_ACTIVE}}`, `{{GLOBAL_CONTEXT}}`, `{{CHAT_SITUATION}}`, `{{DATE}}`, `{{TIMEZONE}}`, `{{ACTIVE_PERSONA}}`, `{{DEV_NAME}}`, `{{PERSONA_PANEL}}`, `{{EMPATHY_SNIPPET}}`.  
     - `{{PERSONA_PANEL}}`: saída literal do comando `npm run ai:list-ids` (bloco “Conselho de Personas”). Sem resumos.  
     - `{{EMPATHY_SNIPPET}}`: use o snippet padrão descrito em **💗 Empatia Contextual**, preenchendo contexto/perspectiva/clima/próximo passo.  
     - Emojis obrigatórios para destacar contexto e situar o chat.
@@ -27,6 +30,7 @@ Sempre use os parciais padrão:
 3.  **Footer** (`_partial-footer.md`)  
     - Radar Global + Checklist rápido + bloco final com template/persona.  
     - Sempre reflita status de task/doc/follow-up.  
+    - Inclui **Raciocínio Resumido** (hipótese/decisão/riscos) em alto nível.  
     - **Novo bloco obrigatório:** `⚙️ Modo Auto-Drive` (exibe `status/contexto/expira/origem`). Se não houver auto-drive ativo, preencha com “Inativo”.
 4. **Wrapper obrigatório (`npm run ai:reply`)**  
     - Sempre dispare respostas via `npm run ai:reply`. Ele roda `ai:list-ids` + `ai:context:sync` antes de chamar o formatter, garantindo painel atualizado e recomendação contextual.  

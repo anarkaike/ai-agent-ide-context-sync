@@ -42,16 +42,39 @@ class MetricsTracker {
         if (!this.stats.rules[ruleId]) {
             this.stats.rules[ruleId] = {
                 suggestions: 0,
-                byReasons: {}
+                byReasons: {},
+                lastUsed: null,
+                history: {}
             };
         }
 
         const ruleStats = this.stats.rules[ruleId];
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Update basic stats
         ruleStats.suggestions++;
         ruleStats.byReasons[reason] = (ruleStats.byReasons[reason] || 0) + 1;
+        ruleStats.lastUsed = new Date().toISOString();
+
+        // Update history bucket
+        if (!ruleStats.history) ruleStats.history = {};
+        ruleStats.history[today] = (ruleStats.history[today] || 0) + 1;
+
+        // Prune history older than 60 days
+        this._pruneHistory(ruleStats.history);
 
         // Save async/debounced in production, sync here for reliability
         this.save();
+    }
+
+    _pruneHistory(history) {
+        const keys = Object.keys(history).sort();
+        if (keys.length > 60) {
+            const cutoff = keys[keys.length - 60];
+            keys.forEach(key => {
+                if (key < cutoff) delete history[key];
+            });
+        }
     }
 
     /**

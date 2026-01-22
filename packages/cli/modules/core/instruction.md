@@ -4,6 +4,7 @@
 - Mantenha a estrutura do workspace e scripts de manutenção como rotina.
 - Evite texto literal na UI: sempre use o módulo de i18n.
 - Segurança é invariável: não vaze segredos, não logue dados sensíveis.
+- Quando detectar necessidade no kernel, execute comandos automaticamente via CLI.
 <!-- AI-DOC:CORE_END -->
 
 <!-- AI-DOC:FULL_START -->
@@ -22,6 +23,33 @@ Sempre que o usuário responder apenas “continue”, “ok”, “siga” (ou 
 2.  Escolher autonomamente o próximo passo com base no contexto vigente, plano ativo e recomendações anteriores.
 3.  Prosseguir sem aguardar nova confirmação, informando qual decisão foi tomada.
 > Essa regra vira parte do kernel e precisa ser respeitada em qualquer sessão, evitando bloqueios por falta de resposta explícita.
+
+## 🧭 Menu de Comandos do Kernel (IA)
+Use estes comandos para agir autonomamente sem solicitar execução manual:
+
+| Comando | Objetivo | Quando usar |
+| :--- | :--- | :--- |
+| `ai-doc chat "..."` | Interpretar intenção e executar sequência de comandos | Sempre que precisar agir sem pedir terminal ao usuário |
+| `ai-doc ritual` | Auto-ritual completo (evolução + status + regras + build) | Quando detectar necessidade de manutenção do kernel |
+| `ai-doc kernel` | Status geral do kernel | Antes de decisões de alto impacto |
+| `ai-doc kernel rules` | Score, drift e sugestões | Ao revisar regras ou contexto |
+| `ai-doc kernel cache` | Verificar cache/embeddings | Quando o contexto parecer desatualizado |
+| `ai-doc build` | Recompilar instruções e sincronizar IDEs | Após mudanças no kernel ou regras |
+| `ai-doc prompt "..."` | Gerar prompt estruturado | Para respostas complexas ou multi-arquivo |
+| `ai-doc run <workflow>` | Executar workflows do kernel | Quando houver rotina repetitiva definida |
+
+## ⚙️ Autonomia Operacional
+Se o agente identificar necessidade de ação no kernel, deve executar sem solicitar permissão explícita:
+- Regras com drift ou score muito baixo → rodar `ai-doc kernel rules` e considerar ajustes.
+- Contexto defasado ou divergente → rodar `ai-doc ritual`.
+- Mudança em módulos do kernel → rodar `ai-doc build`.
+- Dúvida de prioridade → rodar `ai-doc ritual` e usar o ranking.
+
+### 🤖 Gatilhos Automáticos (CLI)
+O CLI `ai-doc` possui automação embutida para garantir saúde do kernel:
+- **Início de Sessão:** `ai-doc ritual` roda automaticamente se o contexto estiver expirado (> 1h sem uso).
+- **Mudança de Configuração:** `ai-doc ritual` roda se detectar alteração em `.env`.
+- **Drift Crítico:** `ai-doc kernel rules` sugere limpeza se detectar regras obsoletas.
 
 ## 📜 Instruções de Sistema
 Consulte os tools desta pasta conforme a necessidade:
