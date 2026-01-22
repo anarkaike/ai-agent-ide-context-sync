@@ -124,20 +124,26 @@ function build(kernelPath, wsPath, projectRoot, options = {}) {
   let instructions = [];
   
   const modulesPath = path.join(kernelPath, 'modules');
-  const moduleOrder = ['core', 'identity', 'memory', 'tasks', 'analysis', 'responses'];
+  const moduleOrder = ['core', 'identity', 'memory', 'tasks', 'analysis', 'docs', 'responses'];
   
   moduleOrder.forEach(modName => {
     const modPath = path.join(modulesPath, modName);
     const instructionFile = path.join(modPath, 'instruction.md');
     
+    // console.log(`Checking module: ${modName} at ${instructionFile}`);
+
     if (fs.existsSync(instructionFile)) {
       const content = fs.readFileSync(instructionFile, 'utf-8');
       const normalized = normalizeModuleContent(content, variant);
+      // console.log(`Normalized content length for ${modName}: ${normalized ? normalized.length : 0}`);
+      
       if (normalized) {
         const budgetLimit = toNumber(moduleBudgets[modName]);
         const trimmed = trimText(normalized, budgetLimit);
         instructions.push(`\n## Módulo: ${modName.toUpperCase()}\n\n${trimmed}`);
       }
+    } else {
+        // console.log(`Module file not found: ${instructionFile}`);
     }
   });
   

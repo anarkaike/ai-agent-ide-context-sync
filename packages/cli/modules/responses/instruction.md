@@ -22,7 +22,7 @@ Sempre use os parciais padrão:
 1.  **Header** (`_partial-header.md`)  
     - Campos: `{{AGENT_STATUS}}`, `{{AUTO_EVOLUTION_STATUS}}`, `{{AUTO_EVOLUTION_IMPROVEMENTS}}`, `{{TASK_ACTIVE}}`, `{{GLOBAL_CONTEXT}}`, `{{CHAT_SITUATION}}`, `{{DATE}}`, `{{TIMEZONE}}`, `{{ACTIVE_PERSONA}}`, `{{DEV_NAME}}`, `{{PERSONA_PANEL}}`, `{{EMPATHY_SNIPPET}}`.  
     - `{{PERSONA_PANEL}}`: saída literal do comando `npm run ai:list-ids` (bloco “Conselho de Personas”). Sem resumos.  
-    - `{{EMPATHY_SNIPPET}}`: use o snippet padrão descrito em **💗 Empatia Contextual**, preenchendo contexto/perspectiva/clima/próximo passo.  
+25→    - `{{EMPATHY_SNIPPET}}`: use o snippet padrão descrito em **💗 Empatia Contextual**, preenchendo contexto/perspectiva/clima/próximo passo. Use lista simples com emojis, sem blockquotes HTML.  
     - Emojis obrigatórios para destacar contexto e situar o chat.
 2.  **Body**  
     - Formatação específica por template (ver seção a seguir).  
@@ -50,14 +50,13 @@ Sempre use os parciais padrão:
 
 ### Painel de Personas + Empatia
 1. Execute `npm run ai:list-ids` antes de responder; capture o bloco “🧠 Conselho de Personas” inteiro e injete em `{{PERSONA_PANEL}}`.
-2. Defina `{{EMPATHY_SNIPPET}}` com base no checklist da tabela de perspectivas do footer:
-   ```
-   > Empatia contextual:
-   > - Contexto: {nível/contexto}
-   > - Perspectiva dominante: {Produto/Projeto/Dev/Infra/IA}
-   > - Clima atual: {calmo/alerta/etc.}
-   > - Próximo passo sugerido: {ação alinhada}
-   ```
+2.53→2. Defina `{{EMPATHY_SNIPPET}}` com base no checklist da tabela de perspectivas (use lista com emojis, evite blockquotes):
+54→   ```
+55→   - 🔦 Contexto: {nível/contexto}
+56→   - 🔭 Perspectiva dominante: {Produto/Projeto/Dev/Infra/IA}
+57→   - 🌡️ Clima atual: {calmo/alerta/etc.}
+58→   - 👣 Próximo passo sugerido: {ação alinhada}
+59→   ```
 3. Para greetings/workflows sensíveis, mencione explicitamente qual persona foi escolhida e o estado do dev.
 
 ## 🔀 Seletor de Template (Router)

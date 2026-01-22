@@ -322,6 +322,12 @@ const runAssistant = async (args = [], commandsRef) => {
   const wantsPrompt = /prompt|pergunta|gerar prompt|gera prompt|escrever prompt/.test(normalized);
   const wantsWorkflow = /workflow|run\s+/.test(normalized);
   const wantsRitual = /ritual/.test(normalized);
+  const wantsScan = /scan|scanner|placeholders|verificar docs/.test(normalized);
+
+  if (wantsScan) {
+    const args = message.split(' ').slice(1);
+    actions.push({ command: 'scan', args });
+  }
 
   if (wantsRules) {
     const applyPromote = /aplicar|apply|promov/.test(normalized);
@@ -389,6 +395,42 @@ const commands = {
   prompt: require('../commands/prompt'),
   run: require('../commands/run'),
   docs: require('./commands/docs'),
+  scan: async (args = []) => {
+    try {
+      const { scanDirectory } = require('../modules/docs/tools/placeholder-scanner');
+      const targetDir = args[0] || 'docs'; // Default to docs folder
+      const absoluteTargetDir = path.resolve(process.cwd(), targetDir);
+      
+      log(`\n🔍 Scanning for placeholders in: ${absoluteTargetDir}\n`, 'cyan');
+      
+      if (!fs.existsSync(absoluteTargetDir)) {
+         log(`❌ Directory not found: ${absoluteTargetDir}`, 'red');
+         return;
+      }
+
+      const allIssues = scanDirectory(absoluteTargetDir);
+      const fileCount = Object.keys(allIssues).length;
+
+      if (fileCount === 0) {
+        log('✅ No placeholders found. Documentation looks clean!', 'green');
+      } else {
+        log(`⚠️  Found potential placeholders in ${fileCount} file(s):\n`, 'yellow');
+        
+        Object.entries(allIssues).forEach(([file, issues]) => {
+          const relativePath = path.relative(process.cwd(), file);
+          log(`📄 ${relativePath}`, 'white');
+          issues.forEach(issue => {
+            log(`   L${issue.line}: ${issue.content} (matches ${issue.pattern})`, 'dim');
+          });
+          console.log('');
+        });
+        
+        log('❌ Please review and fill in the missing information.', 'red');
+      }
+    } catch (error) {
+      log(`❌ Error running scan: ${error.message}`, 'red');
+    }
+  },
   build: async () => {
     const projectRoot = process.cwd();
     const kernelPath = path.resolve(__dirname, '..');
@@ -422,6 +464,27 @@ const commands = {
     outputs.forEach(output => {
       log(`- ${output.label}: ${path.relative(projectRoot, output.path)}`);
     });
+
+    // Validar documentação após build (Kernel Rule: Deep Research + Placeholder Check)
+    try {
+      const { scanDirectory } = require('../modules/docs/tools/placeholder-scanner');
+      const docsDir = path.resolve(projectRoot, 'docs');
+      
+      if (fs.existsSync(docsDir)) {
+        log('\n🔍 Validando conformidade da documentação...', 'cyan');
+        const allIssues = scanDirectory(docsDir);
+        const fileCount = Object.keys(allIssues).length;
+
+        if (fileCount === 0) {
+          log('✅ Documentação validada: Nenhum placeholder encontrado.', 'green');
+        } else {
+          log(`⚠️  Atenção: ${fileCount} arquivo(s) contém placeholders pendentes.`, 'yellow');
+          log('💡 Execute "ai-doc scan" para ver detalhes e corrigir.', 'white');
+        }
+      }
+    } catch (err) {
+      // Ignora erro se scanner não estiver disponível ou falhar, para não quebrar o build
+    }
   },
   kernel: async (args = []) => {
     const projectRoot = process.cwd();

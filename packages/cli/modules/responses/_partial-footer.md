@@ -95,9 +95,6 @@ O que falta para fechar a task?
 - ⬜ Task atual atualizada em `.ai-workspace/tasks/`
 - ⬜ Documentação sincronizada? {{DOC_SYNC_STATUS}}
 - ⬜ Necessita follow-up humano? {{FOLLOWUP_FLAG}}
-
----
-### 💗 Empatia Contextual (Multi-Perspectiva)
 - Use sempre que responder greetings, relatórios, handoffs técnicos ou alinhamentos sensíveis.
 - Combine nível de contexto + persona dominante + clima atual antes de sugerir próximos passos.
 

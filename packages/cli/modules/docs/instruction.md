@@ -4,6 +4,9 @@
 - README.md é obrigatório em toda pasta de docs.
 - Use templates oficiais e mantenha breadcrumbs e links cruzados.
 - Registre decisões de arquitetura e regras de negócio detectadas.
+- Após gerar /docs, revise cada arquivo e preencha todos os placeholders com dados reais do projeto.
+- Faça pesquisa profunda e abrangente no repo antes de preencher; não invente.
+- Valide a documentação com `ai-doc scan` para garantir que não restam placeholders.
 - Se faltar informação, registre pendência e abra task para completar.
 <!-- AI-DOC:CORE_END -->
 
@@ -31,12 +34,27 @@ Módulo responsável por governar como a documentação do projeto é criada, at
 - Recipes: `~/.ai-doc/kernel/modules/docs/recipes/`
 - Schema de config: `~/.ai-doc/kernel/modules/docs/templates/docs-config.schema.json`
 - Exemplo de config: `~/.ai-doc/kernel/modules/docs/templates/docs-config.example.json`
+- Tools: `~/.ai-doc/kernel/modules/docs/tools/`
+
+## 🧰 Ferramentas
+### Placeholder Scanner
+Ferramenta para validar se restaram placeholders nos arquivos de documentação.
+- Comando: `ai-doc scan [pasta]` (default: docs)
+- Quando usar: Sempre após gerar ou atualizar documentação, como passo final de validação.
 
 ## 🧪 Atualização Contínua
 - Toda alteração de código deve atualizar a documentação relacionada.
 - Se a funcionalidade foi removida, a doc correspondente deve ser removida e os links ajustados.
 - Se arquivos/pastas foram renomeados, atualize breadcrumbs e links cruzados.
 - Se a documentação não puder ser atualizada agora, registre a pendência em task.
+
+## 🧠 Protocolo de Preenchimento Profundo
+1. Fazer varredura ampla do repo: README raiz, manifests (package.json/cargo.toml/composer.json), pastas principais e docs existentes.
+2. Buscar fontes de verdade: comandos, módulos, scripts e estruturas reais do projeto.
+3. Substituir placeholders (ex.: `[Nome]`, `YYYY-MM-DD`, `[Descrição]`) por conteúdo validado no código.
+4. Remover instruções de template e listas de placeholder; entregar conteúdo final limpo.
+5. Validar breadcrumbs e links cruzados entre os READMEs.
+6. Se algum dado não puder ser inferido com segurança, sinalizar pendência e abrir task.
 
 ## 🧱 Recipes (Estruturas)
 As receitas definem a estrutura da pasta `/docs` e os templates obrigatórios por tipo de projeto.
@@ -55,8 +73,9 @@ Exemplos de recipes:
 3. Gerar ou atualizar estrutura da docs.
 4. Aplicar templates oficiais.
 5. Garantir README em todas as pastas.
-6. Inserir breadcrumbs e links cruzados.
-7. Validar consistência e cobertura.
+6. Preencher placeholders com dados reais (protocolo de preenchimento profundo).
+7. Inserir breadcrumbs e links cruzados.
+8. Validar consistência e cobertura.
 
 ## 🔗 Integrações
 - Analysis: scanners alimentam o mapa de stack e padrões.
