@@ -188,3 +188,12 @@ module.exports = async (args) => {
       console.log('  ai-doc task status           Status atual');
   }
 };
+
+module.exports.formatDate = formatDate;
+module.exports.slugify = slugify;
+module.exports.getNextId = getNextId;
+module.exports.ensureDirs = ensureDirs;
+module.exports.start = start;
+module.exports.list = list;
+module.exports.complete = complete;
+module.exports.status = status;

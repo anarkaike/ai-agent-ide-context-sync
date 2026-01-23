@@ -22,25 +22,34 @@ module.exports = async (args) => {
     }
 
     const projectRoot = process.cwd();
+    // Instancia parser e generator
     const parser = new MentionParser(projectRoot);
     const generator = new PromptGenerator(projectRoot);
 
     log('🔍 Analisando contexto...', 'dim');
+    
+    // Parseia menções
     const mentions = parser.parse(query);
 
-    const prompt = await generator.generate({
-        goal: query,
-        contextFiles: mentions.files,
-        mentions: mentions.rules,
-        history: [],
-        autoContext: true
-    });
+    try {
+        const prompt = await generator.generate({
+            goal: query,
+            contextFiles: mentions.files,
+            mentions: mentions.rules,
+            history: [],
+            autoContext: true
+        });
 
-    console.log('\n=== 🤖 PROMPT GERADO ===');
-    console.log(prompt);
-    console.log();
+        console.log('\n=== 🤖 PROMPT GERADO ===');
+        console.log(prompt);
+        console.log();
 
-    if (mentions.files.length > 0 || mentions.rules.length > 0) {
-        log(`   Contexto: ${mentions.files.length} arquivos, ${mentions.rules.length} regras`, 'dim');
+        if (mentions.files.length > 0 || mentions.rules.length > 0) {
+            log(`   Contexto: ${mentions.files.length} arquivos, ${mentions.rules.length} regras`, 'dim');
+        }
+    } catch (error) {
+        log(`❌ Erro ao gerar prompt: ${error.message}`, 'red');
     }
 };
+
+module.exports.log = log; // Export for testing

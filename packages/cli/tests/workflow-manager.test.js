@@ -154,6 +154,58 @@ describe('WorkflowManager', () => {
         expect(result).toBeNull();
     });
 
+    test('listWorkflows should skip non-existent directories', () => {
+        const globalDir = path.join(os.homedir(), '.ai-doc', 'workflows');
+        const projectDir = path.join(mockProjectRoot, '.ai-context', 'workflows');
+
+        fs.existsSync.mockImplementation((path) => {
+            if (path === globalDir) return false;
+            if (path === projectDir) return true;
+            return false;
+        });
+        fs.readdirSync.mockReturnValue([]);
+
+        const workflows = manager.listWorkflows();
+        expect(workflows).toEqual([]);
+        expect(fs.readdirSync).toHaveBeenCalledTimes(1); // Only for projectDir
+    });
+
+    test('listWorkflows should ignore files that fail to parse or have no steps', () => {
+        const dir = path.join(mockProjectRoot, '.ai-context', 'workflows');
+        fs.existsSync.mockReturnValue(true);
+        fs.readdirSync.mockReturnValue(['no-steps.yaml', 'invalid.yaml']);
+        
+        fs.readFileSync.mockImplementation((p) => {
+            if (p.includes('no-steps.yaml')) return 'name: No Steps'; // Valid YAML, no steps
+            if (p.includes('invalid.yaml')) return '---'; // Empty
+        });
+
+        // Mock parseWorkflow indirectly by letting it run or mocking it?
+        // Let's rely on the real parseWorkflow since we are testing listWorkflows integration
+        // But we need to make sure parseWorkflow returns null for these.
+        
+        // 'name: No Steps' -> { name: 'No Steps' } -> no steps -> returns null
+        // '---' -> null -> returns null
+
+        const workflows = manager.listWorkflows();
+        expect(workflows).toHaveLength(0);
+    });
+
+    test('runWorkflow should succeed when all required params are provided', async () => {
+        const workflow = {
+            id: 'test-req-ok',
+            steps: [],
+            params: [{ name: 'req', required: true }]
+        };
+        
+        jest.spyOn(manager, 'listWorkflows').mockReturnValue([workflow]);
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        
+        await manager.runWorkflow('test-req-ok', { req: 'value' });
+        
+        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Workflow concluído'));
+    });
+
     test('runWorkflow should throw if required params are missing', async () => {
         const workflow = {
             id: 'test-req',

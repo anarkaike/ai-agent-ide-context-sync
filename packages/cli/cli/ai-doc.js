@@ -228,6 +228,7 @@ const collectEvolutionSignals = (projectRoot, stats) => {
     const usage = ruleStats[rule.id] || { suggestions: 0, byReasons: {} };
     const drift = detectDrift(rule, usage);
     if (drift) drifted.push({ id: rule.id, ...drift });
+
     const score = computeRuleScore(usage, rule);
     if (usage.suggestions > 0 && score === 0) lowScore.push({ id: rule.id, suggestions: usage.suggestions });
     if (usage.suggestions > 0 && !usage.history) missingHistory.push({ id: rule.id });
@@ -300,7 +301,7 @@ const checkAutoTriggers = (projectRoot) => {
   return triggers;
 };
 
-const runAssistant = async (args = [], commandsRef) => {
+const runAssistant = async (args, commandsRef) => {
   const message = args.join(' ').trim();
   const projectRoot = process.cwd();
 
@@ -349,11 +350,17 @@ const runAssistant = async (args = [], commandsRef) => {
   }
 
   if (wantsRules) {
-    const applyPromote = /aplicar|apply|promov/.test(normalized);
-    const applyDemote = /rebaix|demot/.test(normalized);
+    const isApply = /aplicar|apply/.test(normalized);
     const ruleArgs = ['rules'];
-    if (applyPromote) ruleArgs.push('--apply');
-    if (applyDemote) ruleArgs.push('--demote');
+
+    if (/promov|promote/.test(normalized)) {
+        ruleArgs.push('--promote');
+    }
+    if (/rebaix|demot/.test(normalized)) {
+        ruleArgs.push('--demote');
+    }
+
+    if (isApply) ruleArgs.push('--apply');
     actions.push({ command: 'kernel', args: ruleArgs });
   }
 
@@ -589,7 +596,7 @@ const commands = {
       if (promotions.length > 0) {
         log('\nSugestões de promoção para always:');
         promotions.forEach(rule => {
-          const usage = ruleStats[rule.id]?.suggestions || 0;
+          const usage = ruleStats[rule.id]?.suggestions;
           log(`- ${rule.id} (${usage} usos)`);
         });
       } else {
@@ -770,4 +777,21 @@ const main = async () => {
   }
 };
 
-main();
+/* istanbul ignore next */
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  main,
+  commands,
+  formatBytes,
+  formatDate,
+  computeRuleScore,
+  detectDrift,
+  updateRuleAlwaysApply,
+  log,
+  listFiles,
+  countFilesRecursive,
+  normalizeText
+};

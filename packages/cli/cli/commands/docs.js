@@ -41,7 +41,7 @@ const writeFileSafe = (filePath, content) => {
   return false;
 };
 
-module.exports = async (args = []) => {
+const run = async (args = []) => {
   const projectRoot = process.cwd();
   // We assume this file is in packages/cli/cli/commands/docs.js
   // Modules are in packages/cli/modules
@@ -152,3 +152,10 @@ module.exports = async (args = []) => {
   log(`   Arquivos criados: ${createdFiles}`);
   log(`\n👉 Próximo passo: Explore a pasta /docs e preencha os READMEs.\n`, 'magenta');
 };
+
+run.ensureDir = ensureDir;
+run.getTemplateContent = getTemplateContent;
+run.writeFileSafe = writeFileSafe;
+run.log = log; // Exported for testing
+
+module.exports = run;

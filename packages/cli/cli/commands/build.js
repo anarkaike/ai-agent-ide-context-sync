@@ -170,4 +170,14 @@ function build(kernelPath, wsPath, projectRoot, options = {}) {
   return finalContent;
 }
 
-module.exports = { build };
+module.exports = { 
+  build,
+  // Exports for testing
+  toNumber,
+  trimText,
+  parseBudgetMap,
+  applyBudget,
+  stripFrontmatter,
+  extractSection,
+  normalizeModuleContent
+};

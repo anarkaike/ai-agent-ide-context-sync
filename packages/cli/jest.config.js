@@ -13,6 +13,7 @@ module.exports = {
         '<rootDir>/parsers/**/*.js',
         '<rootDir>/workflows/**/*.js',
         '<rootDir>/evolution/**/*.js',
+        '<rootDir>/modules/**/*.js',
         '!**/node_modules/**',
         '!**/tests/**',
         '!**/coverage/**'

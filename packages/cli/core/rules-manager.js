@@ -411,11 +411,13 @@ ${content}`;
 }
 
 // Exporta para uso em outros scripts
+/* istanbul ignore next */
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = RulesManager;
 }
 
 // CLI quando executado diretamente
+/* istanbul ignore next */
 if (require.main === module) {
     RulesManager.runCLI();
 }

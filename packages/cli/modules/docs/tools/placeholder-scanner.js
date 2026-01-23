@@ -85,7 +85,7 @@ function scanDirectory(dir) {
 }
 
 // Main execution if run directly
-if (require.main === module) {
+const main = () => {
   const targetDir = process.argv[2] || '.';
   const absoluteTargetDir = path.resolve(targetDir);
 
@@ -112,6 +112,11 @@ if (require.main === module) {
     console.log('❌ Please review and fill in the missing information.');
     process.exit(1);
   }
+};
+
+/* istanbul ignore next */
+if (require.main === module) {
+  main();
 }
 
-module.exports = { scanDirectory, scanFile };
+module.exports = { scanDirectory, scanFile, main };

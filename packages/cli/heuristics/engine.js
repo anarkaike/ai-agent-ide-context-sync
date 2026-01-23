@@ -160,11 +160,13 @@ class HeuristicsEngine {
 }
 
 // Exporta para uso em outros scripts
+/* istanbul ignore next */
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = HeuristicsEngine;
 }
 
 // CLI quando executado diretamente
+/* istanbul ignore next */
 if (require.main === module) {
     HeuristicsEngine.runCLI();
 }

@@ -61,6 +61,17 @@ describe('HeuristicsEngine', () => {
         expect(engine.heuristics.navigation.node[0].id).toBe('h1');
     });
 
+    test('should load .yml files and handle missing heuristics property', () => {
+        fs.existsSync.mockReturnValue(true);
+        fs.readdirSync.mockReturnValue(['test.yml']);
+        fs.readFileSync.mockReturnValue('content');
+        yaml.load.mockReturnValue({}); // No heuristics property -> || []
+
+        engine = new HeuristicsEngine();
+        
+        expect(engine.heuristics.navigation.test).toEqual([]);
+    });
+
     test('should handle load errors gracefully', () => {
         fs.existsSync.mockReturnValue(true);
         fs.readdirSync.mockReturnValue(['broken.yaml']);
@@ -102,7 +113,17 @@ describe('HeuristicsEngine', () => {
         expect(result).toBe(true);
         expect(engine.heuristics.navigation.node[0].times_applied).toBe(1);
         expect(engine.heuristics.navigation.node[0].last_used).toBeDefined();
-        expect(engine.save).toHaveBeenCalled();
+        expect(engine.save).toHaveBeenCalledWith('navigation', 'node');
+    });
+
+    test('apply should return false if type/stack missing', () => {
+        const result = engine.apply('invalid', 'stack', 'id');
+        expect(result).toBe(false);
+    });
+
+    test('learn should initialize type/stack if missing', () => {
+        engine.learn('newType', 'newStack', { id: 'h1' });
+        expect(engine.heuristics.newType.newStack).toHaveLength(1);
     });
 
     test('apply should return false if heuristic not found', () => {
