@@ -733,7 +733,7 @@ function getAllTasks() {
     const tasksPath = path.join(aiWorkspacePath, 'tasks', 'active');
     if (!fs.existsSync(tasksPath)) return [];
 
-    const taskFiles = fs.readdirSync(tasksPath).filter(f => f.endsWith('.md'));
+    const taskFiles = fs.readdirSync(tasksPath).filter(f => f.endsWith('.md') && f.toLowerCase() !== 'readme.md');
 
     return taskFiles.map(file => {
         const taskPath = path.join(tasksPath, file);
