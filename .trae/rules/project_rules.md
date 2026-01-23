@@ -1,6 +1,6 @@
 # AI Instructions - ai-agent-ide-context-sync
 # Gerado automaticamente pelo AI-DOC Kernel v2.0
-# Data: 2026-01-23T04:02:38.498Z
+# Data: 2026-01-23T18:02:08.044Z
 # Variante: CORE
 # ⚠️ NÃO EDITE MANUALMENTE - Use 'ai-doc build' para regenerar
 
@@ -75,6 +75,8 @@
 - Sempre escolha um template de resposta e siga header/body/footer padronizados.
 - O header deve trazer status do agente, auto-evolução e task ativa (se houver), sempre em linhas separadas.
 - O footer deve trazer checklist (use emojis `✅` e `⬜`), próximos passos e raciocínio resumido.
+- **FORMATAÇÃO OBRIGATÓRIA:** Checklists devem ser SEMPRE listas verticais (um item por linha), usando bullets do Markdown (`- `). Nunca coloque itens lado a lado.
+- **PROIBIDO:** Nunca use checkboxes markdown (`[ ]`, `[x]`) ou tags HTML (`<input>`) em checklists; isso quebra a UI. Use APENAS emojis.
 - **Títulos de sessão e listas devem ter emoticons obrigatórios** para leitura rápida e redução de carga cognitiva.
 - Traga evidências: arquivos, comandos e resultados; sem “feito” vazio.
 - Mantenha controle de progresso e próximos passos acionáveis.

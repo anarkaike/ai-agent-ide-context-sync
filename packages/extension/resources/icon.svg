@@ -9,7 +9,8 @@
       <stop offset="100%" stop-color="#22c55e" />
     </linearGradient>
   </defs>
-  <rect x="6" y="6" width="52" height="52" rx="14" fill="url(#bg)" />
+  <!-- Background removed for transparent activity bar icon -->
+  <!-- <rect x="6" y="6" width="52" height="52" rx="14" fill="url(#bg)" /> -->
   <circle cx="32" cy="32" r="14" fill="#020617" stroke="#1f2937" stroke-width="1.6" />
   <path d="M19 32c0-7.2 5.8-13 13-13 3.8 0 7.2 1.6 9.7 4.2" fill="none" stroke="url(#orbit)" stroke-width="2.4" stroke-linecap="round" />
   <path d="M45 32c0 7.2-5.8 13-13 13-3.8 0-7.2-1.6-9.7-4.2" fill="none" stroke="url(#orbit)" stroke-width="2.4" stroke-linecap="round" />
