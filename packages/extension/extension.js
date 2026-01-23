@@ -1,15 +1,16 @@
 const vscode = require('vscode');
-const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { I18n, SmartNotifications } = require('./modules');
 const { KanbanManager, AdvancedAnalytics, ThemeManager, CloudSyncManager } = require('./advanced-modules');
-const { AutomationTreeProvider, handleGeneratePrompt, handleRunWorkflow } = require('./automation-modules');
+const { AutomationTreeProvider, handleGeneratePrompt, handleRunWorkflow, setAutomationI18n } = require('./automation-modules');
+const RitualScheduler = require('./modules/RitualScheduler');
 
 // Global Management Instances
 let i18n = null;
 let notifications = null;
+let ritualScheduler = null;
 let kanbanManager = null;
 let analytics = null;
 let themeManager = null;
@@ -144,14 +145,14 @@ class PersonasTreeProvider {
         const personasPath = path.join(aiWorkspacePath, 'personas');
 
         if (!fs.existsSync(personasPath)) {
-            return [this.createActionItem('➕ Create First Persona', 'ai-agent-sync.createPersona')];
+            return [this.createActionItem('➕ Create First Persona', 'ai-agent-sync.createPersona', null, i18n.t('tooltips.createFirstPersona'))];
         }
 
         const personaFiles = fs.readdirSync(personasPath)
             .filter(f => f.endsWith('.md') && f.startsWith('AI-'));
 
         if (personaFiles.length === 0) {
-            return [this.createActionItem('➕ Create First Persona', 'ai-agent-sync.createPersona')];
+            return [this.createActionItem('➕ Create First Persona', 'ai-agent-sync.createPersona', null, i18n.t('tooltips.createFirstPersona'))];
         }
 
         const settingsPath = path.join(aiWorkspacePath, '.persona-settings.json');
@@ -219,7 +220,7 @@ class PersonasTreeProvider {
         });
 
         // Add "Create New" button at the end
-        personas.push(this.createActionItem('➕ Create New Persona', 'ai-agent-sync.createPersona'));
+        personas.push(this.createActionItem('➕ Create New Persona', 'ai-agent-sync.createPersona', null, i18n.t('tooltips.createNewPersona')));
 
         return personas;
     }
@@ -232,7 +233,7 @@ class PersonasTreeProvider {
         tasksItem.personaName = personaElement.personaName;
         details.push(tasksItem);
 
-        details.push(this.createActionItem('View Full Details', 'ai-agent-sync.viewPersonaDetails', personaElement.personaPath));
+        details.push(this.createActionItem('View Full Details', 'ai-agent-sync.viewPersonaDetails', personaElement.personaPath, i18n.t('tooltips.viewPersonaDetails')));
 
         return details;
     }
@@ -241,14 +242,14 @@ class PersonasTreeProvider {
         const tasksPath = path.join(aiWorkspacePath, 'tasks', 'active');
 
         if (!fs.existsSync(tasksPath)) {
-            return [this.createActionItem('➕ Create Task', 'ai-agent-sync.createTask', personaName)];
+            return [this.createActionItem('➕ Create Task', 'ai-agent-sync.createTask', personaName, i18n.t('tooltips.createTaskForPersona'))];
         }
 
         const taskFiles = fs.readdirSync(tasksPath)
             .filter(f => f.startsWith(personaName) && f.endsWith('.md'));
 
         if (taskFiles.length === 0) {
-            return [this.createActionItem('➕ Create Task', 'ai-agent-sync.createTask', personaName)];
+            return [this.createActionItem('➕ Create Task', 'ai-agent-sync.createTask', personaName, i18n.t('tooltips.createTaskForPersona'))];
         }
 
         const tasks = taskFiles.map(file => {
@@ -280,7 +281,7 @@ class PersonasTreeProvider {
             return item;
         });
 
-        tasks.push(this.createActionItem('Create New Task', 'ai-agent-sync.createTask', personaName));
+        tasks.push(this.createActionItem('Create New Task', 'ai-agent-sync.createTask', personaName, i18n.t('tooltips.createTaskForPersona')));
 
         return tasks;
     }
@@ -327,15 +328,15 @@ class PersonasTreeProvider {
         }
 
         // Add actions
-        items.push(this.createActionItem('View Full Details', 'ai-agent-sync.showTaskDetails', taskPath));
-        items.push(this.createActionItem('Edit Task', 'ai-agent-sync.openFile', taskPath));
-        items.push(this.createActionItem('Archive Task', 'ai-agent-sync.archiveTask', taskPath));
-        items.push(this.createActionItem('Delete Task', 'ai-agent-sync.deleteTask', taskPath));
+        items.push(this.createActionItem('View Full Details', 'ai-agent-sync.showTaskDetails', taskPath, i18n.t('tooltips.viewTaskDetails')));
+        items.push(this.createActionItem('Edit Task', 'ai-agent-sync.openFile', taskPath, i18n.t('tooltips.editTask')));
+        items.push(this.createActionItem('Archive Task', 'ai-agent-sync.archiveTask', taskPath, i18n.t('tooltips.archiveTask')));
+        items.push(this.createActionItem('Delete Task', 'ai-agent-sync.deleteTask', taskPath, i18n.t('tooltips.deleteTask')));
 
         return items;
     }
 
-    createActionItem(label, command, arg) {
+    createActionItem(label, command, arg, tooltip) {
         const item = new vscode.TreeItem(label);
         item.command = {
             command: command,
@@ -343,6 +344,11 @@ class PersonasTreeProvider {
             arguments: arg ? [arg] : []
         };
         item.contextValue = 'action';
+        if (tooltip) {
+            item.tooltip = tooltip;
+        } else {
+            item.tooltip = label;
+        }
 
         // Use icons instead of just text
         if (label.includes('Create')) item.iconPath = new vscode.ThemeIcon('add');
@@ -372,11 +378,11 @@ class StatusTreeProvider {
         return element;
     }
 
-    getChildren(element) {
+    async getChildren(element) {
         if (!element) {
             try {
-                const output = execSync('ai-doc status', { encoding: 'utf-8' });
-
+                const client = new AIClient();
+                const output = await client.getKernelStatus();
                 const cleanOutput = output.replace(/\x1b\[[0-9;]*m/g, '');
 
                 const items = [];
@@ -866,8 +872,12 @@ class StatusBarManager {
 function activate(context) {
     console.log('AI Agent IDE Context Sync extension activated!');
 
+    // Initialize i18n
+    i18n = new I18n(context.extensionPath);
+    setAutomationI18n(i18n);
+
     // --- Automation Module (New Core) ---
-    automationProvider = new AutomationTreeProvider();
+    automationProvider = new AutomationTreeProvider(i18n);
     vscode.window.registerTreeDataProvider('ai-agent-sync-automation', automationProvider);
 
     context.subscriptions.push(
@@ -877,9 +887,6 @@ function activate(context) {
     );
     // -------------------------------------
 
-    // Initialize i18n
-    i18n = new I18n(context.extensionPath);
-
     // Initialize Smart Notifications
     notifications = new SmartNotifications(context, i18n);
     const aiWorkspacePath = getAiWorkspacePath();
@@ -887,6 +894,11 @@ function activate(context) {
         notifications.start(aiWorkspacePath);
         ensureWorkspacePersonas(aiWorkspacePath);
     }
+
+    // Initialize Ritual Scheduler
+    ritualScheduler = new RitualScheduler(context, i18n);
+    ritualScheduler.start();
+    context.subscriptions.push({ dispose: () => ritualScheduler.stop() });
 
     // Initialize Advanced Modules
     kanbanManager = aiWorkspacePath ? new KanbanManager(context, aiWorkspacePath) : null;
@@ -942,12 +954,64 @@ function activate(context) {
  * Register all commands
  */
 function registerCommands(context) {
+    // New Commands (v2.1)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.scanDocs', async () => {
+            const client = new AIClient();
+            try {
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: i18n.t('automation.scanDocsProgress'),
+                    cancellable: false
+                }, async () => {
+                    const output = await client.scanDocs();
+                    vscode.window.showInformationMessage(i18n.t('automation.scanDocsCompleted', output));
+                });
+            } catch (e) {
+                vscode.window.showErrorMessage(i18n.t('automation.scanDocsFailed', e));
+            }
+        }),
+        vscode.commands.registerCommand('ai-agent-sync.ritual', async () => {
+            const client = new AIClient();
+            try {
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: i18n.t('automation.runRitualProgress'),
+                    cancellable: false
+                }, async () => {
+                    await client.runRitual();
+                    vscode.window.showInformationMessage(i18n.t('automation.runRitualCompleted'));
+                    // Refresh status
+                    statusProvider.refresh();
+                });
+            } catch (e) {
+                vscode.window.showErrorMessage(i18n.t('automation.runRitualFailed', e));
+            }
+        }),
+        vscode.commands.registerCommand('ai-agent-sync.evolve', async () => {
+            const client = new AIClient();
+            try {
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: i18n.t('automation.evolveRulesProgress'),
+                    cancellable: false
+                }, async () => {
+                    const output = await client.evolveRules();
+                    vscode.window.showInformationMessage(i18n.t('automation.evolveRulesCompleted', output));
+                });
+            } catch (e) {
+                vscode.window.showErrorMessage(i18n.t('automation.evolveRulesFailed', e));
+            }
+        })
+    );
+
     // Initialize workspace
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.init', async () => {
             try {
-                execSync('ai-doc init', { encoding: 'utf-8' });
-                vscode.window.showInformationMessage('✅ Workspace initialized!');
+                const client = new AIClient();
+                await client.initWorkspace();
+                vscode.window.showInformationMessage(i18n.t('messages.workspaceInitialized'));
 
                 // Re-initialize managers with new workspace path
                 const newAiWorkspacePath = getAiWorkspacePath();
@@ -966,9 +1030,9 @@ function registerCommands(context) {
                     const terminal = vscode.window.createTerminal('AI Agent CLI + Init');
                     terminal.show();
                     terminal.sendText('npm install -g ai-agent-ide-context-sync && ai-doc init', true);
-                    vscode.window.showInformationMessage('Instalando ai-doc CLI globalmente e inicializando o workspace...');
+                    vscode.window.showInformationMessage(i18n.t('messages.installingCliAndInit'));
                 } else {
-                    vscode.window.showErrorMessage(`❌ Init failed: ${error.message}`);
+                    vscode.window.showErrorMessage(i18n.t('messages.initFailed', error.message));
                 }
             }
         })
@@ -978,8 +1042,9 @@ function registerCommands(context) {
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.showKernelInfo', async () => {
             try {
-                const statusOutput = execSync('ai-doc status', { encoding: 'utf-8' })
-                    .replace(/\x1b\[[0-9;]*m/g, '');
+                const client = new AIClient();
+                const output = await client.getKernelStatus();
+                const statusOutput = output.replace(/\x1b\[[0-9;]*m/g, '');
 
                 const lines = statusOutput.split('\n').map(l => l.trim()).filter(Boolean);
                 const kernelLine = lines.find(l => l.toLowerCase().includes('ai kernel'));
@@ -1044,17 +1109,18 @@ Fonte: ai-doc status + leitura da pasta .ai-workspace do projeto atual.
         vscode.commands.registerCommand('ai-agent-sync.build', async () => {
             vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
-                title: 'Building AI Agent Context...',
+                title: i18n.t('messages.buildingContext'),
                 cancellable: false
             }, async (progress) => {
                 try {
-                    progress.report({ increment: 0, message: 'Compiling modules...' });
-                    const output = execSync('ai-doc build', { encoding: 'utf-8' });
-                    progress.report({ increment: 100, message: 'Done!' });
-                    vscode.window.showInformationMessage('✅ Context built successfully!');
+                    progress.report({ increment: 0, message: i18n.t('messages.compilingModules') });
+                    const client = new AIClient();
+                    await client.buildContext();
+                    progress.report({ increment: 100, message: i18n.t('messages.buildDone') });
+                    vscode.window.showInformationMessage(i18n.t('messages.contextBuilt'));
                     statusProvider.refresh();
                 } catch (error) {
-                    vscode.window.showErrorMessage(`❌ Build failed: ${error.message}`);
+                    vscode.window.showErrorMessage(i18n.t('messages.buildFailed', error.message));
                 }
             });
         })
@@ -1063,7 +1129,7 @@ Fonte: ai-doc status + leitura da pasta .ai-workspace do projeto atual.
     async function openPersonaForm(mode, filePath) {
         const aiWorkspacePath = getAiWorkspacePath();
         if (!aiWorkspacePath) {
-            vscode.window.showErrorMessage('No .ai-workspace found');
+            vscode.window.showErrorMessage(i18n.t('messages.noWorkspaceFound'));
             return;
         }
 
@@ -1165,23 +1231,24 @@ Fonte: ai-doc status + leitura da pasta .ai-workspace do projeto atual.
                     const description = (message.description || '').trim();
 
                     if (!name) {
-                        vscode.window.showErrorMessage('Name is required');
+                        vscode.window.showErrorMessage(i18n.t('messages.personaNameRequired'));
                         return;
                     }
 
                     if (!name.startsWith('AI-')) {
-                        vscode.window.showErrorMessage('Name must start with AI-');
+                        vscode.window.showErrorMessage(i18n.t('messages.personaNamePrefix'));
                         return;
                     }
 
                     if (!/^AI-[A-Z]+$/.test(name)) {
-                        vscode.window.showErrorMessage('Use uppercase letters only (e.g., AI-NARUTO)');
+                        vscode.window.showErrorMessage(i18n.t('messages.personaNameUppercase'));
                         return;
                     }
 
                     try {
                         if (mode === 'create') {
-                            execSync(`ai-doc identity create ${name}`, { encoding: 'utf-8' });
+                            const client = new AIClient();
+                            await client.createIdentity(name);
                             ensureWorkspacePersonas(aiWorkspacePath);
 
                             const personaPath = path.join(aiWorkspacePath, 'personas', `${name}.md`);
@@ -1927,13 +1994,14 @@ status: active
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.status', async () => {
             try {
-                const output = execSync('ai-doc status', { encoding: 'utf-8' });
-                const outputChannel = vscode.window.createOutputChannel('AI Agent Sync');
+                const client = new AIClient();
+                const output = await client.getStatus();
+                const outputChannel = vscode.window.createOutputChannel(i18n.t('messages.outputChannelTitle'));
                 outputChannel.clear();
                 outputChannel.appendLine(output);
                 outputChannel.show();
             } catch (error) {
-                vscode.window.showErrorMessage(`❌ Status check failed: ${error.message}`);
+                vscode.window.showErrorMessage(i18n.t('messages.statusFailed', error.message));
             }
         })
     );
@@ -1944,16 +2012,16 @@ status: active
             const tasks = getAllTasks();
 
             if (tasks.length === 0) {
-                vscode.window.showInformationMessage('No tasks found. Create one first!');
+                vscode.window.showInformationMessage(i18n.t('messages.noTasksFound'));
                 return;
             }
 
             // Add "Create New Task" option at the top
             const items = [
                 {
-                    label: '$(add) Create New Task',
+                    label: i18n.t('quickPicker.createNewTaskLabel'),
                     description: '',
-                    detail: 'Create a new task for a persona',
+                    detail: i18n.t('quickPicker.createNewTaskDetail'),
                     isCreateNew: true
                 },
                 { label: '', kind: vscode.QuickPickItemKind.Separator },
@@ -1961,7 +2029,7 @@ status: active
             ];
 
             const selected = await vscode.window.showQuickPick(items, {
-                placeHolder: 'Select a task or create new',
+                placeHolder: i18n.t('quickPicker.placeHolder'),
                 matchOnDescription: true,
                 matchOnDetail: true
             });
@@ -1984,8 +2052,8 @@ status: active
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.searchTasks', async () => {
             const searchTerm = await vscode.window.showInputBox({
-                prompt: 'Search in tasks and checklists',
-                placeHolder: 'Enter search term...'
+                prompt: i18n.t('search.prompt'),
+                placeHolder: i18n.t('search.placeHolder')
             });
 
             if (!searchTerm) return;
@@ -2000,7 +2068,7 @@ status: active
                 if (task.label.toLowerCase().includes(searchTerm.toLowerCase())) {
                     results.push({
                         ...task,
-                        matchType: 'Title'
+                        matchType: i18n.t('search.matchTitle')
                     });
                     continue;
                 }
@@ -2014,26 +2082,26 @@ status: active
                 if (matchingLines.length > 0) {
                     results.push({
                         ...task,
-                        matchType: `${matchingLines.length} checklist item(s)`,
+                        matchType: i18n.t('search.matchChecklistItems', matchingLines.length),
                         detail: matchingLines[0].trim()
                     });
                 }
             }
 
             if (results.length === 0) {
-                vscode.window.showInformationMessage(`No results found for "${searchTerm}"`);
+                vscode.window.showInformationMessage(i18n.t('messages.noResultsFound', searchTerm));
                 return;
             }
 
             const selected = await vscode.window.showQuickPick(
                 results.map(r => ({
                     label: r.label,
-                    description: `${r.persona} - Match in: ${r.matchType}`,
+                    description: i18n.t('search.resultDescription', r.persona, r.matchType),
                     detail: r.detail,
                     path: r.path
                 })),
                 {
-                    placeHolder: `${results.length} result(s) for "${searchTerm}"`
+                    placeHolder: i18n.t('search.resultsPlaceholder', results.length, searchTerm)
                 }
             );
 
@@ -2048,7 +2116,7 @@ status: active
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.clearActiveTask', () => {
             statusBarManager.updateTask(null);
-            vscode.window.showInformationMessage('Active task cleared');
+            vscode.window.showInformationMessage(i18n.t('messages.activeTaskCleared'));
         })
     );
 
@@ -2057,7 +2125,7 @@ status: active
         vscode.commands.registerCommand('ai-agent-sync.openDashboard', () => {
             const panel = vscode.window.createWebviewPanel(
                 'aiAgentDashboard',
-                '📊 AI Agent Dashboard',
+                i18n.t('dashboard.title'),
                 vscode.ViewColumn.One,
                 {
                     enableScripts: true,
@@ -2710,7 +2778,8 @@ Apenas tarefas ativas em \`.ai-workspace/tasks/active/\` são consideradas.
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.showHeuristics', async () => {
             try {
-                const output = execSync('ai-doc heuristics', { encoding: 'utf-8' });
+                const client = new AIClient();
+                const output = await client.listHeuristics();
 
                 const lines = output.split('\n').map(l => l.replace(/\x1b\[[0-9;]*m/g, ''));
 
@@ -2760,12 +2829,12 @@ Apenas tarefas ativas em \`.ai-workspace/tasks/active/\` são consideradas.
 
                 const md = transformed.join('\n');
 
-                const content = `# 💡 Heurísticas Aprendidas
+                const content = `# ${i18n.t('heuristics.title')}
 
 ${md}
 
 ---
-Generated: ${new Date().toLocaleString()}
+${i18n.t('heuristics.generated', new Date().toLocaleString())}
 `;
 
                 showWebviewReport(`# 💡 Heurísticas Aprendidas`, content);

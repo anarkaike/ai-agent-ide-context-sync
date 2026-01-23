@@ -10,6 +10,16 @@ Outros idiomas e documentos relacionados:
 - README (EN): [README.md](./README.md)
 - README (PT-BR): [README.pt-BR.md](./README.pt-BR.md)
 
+## [2.0.14] - 2026-01-23
+
+### Adicionado
+- 🛠️ Seção dedicada "Maintenance & Context" na barra lateral (Scan Docs, Run Ritual, Evolve Rules)
+- 🌐 Tooltips bilíngues (EN/PT-BR) para todas as ações da barra lateral
+- 🧪 Cobertura abrangente de testes unitários para módulos lógicos centrais
+
+### Corrigido
+- 🐛 Suporte i18n nos botões de ação do RitualScheduler
+
 ## [2.0.13] - 2026-01-18
 
 ### Alterado

@@ -27,12 +27,35 @@ suite('AI Agent IDE Context Sync Extension Tests', () => {
             'ai-agent-sync.editPersona',
             'ai-agent-sync.deletePersona',
             'ai-agent-sync.createTask',
+            'ai-agent-sync.archiveTask',
+            'ai-agent-sync.deleteTask',
+            'ai-agent-sync.viewPersonaDetails',
+            'ai-agent-sync.showTaskDetails',
+            'ai-agent-sync.generatePrompt',
+            'ai-agent-sync.runWorkflow',
+            'ai-agent-sync.runWorkflowInput',
+            'ai-agent-sync.scanDocs',
+            'ai-agent-sync.ritual',
+            'ai-agent-sync.evolve',
+            'ai-agent-sync.showKernelInfo',
             'ai-agent-sync.quickPicker',
             'ai-agent-sync.searchTasks',
+            'ai-agent-sync.clearActiveTask',
             'ai-agent-sync.openDashboard',
             'ai-agent-sync.timerMenu',
             'ai-agent-sync.exportTasks',
-            'ai-agent-sync.customizePersona'
+            'ai-agent-sync.customizePersona',
+            'ai-agent-sync.openKanban',
+            'ai-agent-sync.selectTheme',
+            'ai-agent-sync.weeklyReport',
+            'ai-agent-sync.monthlyReport',
+            'ai-agent-sync.exportBackup',
+            'ai-agent-sync.cloudSync',
+            'ai-agent-sync.showActiveTasks',
+            'ai-agent-sync.showPersonas',
+            'ai-agent-sync.showChecklistItems',
+            'ai-agent-sync.showCompletionDetails',
+            'ai-agent-sync.showHeuristics'
         ];
 
         commands.forEach(command => {
@@ -139,6 +162,70 @@ suite('AI Agent IDE Context Sync Extension Tests', () => {
                 JSON.parse(fs.readFileSync(enPath, 'utf-8'));
                 JSON.parse(fs.readFileSync(ptPath, 'utf-8'));
             });
+        });
+
+        test('Should contain all new automation tooltips', () => {
+            const ext = vscode.extensions.getExtension('junio-de-almeida-vitorino.ai-agent-ide-context-sync-vscode');
+            const en = JSON.parse(fs.readFileSync(path.join(ext.extensionPath, 'locales', 'en.json'), 'utf-8'));
+            const pt = JSON.parse(fs.readFileSync(path.join(ext.extensionPath, 'locales', 'pt-BR.json'), 'utf-8'));
+
+            const keys = [
+                'automation.scanDocsTooltip',
+                'automation.runRitualTooltip',
+                'automation.evolveRulesTooltip'
+            ];
+
+            keys.forEach(key => {
+                const parts = key.split('.');
+                const enValue = parts.reduce((obj, k) => obj && obj[k], en);
+                const ptValue = parts.reduce((obj, k) => obj && obj[k], pt);
+
+                assert.ok(enValue, `Missing EN translation for ${key}`);
+                assert.ok(ptValue, `Missing PT-BR translation for ${key}`);
+            });
+        });
+    });
+
+    suite('Automation Tree Provider', () => {
+        let AutomationTreeProvider;
+        let provider;
+        let mockI18n;
+
+        suiteSetup(() => {
+            const modules = require('../automation-modules');
+            AutomationTreeProvider = modules.AutomationTreeProvider;
+            
+            mockI18n = {
+                t: (key) => key // simple mock that returns the key
+            };
+            
+            provider = new AutomationTreeProvider(mockI18n);
+        });
+
+        test('Should have maintenance section', async () => {
+            const children = await provider.getChildren();
+            const maintenanceSection = children.find(c => c.contextValue === 'maintenance-section');
+            assert.ok(maintenanceSection, 'Maintenance section not found');
+            assert.strictEqual(maintenanceSection.label, 'automation.maintenanceSectionLabel');
+        });
+
+        test('Should have maintenance items with tooltips', async () => {
+            const maintenanceSection = { contextValue: 'maintenance-section' };
+            const children = await provider.getChildren(maintenanceSection);
+            
+            assert.strictEqual(children.length, 3);
+            
+            const scanDocs = children.find(c => c.command.command === 'ai-agent-sync.scanDocs');
+            assert.ok(scanDocs);
+            assert.strictEqual(scanDocs.tooltip, 'automation.scanDocsTooltip');
+            
+            const ritual = children.find(c => c.command.command === 'ai-agent-sync.ritual');
+            assert.ok(ritual);
+            assert.strictEqual(ritual.tooltip, 'automation.runRitualTooltip');
+            
+            const evolve = children.find(c => c.command.command === 'ai-agent-sync.evolve');
+            assert.ok(evolve);
+            assert.strictEqual(evolve.tooltip, 'automation.evolveRulesTooltip');
         });
     });
 });

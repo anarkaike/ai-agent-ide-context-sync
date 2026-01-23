@@ -678,10 +678,8 @@ const commands = {
     const wsPath = path.join(projectRoot, '.ai-workspace');
     const statsPath = path.join(wsPath, 'stats.json');
 
-    if (!fs.existsSync(wsPath)) {
-      log('🔄 Workspace não encontrado. Inicializando...', 'cyan');
-      await commands.init();
-    }
+    // Always run init to ensure structure is up-to-date (idempotent)
+    await commands.init();
 
     log('\n🕯️ Iniciando Ritual de Manutenção...\n', 'magenta');
 
@@ -719,15 +717,32 @@ const commands = {
     const wsPath = path.join(projectRoot, '.ai-workspace');
     const docsPath = path.join(projectRoot, 'docs');
 
+    // Ensure all required subdirectories exist (idempotent)
+    const requiredDirs = [
+      path.join(wsPath, 'cache', 'compiled'),
+      path.join(wsPath, 'rules', 'project'),
+      path.join(wsPath, 'rules', 'path-specific'),
+      path.join(wsPath, 'tasks', 'active'),
+      path.join(wsPath, 'tasks', 'completed'),
+      path.join(wsPath, 'personas'),
+      path.join(wsPath, 'analysis')
+    ];
+
     if (fs.existsSync(wsPath)) {
-      log('⚠️ Workspace já existe.', 'yellow');
+      log('⚠️ Workspace detectado. Verificando estrutura...', 'yellow');
     } else {
-      fs.mkdirSync(path.join(wsPath, 'cache', 'compiled'), { recursive: true });
-      fs.mkdirSync(path.join(wsPath, 'rules', 'project'), { recursive: true });
-      fs.mkdirSync(path.join(wsPath, 'tasks', 'active'), { recursive: true });
-      fs.mkdirSync(path.join(wsPath, 'tasks', 'completed'), { recursive: true });
+      log('✅ Inicializando novo Workspace em .ai-workspace', 'green');
+    }
+
+    requiredDirs.forEach(dir => {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+        log(`   + Criado: ${path.relative(projectRoot, dir)}`, 'dim');
+      }
+    });
+
+    if (!fs.existsSync(path.join(wsPath, 'stats.json'))) {
       writeJsonSafe(path.join(wsPath, 'stats.json'), { sessions: 0, rules: {} });
-      log('✅ Workspace inicializado em .ai-workspace', 'green');
     }
 
     if (!fs.existsSync(docsPath)) {
@@ -735,6 +750,8 @@ const commands = {
       fs.writeFileSync(path.join(docsPath, 'README.md'), '# Documentação do Projeto\n\nGerado via ai-doc init.');
       log('✅ Pasta docs/ criada.', 'green');
     }
+    
+    log('✅ Estrutura do Workspace validada.', 'green');
   },
   status: async () => { console.log("AI CLI v2.0 Refactored"); },
   help: () => {

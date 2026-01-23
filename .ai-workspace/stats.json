@@ -184,8 +184,52 @@
           }
         ]
       }
+    },
+    {
+      "timestamp": "2026-01-23T04:01:05.271Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-23T04:02:38.448Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
     }
   ],
-  "lastUpdated": "2026-01-22T20:42:50.480Z",
-  "lastRitual": "2026-01-22T20:42:50.582Z"
+  "lastUpdated": "2026-01-23T04:02:38.448Z",
+  "lastRitual": "2026-01-23T04:02:38.511Z"
 }

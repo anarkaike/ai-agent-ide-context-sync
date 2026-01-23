@@ -119,5 +119,13 @@
         "productivityInsight": "💡 Insight: Você é mais produtivo em {0}",
         "viewTask": "Ver Tarefa",
         "dismiss": "Dispensar"
+    },
+    "automation": {
+        "scanDocsProgress": "Escaneando documentação do projeto...",
+        "scanDocsCompleted": "Escaneamento de documentação concluído: {0}",
+        "scanDocsFailed": "Escaneamento falhou: {0}",
+        "scanDocsTooltip": "Escanear arquivos do projeto para atualizar contexto da IA",
+        "runRitualTooltip": "Executar ritual de manutenção para limpar estado do kernel da IA",
+        "evolveRulesTooltip": "Evoluir regras da IA para detectar desvio de contexto"
     }
 }

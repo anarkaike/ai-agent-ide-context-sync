@@ -12,6 +12,16 @@ Related docs:
 - Extension README (EN): [README.md](./README.md)
 - Extension README (PT-BR): [README.pt-BR.md](./README.pt-BR.md)
 
+## [2.0.14] - 2026-01-23
+
+### Added
+- 🛠️ Dedicated "Maintenance & Context" section in sidebar (Scan Docs, Run Ritual, Evolve Rules)
+- 🌐 Bilingual tooltips (EN/PT-BR) for all sidebar actions
+- 🧪 Comprehensive unit test coverage for core logic modules
+
+### Fixed
+- 🐛 i18n support in RitualScheduler action buttons
+
 ## [2.0.13] - 2026-01-18
 
 ### Changed

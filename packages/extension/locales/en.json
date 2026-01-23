@@ -63,10 +63,19 @@
         "openKanban": "Open Kanban",
         "openDashboard": "Open Dashboard",
         "dismiss": "Dismiss",
+        "viewPersonaDetails": "View Full Details",
         "motivationalPersonaCreated": "🎉 New persona created: {0}. Another ally in your flow.",
         "motivationalPersonaUpdated": "✨ Persona {0} updated. Your AI kernel just got sharper.",
         "motivationalTaskCreated": "🚀 New task \"{0}\" created for {1}. Let’s push this chapter of the project forward.",
-        "motivationalChecklistUpdated": "✅ Progress on \"{0}\": {1}/{2} items completed. Small wins create big deliveries."
+        "motivationalChecklistUpdated": "✅ Progress on \"{0}\": {1}/{2} items completed. Small wins create big deliveries.",
+        "installingCliAndInit": "Installing global ai-doc CLI and initializing workspace...",
+        "buildingContext": "Building AI Agent Context...",
+        "compilingModules": "Compiling modules...",
+        "buildDone": "Done!",
+        "outputChannelTitle": "AI Agent Sync",
+        "personaNameRequired": "Name is required",
+        "personaNamePrefix": "Name must start with AI-",
+        "personaNameUppercase": "Use uppercase letters only (e.g., AI-NARUTO)"
     },
     "timer": {
         "pauseTimer": "⏸️ Pause Timer",
@@ -119,5 +128,74 @@
         "productivityInsight": "💡 Insight: You're most productive on {0}",
         "viewTask": "View Task",
         "dismiss": "Dismiss"
+    },
+    "tooltips": {
+        "createFirstPersona": "Create your first AI Persona to start working.",
+        "createNewPersona": "Create a new AI Persona.",
+        "viewPersonaDetails": "Open full persona file.",
+        "createTaskForPersona": "Create a new task for this persona.",
+        "viewTaskDetails": "Open task details.",
+        "editTask": "Edit task file directly.",
+        "archiveTask": "Move task to archive.",
+        "deleteTask": "Permanently delete task."
+    },
+    "automation": {
+        "generatePromptLabel": "✨ Generate Smart Prompt",
+        "generatePromptTooltip": "Create a structured prompt using semantic search and active rules.",
+        "maintenanceSectionLabel": "🛠️ Maintenance & Context",
+        "workflowsSectionLabel": "🚀 Workflows",
+        "rulesSectionLabel": "📏 Active Rules",
+        "scanDocsLabel": "🔍 Scan Documentation",
+        "scanDocsTooltip": "Scan project for documentation placeholders and missing docs.",
+        "runRitualLabel": "🔮 Run Ritual",
+        "runRitualTooltip": "Run full maintenance cycle (Auto-fix, Drift Check, Build).",
+        "evolveRulesLabel": "🧬 Evolve Rules",
+        "evolveRulesTooltip": "Check for rule drift and suggest evolutions based on recent code.",
+        "runWorkflowPromptLabel": "▶️ Run Workflow...",
+        "runWorkflowPromptTooltip": "Select or type a workflow id to run.",
+        "demoWorkflowLabel": "React Component",
+        "runWorkflowLabel": "Run Workflow",
+        "generatePromptPlaceholder": "Ex: Create a new login component with auth logic",
+        "generatePromptPrompt": "Describe your goal for the Smart Prompt",
+        "workflowIdPlaceholder": "create-component",
+        "workflowIdPrompt": "Enter workflow ID",
+        "workflowParamsPlaceholder": "name=MyComponent",
+        "workflowParamsPrompt": "Enter parameters (key=value)",
+        "runningWorkflowTitle": "Running workflow: {0}...",
+        "workflowCompleted": "Workflow {0} completed!",
+        "workflowError": "Workflow error: {0}",
+        "scanDocsProgress": "Scanning Documentation...",
+        "scanDocsCompleted": "Scan Completed:\n{0}",
+        "scanDocsFailed": "Scan failed: {0}",
+        "runRitualProgress": "Running Ritual...",
+        "runRitualCompleted": "Ritual completed successfully!",
+        "runRitualFailed": "Ritual failed: {0}",
+        "evolveRulesProgress": "Evolving Rules...",
+        "evolveRulesCompleted": "Evolution Analysis:\n{0}",
+        "evolveRulesFailed": "Evolution failed: {0}"
+    },
+    "quickPicker": {
+        "createNewTaskLabel": "$(add) Create New Task",
+        "createNewTaskDetail": "Create a new task for a persona",
+        "placeHolder": "Select a task or create new"
+    },
+    "search": {
+        "prompt": "Search in tasks and checklists",
+        "placeHolder": "Enter search term...",
+        "matchTitle": "Title",
+        "matchChecklistItems": "{0} checklist item(s)",
+        "resultDescription": "{0} - Match in: {1}",
+        "resultsPlaceholder": "{0} result(s) for \"{1}\""
+    },
+    "ritualScheduler": {
+        "statusText": "$(pulse) AI Kernel",
+        "statusTooltip": "AI Kernel Monitor Active",
+        "driftDetected": "AI Kernel: Drift detected in rules. Context may be outdated.",
+        "runRitual": "Run Ritual",
+        "ignore": "Ignore"
+    },
+    "heuristics": {
+        "title": "💡 Learned Heuristics",
+        "generated": "Generated: {0}"
     }
 }

@@ -9,6 +9,7 @@ class I18n {
     constructor(extensionPath) {
         this.extensionPath = extensionPath;
         this.translations = {};
+        this.fallbackTranslations = {};
         this.currentLocale = vscode.env.language || 'en';
         this.loadTranslations();
     }
@@ -19,6 +20,9 @@ class I18n {
         const fallbackFile = path.join(localesPath, 'en.json');
 
         try {
+            if (fs.existsSync(fallbackFile)) {
+                this.fallbackTranslations = JSON.parse(fs.readFileSync(fallbackFile, 'utf-8'));
+            }
             if (fs.existsSync(localeFile)) {
                 this.translations = JSON.parse(fs.readFileSync(localeFile, 'utf-8'));
             } else if (fs.existsSync(fallbackFile)) {
@@ -27,29 +31,31 @@ class I18n {
         } catch (error) {
             console.error('Failed to load translations:', error);
             this.translations = {};
+            this.fallbackTranslations = {};
         }
     }
 
     t(key, ...args) {
         const keys = key.split('.');
-        let value = this.translations;
+        const value = this.getTranslationValue(this.translations, keys);
+        const fallbackValue = this.getTranslationValue(this.fallbackTranslations, keys);
+        const text = typeof value === 'string' ? value : (typeof fallbackValue === 'string' ? fallbackValue : key);
 
+        return text.replace(/\{(\d+)\}/g, (match, index) => {
+            return args[index] !== undefined ? args[index] : match;
+        });
+    }
+
+    getTranslationValue(source, keys) {
+        let value = source;
         for (const k of keys) {
             if (value && typeof value === 'object') {
                 value = value[k];
             } else {
-                return key;
+                return undefined;
             }
         }
-
-        if (typeof value === 'string') {
-            // Replace placeholders {0}, {1}, etc.
-            return value.replace(/\{(\d+)\}/g, (match, index) => {
-                return args[index] !== undefined ? args[index] : match;
-            });
-        }
-
-        return key;
+        return value;
     }
 
     getLocale() {
