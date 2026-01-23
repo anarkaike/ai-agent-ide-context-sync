@@ -19,8 +19,9 @@ const getNextId = (activeDir, completedDir) => {
   const getNumbers = (dir) => {
     if (!fs.existsSync(dir)) return [];
     return fs.readdirSync(dir)
-      .filter(f => f.startsWith('task-') && f.endsWith('.md'))
+      .filter(f => f.endsWith('.md'))
       .map(f => {
+        // Match task-001 in "task-001-..." or "AI-DEV--task-001-..."
         const match = f.match(/task-(\d+)/);
         return match ? parseInt(match[1], 10) : 0;
       });
@@ -47,13 +48,28 @@ const start = async (args, wsPath) => {
   }
 
   const { activeDir, completedDir } = ensureDirs(wsPath);
+  
+  // Detect Persona (default to AI-DEV or first available)
+  const personasDir = path.join(wsPath, 'personas');
+  let persona = 'AI-DEV';
+  if (fs.existsSync(personasDir)) {
+    const files = fs.readdirSync(personasDir).filter(f => f.endsWith('.md') && f.startsWith('AI-'));
+    if (files.length > 0) {
+      persona = files[0].replace('.md', '');
+    }
+  }
+
   const id = getNextId(activeDir, completedDir);
-  const filename = `task-${id}-${slugify(title)}.md`;
+  // Align with Extension format: AI-DEV--TASK-...
+  // Extension expects: `${personaName}--TASK-${date}-${slug}.md` or just starts with persona
+  // We keep ID for CLI readability but add prefix
+  const filename = `${persona}--task-${id}-${slugify(title)}.md`;
   const filePath = path.join(activeDir, filename);
 
   const content = `---
 id: task-${id}
 title: ${title}
+persona: ${persona}
 status: in_progress
 created_at: ${formatDate()}
 objectives:

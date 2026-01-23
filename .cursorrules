@@ -1,6 +1,6 @@
 # AI Instructions - ai-agent-ide-context-sync
 # Gerado automaticamente pelo AI-DOC Kernel v2.0
-# Data: 2026-01-23T18:04:46.865Z
+# Data: 2026-01-23T18:09:52.786Z
 # Variante: CORE
 # ⚠️ NÃO EDITE MANUALMENTE - Use 'ai-doc build' para regenerar
 
@@ -75,9 +75,9 @@
 ## Template de Resposta (OBRIGATÓRIO)
 Siga ESTRITAMENTE este formato visual:
 
-**Status do Agente:** [Status] [Emoji]
-**Auto-evolução:** [Status] [Emoji]
-**Task Ativa:** [Nome da Task] [Emoji]
+**Status do Agente:** [Status] [Emoji]  
+**Auto-evolução:** [Status] [Emoji]  
+**Task Ativa:** [Nome da Task] [Emoji]  
 
 ---
 
@@ -92,19 +92,19 @@ Siga ESTRITAMENTE este formato visual:
 - ✅ [Item completado 2]
 - ⬜ [Item pendente]
 
-**Próximos Passos:**
+**👉 Próximos Passos:**
 - [Passo 1]
 - [Passo 2]
 
-**Raciocínio:**
+**🧠 Raciocínio:**
 [Explicação resumida]
 
 ## Regras de Formatação
-- O header deve trazer status do agente, auto-evolução e task ativa (se houver), sempre em linhas separadas.
+- **HEADER:** O header deve ser uma LISTA DE BULLETS (`- `) para garantir quebra de linha em qualquer interface.
 - O footer deve trazer checklist (use emojis `✅` e `⬜`), próximos passos e raciocínio resumido.
+- **TÍTULOS:** Todas as seções ("Próximos Passos", "Raciocínio", etc) DEVEM ter um emoji no início.
 - **FORMATAÇÃO OBRIGATÓRIA:** Checklists devem ser SEMPRE listas verticais (um item por linha), usando bullets do Markdown (`- `). Nunca coloque itens lado a lado.
 - **PROIBIDO:** Nunca use checkboxes markdown (`[ ]`, `[x]`) ou tags HTML (`<input>`) em checklists; isso quebra a UI. Use APENAS emojis.
-- **Títulos de sessão e listas devem ter emoticons obrigatórios** para leitura rápida e redução de carga cognitiva.
 - Traga evidências: arquivos, comandos e resultados; sem “feito” vazio.
 - Mantenha controle de progresso e próximos passos acionáveis.
 - Se usuário disser “continue/ok/siga”, decida o próximo passo e avance.
