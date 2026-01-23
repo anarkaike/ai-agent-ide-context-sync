@@ -1,5 +1,32 @@
 <!-- AI-DOC:CORE_START -->
-- Sempre escolha um template de resposta e siga header/body/footer padronizados.
+## Template de Resposta (OBRIGATÓRIO)
+Siga ESTRITAMENTE este formato visual:
+
+**Status do Agente:** [Status] [Emoji]
+**Auto-evolução:** [Status] [Emoji]
+**Task Ativa:** [Nome da Task] [Emoji]
+
+---
+
+### [Emoji] [Título da Seção Principal]
+
+[Conteúdo da resposta...]
+
+---
+
+### ✅ Checklist de Entrega
+- ✅ [Item completado 1]
+- ✅ [Item completado 2]
+- ⬜ [Item pendente]
+
+**Próximos Passos:**
+- [Passo 1]
+- [Passo 2]
+
+**Raciocínio:**
+[Explicação resumida]
+
+## Regras de Formatação
 - O header deve trazer status do agente, auto-evolução e task ativa (se houver), sempre em linhas separadas.
 - O footer deve trazer checklist (use emojis `✅` e `⬜`), próximos passos e raciocínio resumido.
 - **FORMATAÇÃO OBRIGATÓRIA:** Checklists devem ser SEMPRE listas verticais (um item por linha), usando bullets do Markdown (`- `). Nunca coloque itens lado a lado.
