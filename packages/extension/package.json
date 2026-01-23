@@ -3,7 +3,7 @@
     "displayName": "AI Agent IDE Context Sync",
     "description": "AI Kernel para desenvolvedores: personas, tasks, Pomodoro, Kanban, analytics e contexto unificado para múltiplos IDEs e agentes. Sistema Operacional para sua IA de desenvolvimento ficar sempre sincronizada com o git do projeto.",
     "icon": "resources/ai.png",
-    "version": "2.0.14",
+    "version": "2.0.18",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -22,7 +22,11 @@
         "directory": "packages/extension"
     },
     "activationEvents": [
-        "onView:ai-agent-sync-personas"
+        "onView:ai-agent-sync-personas",
+        "onView:ai-agent-sync-analytics",
+        "onView:ai-agent-sync-status",
+        "onView:ai-agent-sync-timer",
+        "onView:ai-agent-sync-automation"
     ],
     "main": "./extension.js",
     "contributes": {
@@ -234,7 +238,7 @@
                 {
                     "id": "ai-agent-sync",
                     "title": "AI Agent Sync",
-                    "icon": "resources/icon.svg"
+                    "icon": "resources/icon-outline.svg"
                 }
             ]
         },

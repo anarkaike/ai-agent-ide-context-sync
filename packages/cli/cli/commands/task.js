@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
+const clickup = require('./clickup'); // Import ClickUp module
 
 // Helper to format date
 const formatDate = () => new Date().toISOString();
@@ -176,6 +177,25 @@ const complete = async (args, wsPath) => {
 
   console.log(`✅ Task completada: ${targetFile}`);
   console.log(`📂 Movida para: ${path.relative(process.cwd(), destPath)}`);
+
+  // Hook ClickUp
+  const clickupMatch = content.match(/clickup_id:\s*["']?([^"'\s]+)["']?/);
+  if (clickupMatch && clickupMatch[1]) {
+    const clickupId = clickupMatch[1];
+    try {
+      console.log(`🔄 Atualizando status no ClickUp (#${clickupId})...`);
+      // Reuses logic from clickup module (requires export)
+      if (clickup.updateTaskStatus) {
+        await clickup.updateTaskStatus(clickupId, 'complete');
+        console.log('✅ ClickUp atualizado para "complete".');
+      } else {
+        // Fallback if not exported directly, though we just checked it is
+        console.log('⚠️  Função updateTaskStatus não encontrada no módulo clickup.');
+      }
+    } catch (e) {
+      console.log(`⚠️  Falha ao atualizar ClickUp: ${e.message}`);
+    }
+  }
 };
 
 const status = async (wsPath) => {

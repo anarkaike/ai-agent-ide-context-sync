@@ -1,7 +1,7 @@
 /**
  * AIClient - Wrapper para comunicação com o CLI (Core Intelligence)
  */
-const { execFile } = require('child_process');
+const { execFile, exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const vscode = require('vscode');
@@ -24,16 +24,37 @@ class AIClient {
             const command = useLocal ? 'node' : 'ai-doc';
             const commandArgs = useLocal ? [this.cliPath, ...args] : args;
 
-            console.log(`[AIClient] Executing: ${command} ${commandArgs.join(' ')}`);
+            // Se for usar comando global, verifica se existe antes
+            if (!useLocal) {
+                const checkCmd = process.platform === 'win32' ? 'where ai-doc' : 'which ai-doc';
+                exec(checkCmd, (checkError) => {
+                    if (checkError) {
+                        const msg = `[AIClient] CLI não encontrado. Instale globalmente com 'npm install -g ai-agent-ide-context-sync' ou use 'npm link' no diretório do CLI.`;
+                        console.error(msg);
+                        vscode.window.showErrorMessage("AI Agent CLI not found! Please install it globally: npm install -g ai-agent-ide-context-sync");
+                        reject(msg);
+                        return;
+                    }
+                    
+                    // Se existe, executa
+                    this._runExecFile(command, commandArgs, resolve, reject);
+                });
+            } else {
+                // Se for local, executa direto
+                this._runExecFile(command, commandArgs, resolve, reject);
+            }
+        });
+    }
 
-            execFile(command, commandArgs, { cwd: this.projectRoot }, (error, stdout, stderr) => {
-                if (error) {
-                    console.error(`[AIClient] Error: ${stderr}`);
-                    reject(stderr || error.message);
-                    return;
-                }
-                resolve(stdout.trim());
-            });
+    _runExecFile(command, commandArgs, resolve, reject) {
+        console.log(`[AIClient] Executing: ${command} ${commandArgs.join(' ')}`);
+        execFile(command, commandArgs, { cwd: this.projectRoot }, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`[AIClient] Error: ${stderr}`);
+                reject(stderr || error.message);
+                return;
+            }
+            resolve(stdout.trim());
         });
     }
 
@@ -96,7 +117,7 @@ class AIClient {
     }
 
     async evolveRules() {
-        return this.execute(['rules', '--evolve']);
+        return this.execute(['evolve']);
     }
 
     async getKernelStatus() {

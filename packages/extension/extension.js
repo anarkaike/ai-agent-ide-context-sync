@@ -2,6 +2,7 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const AIClient = require('./ai-client');
 const { I18n, SmartNotifications } = require('./modules');
 const { KanbanManager, AdvancedAnalytics, ThemeManager, CloudSyncManager } = require('./advanced-modules');
 const { AutomationTreeProvider, handleGeneratePrompt, handleRunWorkflow, setAutomationI18n } = require('./automation-modules');
@@ -443,13 +444,23 @@ class StatusTreeProvider {
 
                 return items.length > 0 ? items : [new vscode.TreeItem('No status available')];
             } catch (error) {
-                const item = new vscode.TreeItem('❌ ai-doc CLI not found');
-                item.description = 'Install: npm install -g ai-agent-ide-context-sync';
-                item.command = {
-                    command: 'vscode.open',
-                    title: 'Open NPM',
-                    arguments: [vscode.Uri.parse('https://www.npmjs.com/package/ai-agent-ide-context-sync')]
-                };
+                const errorMessage = error.message || String(error);
+                const isNotFound = errorMessage.includes('ENOENT') || errorMessage.includes('not found') || errorMessage.includes('não encontrado');
+
+                if (isNotFound) {
+                    const item = new vscode.TreeItem('❌ ai-doc CLI not found');
+                    item.description = 'Install: npm install -g ai-agent-ide-context-sync';
+                    item.command = {
+                        command: 'vscode.open',
+                        title: 'Open NPM',
+                        arguments: [vscode.Uri.parse('https://www.npmjs.com/package/ai-agent-ide-context-sync')]
+                    };
+                    return [item];
+                }
+
+                const item = new vscode.TreeItem('❌ Kernel Status Error');
+                item.description = errorMessage;
+                item.tooltip = errorMessage;
                 return [item];
             }
         }
@@ -911,11 +922,13 @@ function activate(context) {
     statusProvider = new StatusTreeProvider();
     analyticsProvider = new AnalyticsTreeProvider();
     timerProvider = new PomodoroTreeProvider();
+    automationProvider = new AutomationTreeProvider(i18n);
 
     vscode.window.registerTreeDataProvider('ai-agent-sync-personas', personasProvider);
     vscode.window.registerTreeDataProvider('ai-agent-sync-status', statusProvider);
     vscode.window.registerTreeDataProvider('ai-agent-sync-analytics', analyticsProvider);
     vscode.window.registerTreeDataProvider('ai-agent-sync-timer', timerProvider);
+    vscode.window.registerTreeDataProvider('ai-agent-sync-automation', automationProvider);
 
     // Watch for file changes
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];

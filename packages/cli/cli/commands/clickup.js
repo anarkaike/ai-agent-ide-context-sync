@@ -449,6 +449,20 @@ const resolveLocalTask = (partialId) => {
   return { filePath, frontmatter, body, clickupId: frontmatter.clickup_id };
 };
 
+const normalizeStatus = (status) => {
+  const statusMap = {
+    'in_progress': 'in progress',
+    'completed': 'complete',
+    'done': 'complete',
+    'pending': 'to do',
+    'todo': 'to do',
+    'blocked': 'blocked',
+    'review': 'in review'
+  };
+  const lower = status.toLowerCase();
+  return statusMap[lower] || lower;
+};
+
 const cmdPush = async (args) => {
   if (args.length < 1) {
     log('❌ Uso: ai-doc clickup push <local-task-id>');
@@ -479,19 +493,7 @@ const cmdPush = async (args) => {
     
     // Update status if needed (separate call often required)
     if (task.frontmatter.status) {
-       // Mapeamento simples de status local -> clickup
-       // Ajuste conforme os status do seu espaço no ClickUp
-       const statusMap = {
-         'in_progress': 'in progress',
-         'completed': 'complete',
-         'pending': 'to do',
-         'blocked': 'blocked',
-         'review': 'in review'
-       };
-       // Tenta mapeamento ou usa raw (lowercase), ou raw original
-       const normalized = task.frontmatter.status.toLowerCase();
-       const clickupStatus = statusMap[normalized] || normalized || task.frontmatter.status;
-       
+       const clickupStatus = normalizeStatus(task.frontmatter.status);
        await callClickUpApi(`/task/${task.clickupId}`, 'PUT', { status: clickupStatus });
     }
     
@@ -547,12 +549,17 @@ const cmdStatus = async (args) => {
   }
   
   try {
-    log(`🔄 Alterando status de #${clickupId} para "${status}"...`);
-    await callClickUpApi(`/task/${clickupId}`, 'PUT', { status: status });
+    const finalStatus = normalizeStatus(status);
+    log(`🔄 Alterando status de #${clickupId} para "${finalStatus}"...`);
+    await updateTaskStatus(clickupId, finalStatus);
     log('✅ Status atualizado.');
   } catch (err) {
     log(`❌ Erro ao atualizar status: ${err.message}`);
   }
+};
+
+const updateTaskStatus = async (clickupId, status) => {
+  await callClickUpApi(`/task/${clickupId}`, 'PUT', { status: status });
 };
 
 const cmdLink = async (args) => {
@@ -618,3 +625,5 @@ module.exports = async (args = []) => {
       log('  ai-doc clickup link <id> <cup>   Vínculo local ↔ ClickUp');
   }
 };
+
+module.exports.updateTaskStatus = updateTaskStatus;
