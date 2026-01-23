@@ -288,6 +288,23 @@ const getNextId = (activeDir, completedDir) => {
   return String(maxId + 1).padStart(3, '0');
 };
 
+const findLocalTaskByClickUpId = (clickupId, activeDir, completedDir) => {
+  const scan = (dir) => {
+    if (!fs.existsSync(dir)) return null;
+    const files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
+    for (const file of files) {
+      const p = path.join(dir, file);
+      const content = fs.readFileSync(p, 'utf-8');
+      const { frontmatter } = readFrontmatter(content);
+      if (frontmatter.clickup_id && String(frontmatter.clickup_id) === String(clickupId)) {
+        return p;
+      }
+    }
+    return null;
+  };
+  return scan(activeDir) || scan(completedDir);
+};
+
 const cmdPull = async (args) => {
   if (args.length < 1) {
     log('❌ Uso: ai-doc clickup pull <clickup-task-id>');
@@ -310,8 +327,13 @@ const cmdPull = async (args) => {
     if (!fs.existsSync(completedDir)) fs.mkdirSync(completedDir, { recursive: true });
     
     // Verifica se já existe vínculo
-    // (Poderia varrer arquivos, mas por hora cria nova se não achar pelo nome?)
-    // Vamos criar uma nova task local sempre, para simplificar.
+    const existingPath = findLocalTaskByClickUpId(task.id, activeDir, completedDir);
+    if (existingPath) {
+      log(`⚠️  Task já importada anteriormente:`);
+      log(`📄 ${path.relative(process.cwd(), existingPath)}`);
+      log('💡 Use "ai-doc clickup push" se quiser atualizar o remoto, ou edite localmente.');
+      return;
+    }
     
     const localId = getNextId(activeDir, completedDir);
     const title = task.name;
@@ -407,10 +429,20 @@ const resolveLocalTask = (partialId) => {
   const activeDir = path.join(wsPath, 'tasks', 'active');
   if (!fs.existsSync(activeDir)) return null;
   
-  const candidates = fs.readdirSync(activeDir).filter(f => f.includes(partialId) && f.endsWith('.md'));
+  // Tenta match exato primeiro (task-ID-slug.md)
+  // Assumindo formato task-{id}-...
+  const exactCandidates = fs.readdirSync(activeDir).filter(f => {
+    return f === partialId || f === partialId + '.md' || f.startsWith(`${partialId}-`);
+  });
+
+  let candidates = exactCandidates.length > 0 ? exactCandidates : fs.readdirSync(activeDir).filter(f => f.includes(partialId) && f.endsWith('.md'));
+
   if (candidates.length === 0) return null;
   
-  const filePath = path.join(activeDir, candidates[0]);
+  // Se houver mais de um, tenta o mais curto (geralmente o ID exato) ou o primeiro
+  const chosen = candidates.sort((a, b) => a.length - b.length)[0];
+
+  const filePath = path.join(activeDir, chosen);
   const raw = fs.readFileSync(filePath, 'utf-8');
   const { frontmatter, body } = readFrontmatter(raw);
   
@@ -452,9 +484,14 @@ const cmdPush = async (args) => {
        const statusMap = {
          'in_progress': 'in progress',
          'completed': 'complete',
-         'pending': 'to do'
+         'pending': 'to do',
+         'blocked': 'blocked',
+         'review': 'in review'
        };
-       const clickupStatus = statusMap[task.frontmatter.status] || task.frontmatter.status;
+       // Tenta mapeamento ou usa raw (lowercase), ou raw original
+       const normalized = task.frontmatter.status.toLowerCase();
+       const clickupStatus = statusMap[normalized] || normalized || task.frontmatter.status;
+       
        await callClickUpApi(`/task/${task.clickupId}`, 'PUT', { status: clickupStatus });
     }
     
