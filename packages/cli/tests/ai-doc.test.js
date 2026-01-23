@@ -126,10 +126,10 @@ describe('CLI ai-doc', () => {
             });
 
             test('should warn if workspace exists', async () => {
-                fs.existsSync.mockReturnValue(true);
-                await commands.init();
-                expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Workspace já existe'));
-            });
+            fs.existsSync.mockReturnValue(true);
+            await commands.init();
+            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Workspace detectado. Verificando estrutura...'));
+        });
         });
 
         describe('build', () => {
