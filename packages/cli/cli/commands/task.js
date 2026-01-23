@@ -73,6 +73,39 @@ deliverables:
   fs.writeFileSync(filePath, content, 'utf-8');
   console.log(`✅ Task iniciada: task-${id} (${title})`);
   console.log(`📄 Arquivo criado: ${path.relative(process.cwd(), filePath)}`);
+
+  try {
+    const cachePath = path.join(wsPath, 'live-state', 'clickup-open-tasks.json');
+    if (fs.existsSync(cachePath)) {
+      const data = JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
+      const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+      const norm = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const tNorm = norm(title);
+      const matches = tasks
+        .map((t) => ({ id: t.id || t.task_id || t.uid, title: t.title || t.name || '', score: 0 }))
+        .map((x) => {
+          const s = norm(x.title);
+          const overlap = tNorm && s ? tNorm.split(/\s+/).filter(tok => s.includes(tok)).length : 0;
+          const score = overlap / Math.max(1, tNorm.split(/\s+/).length);
+          return { ...x, score };
+        })
+        .filter((x) => x.score >= 0.5)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+      if (matches.length > 0) {
+        console.log('\n🔗 Possível correspondência no ClickUp (cache):');
+        matches.forEach(m => {
+          console.log(`- ${m.id} | ${m.title} (score ${Math.round(m.score*100)}%)`);
+        });
+        console.log(`\n💡 Dica: vincule usando "ai-doc clickup link task-${id} <clickup-id>" e rode "ai-doc clickup cache-sync" regularmente.`);
+      } else if (data?.meta?.mcp_active) {
+        console.log('\nℹ️ MCP ClickUp ativo, mas sem correspondências fortes no cache.');
+        console.log('   Considere criar a task no ClickUp ou atualizar o cache: ai-doc clickup cache-sync');
+      }
+    } else {
+      console.log('\nℹ️ Cache ClickUp não encontrado. Execute: ai-doc clickup detect && ai-doc clickup cache-sync');
+    }
+  } catch {}
 };
 
 const list = async (wsPath) => {

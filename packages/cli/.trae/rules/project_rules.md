@@ -1,6 +1,6 @@
 # AI Instructions - cli
 # Gerado automaticamente pelo AI-DOC Kernel v2.0
-# Data: 2026-01-22T19:21:06.523Z
+# Data: 2026-01-23T16:27:11.364Z
 # Variante: CORE
 # ⚠️ NÃO EDITE MANUALMENTE - Use 'ai-doc build' para regenerar
 
@@ -53,6 +53,20 @@
 - Registre saída em formato estruturado (active-state + findings quando necessário).
 - Mantenha referência cruzada docs ↔ código como invariável de qualidade.
 - Se achar bug/lacuna crítica, converta em task com links bidirecionais.
+
+---
+
+## Módulo: DOCS
+
+- Documente junto ao código: criar/atualizar/remover docs sempre que implementar, corrigir, refatorar ou deletar.
+- Regras de documentação vivem no kernel; /docs é só conteúdo do projeto.
+- README.md é obrigatório em toda pasta de docs.
+- Use templates oficiais e mantenha breadcrumbs e links cruzados.
+- Registre decisões de arquitetura e regras de negócio detectadas.
+- Após gerar /docs, revise cada arquivo e preencha todos os placeholders com dados reais do projeto.
+- Faça pesquisa profunda e abrangente no repo antes de preencher; não invente.
+- Valide a documentação com `ai-doc scan` para garantir que não restam placeholders.
+- Se faltar informação, registre pendência e abra task para completar.
 
 ---
 

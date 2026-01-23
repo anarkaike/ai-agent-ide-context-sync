@@ -422,6 +422,7 @@ const commands = {
   run: require('../commands/run'),
   docs: require('./commands/docs'),
   task: require('./commands/task'),
+  clickup: require('./commands/clickup'),
   version: require('./commands/version'),
   scan: async (args = []) => {
     try {
@@ -690,6 +691,11 @@ const commands = {
     await commands.kernel(['rules', '--apply', '--demote']);
 
     await commands.kernel(['cache']);
+    try {
+      await commands.clickup(['cache-sync']);
+    } catch (e) {
+      log(`⚠️ Falha no sync do ClickUp: ${e.message}`, 'yellow');
+    }
     await commands.build();
 
     const stats = readJsonSafe(statsPath) || {};
@@ -759,6 +765,7 @@ const commands = {
     log('\nComandos:', 'yellow');
     log('  ai-doc prompt "..."   Gera prompt estruturado com contexto inteligente');
     log('  ai-doc task <cmd>     Gerencia tasks (start|list|complete|status)');
+    log('  ai-doc clickup <cmd>  Integra ClickUp (detect|cache-sync|link)');
     log('  ai-doc run <wf>       Executa workflow de automação');
     log('  ai-doc docs [recipe]  Gera estrutura de documentação (backend|frontend|fullstack)');
     log('  ai-doc scan [dir]     Verifica placeholders na documentação');
