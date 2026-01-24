@@ -112,13 +112,13 @@
         "remaining": "Restantes"
     },
     "notifications": {
-        "stalledTask": "⚠️ Tarefa '{0}' está inativa há {1} dias",
-        "deadlineApproaching": "📅 Prazo se aproximando para '{0}' em {1} dias",
-        "taskCompleted": "🎉 Parabéns! Tarefa '{0}' completada!",
-        "weeklyReport": "📊 Relatório Semanal: {0} tarefas completadas, {1}% de conclusão",
-        "productivityInsight": "💡 Insight: Você é mais produtivo em {0}",
-        "viewTask": "Ver Tarefa",
-        "dismiss": "Dispensar"
+        "stalledTask": "⚠️ A tarefa '{0}' não é modificada há {1} dias. Isso pode indicar um bloqueio ou esquecimento. Recomendamos revisar o status ou arquivar se não for mais relevante.",
+        "deadlineApproaching": "📅 Atenção: O prazo para '{0}' termina em {1} dias. Planeje-se para a entrega.",
+        "taskCompleted": "🎉 Parabéns! A tarefa '{0}' foi concluída. O contexto do projeto foi atualizado e o histórico registrado.",
+        "weeklyReport": "📊 Resumo Semanal: {0} tarefas concluídas com uma taxa de conclusão de {1}%. O ritmo está ótimo/precisa de atenção. Continue assim para manter o fluxo do projeto.",
+        "productivityInsight": "💡 Insight de Produtividade: Seu dia mais produtivo tem sido {0}. Tente agendar as tarefas mais complexas para este dia para maximizar seu foco.",
+        "viewTask": "Revisar Tarefa",
+        "dismiss": "Entendido"
     },
     "automation": {
         "scanDocsProgress": "Escaneando documentação do projeto...",

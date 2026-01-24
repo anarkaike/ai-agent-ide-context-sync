@@ -121,13 +121,13 @@
         "remaining": "Remaining"
     },
     "notifications": {
-        "stalledTask": "⚠️ Task '{0}' has been inactive for {1} days",
-        "deadlineApproaching": "📅 Deadline approaching for '{0}' in {1} days",
-        "taskCompleted": "🎉 Congratulations! Task '{0}' completed!",
-        "weeklyReport": "📊 Weekly Report: {0} tasks completed, {1}% completion rate",
-        "productivityInsight": "💡 Insight: You're most productive on {0}",
-        "viewTask": "View Task",
-        "dismiss": "Dismiss"
+        "stalledTask": "⚠️ Task '{0}' has not been modified for {1} days. This may indicate a blocker or oversight. We recommend reviewing status or archiving if no longer relevant.",
+        "deadlineApproaching": "📅 Attention: Deadline for '{0}' is in {1} days. Plan for delivery.",
+        "taskCompleted": "🎉 Congratulations! Task '{0}' completed. Project context updated and history recorded.",
+        "weeklyReport": "📊 Weekly Summary: {0} tasks completed with {1}% completion rate. Keep it up to maintain project flow.",
+        "productivityInsight": "💡 Productivity Insight: Your most productive day has been {0}. Try scheduling complex tasks for this day to maximize focus.",
+        "viewTask": "Review Task",
+        "dismiss": "Understood"
     },
     "tooltips": {
         "createFirstPersona": "Create your first AI Persona to start working.",

@@ -1,6 +1,6 @@
 # AI Instructions - ai-agent-ide-context-sync
 # Gerado automaticamente pelo AI-DOC Kernel v2.0
-# Data: 2026-01-23T18:09:52.777Z
+# Data: 2026-01-24T11:55:16.025Z
 # Variante: FULL
 # ⚠️ NÃO EDITE MANUALMENTE - Use 'ai-doc build' para regenerar
 
@@ -595,11 +595,14 @@ Siga ESTRITAMENTE este formato visual:
 - [Passo 2]
 
 **🧠 Raciocínio:**
-[Explicação resumida]
+- 💡 [Insight ou Motivação]
+- 🛠️ [Ação Técnica ou Decisão]
+- 🎯 [Resultado Esperado]
 
 ## Regras de Formatação
 - **HEADER:** O header deve ser uma LISTA DE BULLETS (`- `) para garantir quebra de linha em qualquer interface.
 - O footer deve trazer checklist (use emojis `✅` e `⬜`), próximos passos e raciocínio resumido.
+- **RACIOCÍNIO:** Deve ser SEMPRE uma lista de bullets com emojis para facilitar a cognição e escanibilidade. Evite parágrafos.
 - **TÍTULOS:** Todas as seções ("Próximos Passos", "Raciocínio", etc) DEVEM ter um emoji no início.
 - **FORMATAÇÃO OBRIGATÓRIA:** Checklists devem ser SEMPRE listas verticais (um item por linha), usando bullets do Markdown (`- `). Nunca coloque itens lado a lado.
 - **PROIBIDO:** Nunca use checkboxes markdown (`[ ]`, `[x]`) ou tags HTML (`<input>`) em checklists; isso quebra a UI. Use APENAS emojis.
