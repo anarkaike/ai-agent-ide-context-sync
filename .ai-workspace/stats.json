@@ -272,8 +272,52 @@
           }
         ]
       }
+    },
+    {
+      "timestamp": "2026-01-24T12:52:51.847Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-24T12:53:03.104Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
     }
   ],
-  "lastUpdated": "2026-01-24T11:55:15.704Z",
-  "lastRitual": "2026-01-24T11:55:16.078Z"
+  "lastUpdated": "2026-01-24T12:53:03.104Z",
+  "lastRitual": "2026-01-24T12:53:03.435Z"
 }

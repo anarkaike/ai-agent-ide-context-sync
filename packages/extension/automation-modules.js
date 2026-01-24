@@ -1,5 +1,6 @@
 const vscode = require('vscode');
 const path = require('path');
+const fs = require('fs');
 const AIClient = require('./ai-client');
 
 let i18nRef = null;
@@ -25,6 +26,21 @@ class AutomationTreeProvider {
 
     getTreeItem(element) {
         return element;
+    }
+
+    async isLaravelProject() {
+        if (!vscode.workspace.workspaceFolders) return false;
+        try {
+            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            const composerPath = path.join(rootPath, 'composer.json');
+            if (fs.existsSync(composerPath)) {
+                const composer = JSON.parse(fs.readFileSync(composerPath, 'utf8'));
+                return (composer.require && (composer.require['laravel/framework'] || composer.require['illuminate/support']));
+            }
+        } catch (e) {
+            console.error('Error checking Laravel project:', e);
+        }
+        return false;
     }
 
     async getChildren(element) {
@@ -115,29 +131,73 @@ class AutomationTreeProvider {
 
         if (element.contextValue === 'workflows-section') {
             try {
-                // List workflows from CLI
-                // Requires CLI to output clean JSON or we parse it
-                // For now, let's hardcode the 'create-component' we know exists or try to fetch
-                // Wait, AIClient.listWorkflows is imperfect currently.
-                // Let's implement a direct file reader for now in the TreeProvider to be fast/robust
-                // Or better: AIClient should be fixed to return robust list.
-                // Let's assume AIClient returns empty list and we add a "Run..." generic item
-
                 const items = [];
                 items.push(this.createActionItem(t('automation.runWorkflowPromptLabel'), 'ai-agent-sync.runWorkflowInput', [], t('automation.runWorkflowPromptTooltip')));
 
-                // Demo workflows (hardcoded for stability until CLI JSON output is ready)
-                const demoWf = new vscode.TreeItem(t('automation.demoWorkflowLabel'));
-                demoWf.command = {
-                    command: 'ai-agent-sync.runWorkflow',
-                    title: t('automation.runWorkflowLabel'),
-                    arguments: ['create-component']
-                };
-                demoWf.iconPath = new vscode.ThemeIcon('play');
-                items.push(demoWf);
+                // Check for Laravel Project
+                const isLaravel = await this.isLaravelProject();
+                if (isLaravel) {
+                    const analyzeItem = this.createActionItem(
+                        t('automation.laravelAnalyzeLabel'),
+                        'ai-agent-sync.laravel.analyze',
+                        [],
+                        t('automation.laravelAnalyzeTooltip')
+                    );
+                    analyzeItem.iconPath = new vscode.ThemeIcon('search');
+                    items.push(analyzeItem);
+
+                    const createLayerItem = this.createActionItem(
+                        t('automation.laravelCreateLayerLabel'),
+                        'ai-agent-sync.laravel.createLayer',
+                        [],
+                        t('automation.laravelCreateLayerTooltip')
+                    );
+                    createLayerItem.iconPath = new vscode.ThemeIcon('layers');
+                    items.push(createLayerItem);
+
+                    const listEntitiesItem = this.createActionItem(
+                        t('automation.laravelListEntitiesLabel'),
+                        'ai-agent-sync.laravel.listEntities',
+                        [],
+                        t('automation.laravelListEntitiesTooltip')
+                    );
+                    listEntitiesItem.iconPath = new vscode.ThemeIcon('list-flat');
+                    items.push(listEntitiesItem);
+                }
+
+                const workflows = await this.client.listWorkflows();
+
+                if (workflows && workflows.length > 0) {
+                    workflows.forEach(wf => {
+                        const item = new vscode.TreeItem(wf.id);
+                        item.description = wf.description || '';
+                        item.tooltip = `${wf.id}\n${wf.description || ''}`;
+                        if (wf.params && wf.params.length > 0) {
+                            item.tooltip += `\nParams: ${wf.params.map(p => p.name).join(', ')}`;
+                        }
+                        item.command = {
+                            command: 'ai-agent-sync.runWorkflow',
+                            title: t('automation.runWorkflowLabel'),
+                            arguments: [wf.id, wf.params]
+                        };
+                        item.iconPath = new vscode.ThemeIcon(wf.source === 'global' ? 'globe' : 'file-code');
+                        item.contextValue = 'workflow';
+                        items.push(item);
+                    });
+                } else if (!isLaravel) {
+                    const demoWf = new vscode.TreeItem(t('automation.demoWorkflowLabel'));
+                    demoWf.command = {
+                        command: 'ai-agent-sync.runWorkflow',
+                        title: t('automation.runWorkflowLabel'),
+                        arguments: ['create-component', []]
+                    };
+                    demoWf.iconPath = new vscode.ThemeIcon('play');
+                    items.push(demoWf);
+                }
 
                 return items;
             } catch (e) {
+                console.error('Error loading workflows:', e);
                 return [new vscode.TreeItem('Error loading workflows')];
             }
         }
@@ -196,7 +256,7 @@ async function handleGeneratePrompt() {
 /**
  * Handle Run Workflow
  */
-async function handleRunWorkflow(workflowId) {
+async function handleRunWorkflow(workflowId, workflowParams) {
     let targetWorkflow = workflowId;
 
     if (!targetWorkflow || typeof targetWorkflow !== 'string') {
@@ -210,20 +270,36 @@ async function handleRunWorkflow(workflowId) {
 
     if (!targetWorkflow) return;
 
-    // TODO: Dynamic Params Input
-    // For now, we assume simple params string input
-    const paramsString = await vscode.window.showInputBox({
-        placeHolder: t('automation.workflowParamsPlaceholder'),
-        prompt: t('automation.workflowParamsPrompt')
-    });
-
-    if (paramsString === undefined) return; // Cancelled
-
     const params = {};
-    paramsString.split(' ').forEach(p => {
-        const [k, v] = p.split('=');
-        if (k && v) params[k] = v;
-    });
+
+    if (workflowParams && Array.isArray(workflowParams) && workflowParams.length > 0) {
+        // Dynamic Params Input based on definition
+        for (const param of workflowParams) {
+            const val = await vscode.window.showInputBox({
+                prompt: `Enter value for ${param.name}: ${param.description || ''}`,
+                placeHolder: param.default || '',
+                value: param.default || ''
+            });
+            
+            if (val === undefined) return; // Cancelled
+            params[param.name] = val;
+        }
+    } else {
+        // Fallback: assume simple params string input if no metadata
+        const paramsString = await vscode.window.showInputBox({
+            placeHolder: t('automation.workflowParamsPlaceholder'),
+            prompt: t('automation.workflowParamsPrompt')
+        });
+
+        if (paramsString === undefined) return; // Cancelled
+
+        if (paramsString) {
+            paramsString.split(' ').forEach(p => {
+                const [k, v] = p.split('=');
+                if (k && v) params[k] = v;
+            });
+        }
+    }
 
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
@@ -240,10 +316,76 @@ async function handleRunWorkflow(workflowId) {
     });
 }
 
+/**
+ * Laravel Handlers
+ */
+async function handleLaravelAnalyze() {
+    const client = new AIClient();
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Generating Analysis Prompt...",
+        cancellable: false
+    }, async () => {
+        try {
+            const goal = "Analyze project structure using laravel-boost MCP. Check for missing layers in entities and list recommendations.";
+            const prompt = await client.generatePrompt(goal);
+            const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
+            await vscode.window.showTextDocument(doc);
+        } catch (e) {
+            vscode.window.showErrorMessage(`Error: ${e}`);
+        }
+    });
+}
+
+async function handleLaravelCreateLayer() {
+    const entityName = await vscode.window.showInputBox({
+        prompt: "Entity Name (e.g. User)",
+        placeHolder: "User"
+    });
+    if (!entityName) return;
+
+    const client = new AIClient();
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Generating Creation Prompt...",
+        cancellable: false
+    }, async () => {
+        try {
+            const goal = `Create full Laravel layers (Model, Controller, Service, Repository) for entity ${entityName} using laravel-boost.`;
+            const prompt = await client.generatePrompt(goal);
+            const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
+            await vscode.window.showTextDocument(doc);
+        } catch (e) {
+            vscode.window.showErrorMessage(`Error: ${e}`);
+        }
+    });
+}
+
+async function handleLaravelListEntities() {
+    const client = new AIClient();
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Generating List Prompt...",
+        cancellable: false
+    }, async () => {
+        try {
+            const goal = "List all detected Laravel entities and their status using laravel-boost.";
+            const prompt = await client.generatePrompt(goal);
+            const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
+            await vscode.window.showTextDocument(doc);
+        } catch (e) {
+            vscode.window.showErrorMessage(`Error: ${e}`);
+        }
+    });
+}
+
 module.exports = {
     AutomationTreeProvider,
     handleGeneratePrompt,
     handleRunWorkflow,
+    handleLaravelAnalyze,
+    handleLaravelCreateLayer,
+    handleLaravelListEntities,
     setAutomationI18n: (i18n) => {
         i18nRef = i18n;
     }

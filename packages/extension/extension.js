@@ -5,7 +5,7 @@ const os = require('os');
 const AIClient = require('./ai-client');
 const { I18n, SmartNotifications } = require('./modules');
 const { KanbanManager, AdvancedAnalytics, ThemeManager, CloudSyncManager } = require('./advanced-modules');
-const { AutomationTreeProvider, handleGeneratePrompt, handleRunWorkflow, setAutomationI18n } = require('./automation-modules');
+const { AutomationTreeProvider, handleGeneratePrompt, handleRunWorkflow, handleLaravelAnalyze, handleLaravelCreateLayer, handleLaravelListEntities, setAutomationI18n } = require('./automation-modules');
 const RitualScheduler = require('./modules/RitualScheduler');
 
 // Global Management Instances

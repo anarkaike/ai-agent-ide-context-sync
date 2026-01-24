@@ -85,15 +85,17 @@ class AIClient {
      * Lista workflows disponíveis
      */
     async listWorkflows() {
-        // Truque: executar run sem args lista workflows
-        // O CLI retorna logs, precisamos parsear
         try {
-            await this.execute(['run']);
+            const output = await this.execute(['workflows', '--json']);
+            try {
+                return JSON.parse(output);
+            } catch (parseError) {
+                console.error('[AIClient] Failed to parse workflows JSON:', parseError);
+                return [];
+            }
         } catch (e) {
-            // O CLI retorna erro se não passar workflow, mas lista os disponíveis no stdout/stderr antes
-            // Precisamos adaptar o CLI para ter um comando 'list-workflows' limpo, ou parsear o output de erro
-            // Por enquanto, vamos assumir que o output vem no reject ou stdout dependendo da implementação
-            return []; // TODO: Implementar listagem limpa no CLI
+            console.error('[AIClient] Error listing workflows:', e);
+            return [];
         }
     }
 

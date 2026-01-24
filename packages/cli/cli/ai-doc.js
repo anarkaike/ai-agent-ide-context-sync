@@ -422,6 +422,7 @@ const commands = {
   run: require('../commands/run'),
   docs: require('./commands/docs'),
   task: require('./commands/task'),
+  workflows: require('../commands/workflows'),
   clickup: require('./commands/clickup'),
   version: require('./commands/version'),
   scan: async (args = []) => {
@@ -767,6 +768,7 @@ const commands = {
     log('  ai-doc task <cmd>     Gerencia tasks (start|list|complete|status)');
     log('  ai-doc clickup <cmd>  Integra ClickUp (detect|cache-sync|link)');
     log('  ai-doc run <wf>       Executa workflow de automação');
+    log('  ai-doc workflows      Lista workflows disponíveis');
     log('  ai-doc docs [recipe]  Gera estrutura de documentação (backend|frontend|fullstack)');
     log('  ai-doc scan [dir]     Verifica placeholders na documentação');
     log('  ai-doc build          Compila e sincroniza regras e instruções');
