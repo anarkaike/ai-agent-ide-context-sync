@@ -74,6 +74,7 @@ Now, your `.cursorrules`, `.windsurfrules`, and other agent configs are perfectl
 | `ai-doc soul export` | Export knowledge base |
 | `ai-doc soul import` | Import knowledge base |
 | `ai-doc identity create` | Create a new agent persona |
+| `ai-doc workflows` | List available automation workflows (supports --json) |
 
 ## ❤️ Community & Solidarity
 

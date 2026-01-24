@@ -12,6 +12,18 @@ Related docs:
 - Extension README (EN): [README.md](./README.md)
 - Extension README (PT-BR): [README.pt-BR.md](./README.pt-BR.md)
 
+## [2.0.23] - 2026-01-24
+
+### Added
+- 🤖 **Context Automation Module**: New dedicated sidebar section for running workflows and generating smart prompts.
+- 🚀 **Laravel Boost Integration**: Auto-detects Laravel projects and offers specific automation workflows (Analyze, Create Layer, List Entities).
+- 🧩 **Dynamic Workflow Parameters**: Intelligent UI prompts for workflow inputs instead of raw JSON editing.
+- 🌐 **Context-Aware Workflows**: Workflows are now filtered based on the active project stack (e.g., Laravel commands only appear in Laravel projects).
+
+### Changed
+- 📝 Updated documentation and README with Automation module details.
+- 🐛 Fixed workflow visibility issues in localized versions (PT-BR).
+
 ## [2.0.14] - 2026-01-23
 
 ### Added
