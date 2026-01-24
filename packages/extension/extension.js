@@ -5,7 +5,7 @@ const os = require('os');
 const AIClient = require('./ai-client');
 const { I18n, SmartNotifications } = require('./modules');
 const { KanbanManager, AdvancedAnalytics, ThemeManager, CloudSyncManager } = require('./advanced-modules');
-const { AutomationTreeProvider, handleGeneratePrompt, handleRunWorkflow, handleLaravelAnalyze, handleLaravelCreateLayer, handleLaravelListEntities, setAutomationI18n } = require('./automation-modules');
+const { AutomationTreeProvider, handleGeneratePrompt, handleRunWorkflow, handleLaravelAnalyze, handleLaravelCreateLayer, handleLaravelListEntities, handleReactCreateComponent, handleReactCreateHook, setAutomationI18n } = require('./automation-modules');
 const RitualScheduler = require('./modules/RitualScheduler');
 
 // Global Management Instances
@@ -894,7 +894,14 @@ function activate(context) {
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.generatePrompt', handleGeneratePrompt),
         vscode.commands.registerCommand('ai-agent-sync.runWorkflow', handleRunWorkflow),
-        vscode.commands.registerCommand('ai-agent-sync.runWorkflowInput', handleRunWorkflow)
+        vscode.commands.registerCommand('ai-agent-sync.runWorkflowInput', handleRunWorkflow),
+        // Laravel Commands
+        vscode.commands.registerCommand('ai-agent-sync.laravel.analyze', handleLaravelAnalyze),
+        vscode.commands.registerCommand('ai-agent-sync.laravel.createLayer', handleLaravelCreateLayer),
+        vscode.commands.registerCommand('ai-agent-sync.laravel.listEntities', handleLaravelListEntities),
+        // React Commands
+        vscode.commands.registerCommand('ai-agent-sync.react.createComponent', handleReactCreateComponent),
+        vscode.commands.registerCommand('ai-agent-sync.react.createHook', handleReactCreateHook)
     );
     // -------------------------------------
 

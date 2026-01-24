@@ -43,6 +43,22 @@ class AutomationTreeProvider {
         return false;
     }
 
+    async isReactProject() {
+        if (!vscode.workspace.workspaceFolders) return false;
+        try {
+            const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            const packagePath = path.join(rootPath, 'package.json');
+            if (fs.existsSync(packagePath)) {
+                const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+                const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+                return deps && (deps['react'] || deps['react-dom'] || deps['next']);
+            }
+        } catch (e) {
+            console.error('Error checking React project:', e);
+        }
+        return false;
+    }
+
     async getChildren(element) {
         if (!element) {
             // Root items
@@ -163,6 +179,28 @@ class AutomationTreeProvider {
                     );
                     listEntitiesItem.iconPath = new vscode.ThemeIcon('list-flat');
                     items.push(listEntitiesItem);
+                }
+
+                // Check for React Project
+                const isReact = await this.isReactProject();
+                if (isReact) {
+                    const createComponentItem = this.createActionItem(
+                        t('automation.reactCreateComponentLabel', 'Create Component'),
+                        'ai-agent-sync.react.createComponent',
+                        [],
+                        t('automation.reactCreateComponentTooltip', 'Generate a new React component')
+                    );
+                    createComponentItem.iconPath = new vscode.ThemeIcon('symbol-class');
+                    items.push(createComponentItem);
+
+                    const createHookItem = this.createActionItem(
+                        t('automation.reactCreateHookLabel', 'Create Hook'),
+                        'ai-agent-sync.react.createHook',
+                        [],
+                        t('automation.reactCreateHookTooltip', 'Generate a new React hook')
+                    );
+                    createHookItem.iconPath = new vscode.ThemeIcon('symbol-function');
+                    items.push(createHookItem);
                 }
 
                 const workflows = await this.client.listWorkflows();
@@ -379,6 +417,57 @@ async function handleLaravelListEntities() {
     });
 }
 
+/**
+ * React Handlers
+ */
+async function handleReactCreateComponent() {
+    const componentName = await vscode.window.showInputBox({
+        prompt: "Component Name (e.g. Button)",
+        placeHolder: "Button"
+    });
+    if (!componentName) return;
+
+    const client = new AIClient();
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Generating Component Prompt...",
+        cancellable: false
+    }, async () => {
+        try {
+            const goal = `Create a functional React component named ${componentName} with TypeScript interfaces and props. Use 'export function'.`;
+            const prompt = await client.generatePrompt(goal);
+            const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
+            await vscode.window.showTextDocument(doc);
+        } catch (e) {
+            vscode.window.showErrorMessage(`Error: ${e}`);
+        }
+    });
+}
+
+async function handleReactCreateHook() {
+    const hookName = await vscode.window.showInputBox({
+        prompt: "Hook Name (e.g. useFetch)",
+        placeHolder: "useFetch"
+    });
+    if (!hookName) return;
+
+    const client = new AIClient();
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Generating Hook Prompt...",
+        cancellable: false
+    }, async () => {
+        try {
+            const goal = `Create a custom React hook named ${hookName} with TypeScript. Include usage example.`;
+            const prompt = await client.generatePrompt(goal);
+            const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
+            await vscode.window.showTextDocument(doc);
+        } catch (e) {
+            vscode.window.showErrorMessage(`Error: ${e}`);
+        }
+    });
+}
+
 module.exports = {
     AutomationTreeProvider,
     handleGeneratePrompt,
@@ -386,6 +475,8 @@ module.exports = {
     handleLaravelAnalyze,
     handleLaravelCreateLayer,
     handleLaravelListEntities,
+    handleReactCreateComponent,
+    handleReactCreateHook,
     setAutomationI18n: (i18n) => {
         i18nRef = i18n;
     }

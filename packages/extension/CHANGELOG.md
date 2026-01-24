@@ -12,6 +12,12 @@ Related docs:
 - Extension README (EN): [README.md](./README.md)
 - Extension README (PT-BR): [README.pt-BR.md](./README.pt-BR.md)
 
+## [2.0.24] - 2026-01-24
+### Added
+- **React Support**: Context-aware detection for React/Next.js projects.
+- **React Workflows**: New automation actions to "Create Component" and "Create Hook".
+- **Fix**: Fixed missing registration of Laravel and React automation commands.
+
 ## [2.0.23] - 2026-01-24
 
 ### Added

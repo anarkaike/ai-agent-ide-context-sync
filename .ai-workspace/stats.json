@@ -316,8 +316,184 @@
           }
         ]
       }
+    },
+    {
+      "timestamp": "2026-01-24T13:51:52.221Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-24T14:01:50.966Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-24T14:06:45.627Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-24T15:05:46.426Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-24T16:05:44.917Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-24T17:05:45.056Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-24T17:05:56.990Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-24T17:44:05.962Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
     }
   ],
-  "lastUpdated": "2026-01-24T12:53:03.104Z",
-  "lastRitual": "2026-01-24T12:53:03.435Z"
+  "lastUpdated": "2026-01-24T17:44:05.962Z",
+  "lastRitual": "2026-01-24T17:44:06.330Z"
 }

@@ -20,7 +20,7 @@
 
 **Manage your AI agents, tasks, and project context without leaving your editor.**
 
-[![Version](https://img.shields.io/badge/version-2.0.23-blue.svg)](https://marketplace.visualstudio.com/items?itemName=junio-de-almeida-vitorino.ai-agent-ide-context-sync-vscode)
+[![Version](https://img.shields.io/badge/version-2.0.24-blue.svg)](https://marketplace.visualstudio.com/items?itemName=junio-de-almeida-vitorino.ai-agent-ide-context-sync-vscode)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.80.0+-purple.svg)](https://code.visualstudio.com/)
 
@@ -41,6 +41,7 @@ The **AI Agent IDE Context Sync** extension brings the power of the universal co
 - **⏱️ Pomodoro Timer**: Built-in focus timer with status bar integration to keep you in the flow.
 - **📊 Analytics Dashboard**: Real-time insights on your project's AI context and task progress.
 - **🎨 Customization**: 16 vibrant colors and 24 emoji icons to personalize your workflow.
+- **🤖 Context Automation**: Run workflows, generate smart prompts, and integrate with stacks like Laravel and React.
 
 ## 🚀 Installation
 
@@ -77,7 +78,7 @@ This extension is part of the **AI Agent IDE Context Sync** ecosystem. Built wit
 
 **Gerencie seus agentes de IA, tasks e contexto do projeto sem sair do editor.**
 
-[![Version](https://img.shields.io/badge/version-2.0.22-blue.svg)](https://marketplace.visualstudio.com/items?itemName=junio-de-almeida-vitorino.ai-agent-ide-context-sync-vscode)
+[![Version](https://img.shields.io/badge/version-2.0.24-blue.svg)](https://marketplace.visualstudio.com/items?itemName=junio-de-almeida-vitorino.ai-agent-ide-context-sync-vscode)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.80.0+-purple.svg)](https://code.visualstudio.com/)
 
@@ -97,7 +98,7 @@ A extensão **AI Agent IDE Context Sync** traz o poder do kernel de contexto uni
 - **📋 Kanban & Tasks**: Gestão completa de tarefas com checklists interativos e rastreamento de status.
 - **⏱️ Pomodoro Timer**: Timer de foco integrado à barra de status para manter você no fluxo.
 - **📊 Dashboard de Analytics**: Insights em tempo real sobre o contexto da IA e progresso das tarefas.
-- **🤖 Automação de Contexto**: Rode workflows, gere prompts inteligentes e integre com servidores MCP (como Laravel Boost).
+- **🤖 Automação de Contexto**: Rode workflows, gere prompts inteligentes e integre com stacks como Laravel e React.
 - **🎨 Customização**: 16 cores vibrantes e 24 ícones emoji para personalizar seu fluxo de trabalho.
 
 ## 🚀 Instalação

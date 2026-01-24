@@ -3,7 +3,7 @@
     "displayName": "AI Agent IDE Context Sync",
     "description": "AI Kernel para desenvolvedores: personas, tasks, Pomodoro, Kanban, analytics e contexto unificado para múltiplos IDEs e agentes. Sistema Operacional para sua IA de desenvolvimento ficar sempre sincronizada com o git do projeto.",
     "icon": "resources/ai.png",
-    "version": "2.0.23",
+    "version": "2.0.24",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -231,6 +231,31 @@
                 "command": "ai-agent-sync.evolve",
                 "title": "Evolve Rules (Drift Detection)",
                 "icon": "$(graph)"
+            },
+            {
+                "command": "ai-agent-sync.laravel.analyze",
+                "title": "AI Agent Sync: Laravel - Analyze Entities",
+                "icon": "$(search)"
+            },
+            {
+                "command": "ai-agent-sync.laravel.createLayer",
+                "title": "AI Agent Sync: Laravel - Create Layer",
+                "icon": "$(layers)"
+            },
+            {
+                "command": "ai-agent-sync.laravel.listEntities",
+                "title": "AI Agent Sync: Laravel - List Entities",
+                "icon": "$(list-flat)"
+            },
+            {
+                "command": "ai-agent-sync.react.createComponent",
+                "title": "AI Agent Sync: React - Create Component",
+                "icon": "$(code)"
+            },
+            {
+                "command": "ai-agent-sync.react.createHook",
+                "title": "AI Agent Sync: React - Create Hook",
+                "icon": "$(plug)"
             }
         ],
         "viewsContainers": {
