@@ -10,9 +10,32 @@ const http = require('http');
 
 const log = (msg) => console.log(msg);
 
+// Carrega .env local se existir (simples parser)
+const loadEnv = () => {
+  const envPath = path.join(process.cwd(), '.env');
+  if (fs.existsSync(envPath)) {
+    const content = fs.readFileSync(envPath, 'utf-8');
+    content.split('\n').forEach(line => {
+      const match = line.match(/^\s*([\w_]+)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        const key = match[1];
+        let value = match[2] || '';
+        // Remove quotes if present
+        if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+        if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
+        if (!process.env[key]) {
+          process.env[key] = value.trim();
+        }
+      }
+    });
+  }
+};
+loadEnv();
+
 // Configuração OAuth (Default para App de Teste/Dev)
 // Em produção, deve vir de variáveis de ambiente ou config segura
-const CLIENT_ID = process.env.CLICKUP_CLIENT_ID || 'M8T6716765565565'; // Placeholder
+const DEFAULT_CLIENT_ID = 'M8T6716765565565';
+const CLIENT_ID = process.env.CLICKUP_CLIENT_ID || DEFAULT_CLIENT_ID;
 const REDIRECT_URI = 'http://localhost:3636/callback';
 const AUTH_URL = 'https://app.clickup.com/api';
 const TOKEN_URL = 'https://api.clickup.com/api/v2/oauth/token';
@@ -43,6 +66,14 @@ const base64UrlEncode = (buffer) => {
 
 const cmdAuth = async () => {
   log('\n🔐 Iniciando autenticação OAuth 2.1 (ClickUp)...');
+  
+  if (CLIENT_ID === DEFAULT_CLIENT_ID) {
+    log('⚠️  Aviso: Usando Client ID padrão (placeholder).');
+    log('   Se receber erro "Não foi possível autorizar suas equipes", crie um App no ClickUp');
+    log('   e defina CLICKUP_CLIENT_ID no arquivo .env na raiz do projeto.');
+  } else {
+    log(`ℹ️  Usando Client ID personalizado: ${CLIENT_ID.substring(0, 4)}...`);
+  }
   
   const verifier = generateCodeVerifier();
   const challenge = generateCodeChallenge(verifier);
