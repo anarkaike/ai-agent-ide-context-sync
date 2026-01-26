@@ -12,7 +12,36 @@ Related docs:
 - Extension README (EN): [README.md](./README.md)
 - Extension README (PT-BR): [README.pt-BR.md](./README.pt-BR.md)
 
-## [2.0.24] - 2026-01-24
+## [2.0.31] - 2026-01-26
+### Added
+- 📸 **Context Snap**: New feature to capture current workspace state (files, git diff, errors) into a Markdown snapshot.
+- 🗂️ **Context Tools Section**: Reorganized automation sidebar to include a dedicated section for context tools.
+
+## [2.0.30] - 2026-01-26
+### Added
+- 🕵️ **Git Code Review**: New command to analyze staged changes for bugs, security issues, and best practices.
+
+## [2.0.29] - 2026-01-26
+### Added
+- 🌿 **Git Context Automation**: New automation section for Git operations.
+  - 📝 **Commit Message Generation**: Generates Conventional Commits from staged changes.
+  - 🔀 **PR Description Generation**: Generates PR descriptions from branch diffs.
+
+## [2.0.28] - 2026-01-26
+
+### Added
+- 📊 **Trend Analysis**: New "30-Day Trend" card in Web Dashboard showing productivity changes.
+- 🩺 **Diagnostic Info**: New command `Copy Diagnostic Info` to help troubleshooting.
+- ⚙️ **Status Dashboard Improvements**:
+  - Displays Environment Info (Node, VS Code, OS).
+  - Quick Actions buttons (Start Task, View Logs).
+  - Better error handling for Kernel Status.
+
+### Fixed
+- **Web Dashboard**: Fixed crash when loading dashboard template.
+- **Trend Calculation**: Fixed logic to return percentage difference instead of string.
+
+## [2.0.24] - 2026-01-264
 ### Added
 - **React Support**: Context-aware detection for React/Next.js projects.
 - **React Workflows**: New automation actions to "Create Component" and "Create Hook".

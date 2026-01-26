@@ -333,7 +333,7 @@
                 return false;
             }
             const t = sec.title.toLowerCase();
-            return t.includes('checklist') || t.includes('lista');
+            return t.includes('checklist') || t.includes('lista') || t.includes('plano de ação');
         }
 
         function buildChecklistSection(card, sec, index) {
@@ -411,7 +411,7 @@
                 itemsWrapper.appendChild(row);
             }
 
-            const rawLines = (sec.content || '').split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const rawLines = (sec.content || '').split('\n').map(l => l.trim()).filter(l => l.length > 0 && l !== '---');
             if (rawLines.length === 0) {
                 addItem(false, '');
             } else {

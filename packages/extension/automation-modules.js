@@ -1,16 +1,16 @@
 const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs');
+const { exec } = require('child_process');
 const AIClient = require('./ai-client');
 
 let i18nRef = null;
+let loggerRef = null;
 
-function t(key, ...args) {
-    if (i18nRef) {
-        return i18nRef.t(key, ...args);
-    }
-    return key;
-}
+const t = (key, ...args) => {
+    if (i18nRef) return i18nRef.t(key, ...args);
+    return key; // Fallback
+};
 
 class AutomationTreeProvider {
     constructor(i18n) {
@@ -64,14 +64,10 @@ class AutomationTreeProvider {
             // Root items
             const items = [];
 
-            // 1. Generate Smart Prompt
-            const promptItem = new vscode.TreeItem(t('automation.generatePromptLabel'));
-            promptItem.command = {
-                command: 'ai-agent-sync.generatePrompt',
-                title: t('automation.generatePromptLabel')
-            };
-            promptItem.tooltip = t('automation.generatePromptTooltip');
-            items.push(promptItem);
+            // 1. Context Tools Section
+            const contextItem = new vscode.TreeItem(t('automation.contextSectionLabel'), vscode.TreeItemCollapsibleState.Expanded);
+            contextItem.contextValue = 'context-section';
+            items.push(contextItem);
 
             // 1.1 Maintenance Section (New)
             const maintenanceItem = new vscode.TreeItem(t('automation.maintenanceSectionLabel'), vscode.TreeItemCollapsibleState.Expanded);
@@ -87,6 +83,31 @@ class AutomationTreeProvider {
             const rulesItem = new vscode.TreeItem(t('automation.rulesSectionLabel'), vscode.TreeItemCollapsibleState.Collapsed);
             rulesItem.contextValue = 'rules-section';
             items.push(rulesItem);
+
+            // 4. Git Context Section
+            const gitItem = new vscode.TreeItem(t('automation.gitSectionLabel'), vscode.TreeItemCollapsibleState.Expanded);
+            gitItem.contextValue = 'git-section';
+            items.push(gitItem);
+
+            return items;
+        }
+
+        if (element.contextValue === 'context-section') {
+            const items = [];
+            
+            items.push(this.createActionItem(
+                t('automation.contextSnapLabel'),
+                'ai-agent-sync.context.snap',
+                [],
+                t('automation.contextSnapTooltip')
+            ));
+
+            items.push(this.createActionItem(
+                t('automation.generatePromptLabel'),
+                'ai-agent-sync.generatePrompt',
+                [],
+                t('automation.generatePromptTooltip')
+            ));
 
             return items;
         }
@@ -235,9 +256,32 @@ class AutomationTreeProvider {
 
                 return items;
             } catch (e) {
-                console.error('Error loading workflows:', e);
+                if (loggerRef) loggerRef.error('Error loading workflows', e);
                 return [new vscode.TreeItem('Error loading workflows')];
             }
+        }
+
+        if (element.contextValue === 'git-section') {
+            const items = [];
+            items.push(this.createActionItem(
+                t('automation.gitCommitLabel'),
+                'ai-agent-sync.git.commitMessage',
+                [],
+                t('automation.gitCommitTooltip')
+            ));
+            items.push(this.createActionItem(
+                t('automation.gitPRLabel'),
+                'ai-agent-sync.git.prDescription',
+                [],
+                t('automation.gitPRTooltip')
+            ));
+            items.push(this.createActionItem(
+                t('automation.gitReviewLabel'),
+                'ai-agent-sync.git.codeReview',
+                [],
+                t('automation.gitReviewTooltip')
+            ));
+            return items;
         }
 
         return [];
@@ -286,7 +330,11 @@ async function handleGeneratePrompt() {
             await vscode.window.showTextDocument(doc);
 
         } catch (e) {
-            vscode.window.showErrorMessage(`Error generating prompt: ${e}`);
+            if (loggerRef) {
+                loggerRef.error(`Error generating prompt: ${e}`, e);
+            } else {
+                vscode.window.showErrorMessage(`Error generating prompt: ${e}`);
+            }
         }
     });
 }
@@ -349,7 +397,11 @@ async function handleRunWorkflow(workflowId, workflowParams) {
             await client.runWorkflow(targetWorkflow, params);
             vscode.window.showInformationMessage(t('automation.workflowCompleted', targetWorkflow));
         } catch (e) {
-            vscode.window.showErrorMessage(t('automation.workflowError', e));
+            if (loggerRef) {
+                loggerRef.error(t('automation.workflowError', e), e);
+            } else {
+                vscode.window.showErrorMessage(t('automation.workflowError', e));
+            }
         }
     });
 }
@@ -370,7 +422,11 @@ async function handleLaravelAnalyze() {
             const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
             await vscode.window.showTextDocument(doc);
         } catch (e) {
-            vscode.window.showErrorMessage(`Error: ${e}`);
+            if (loggerRef) {
+                loggerRef.error(`Error: ${e}`, e);
+            } else {
+                vscode.window.showErrorMessage(`Error: ${e}`);
+            }
         }
     });
 }
@@ -394,7 +450,11 @@ async function handleLaravelCreateLayer() {
             const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
             await vscode.window.showTextDocument(doc);
         } catch (e) {
-            vscode.window.showErrorMessage(`Error: ${e}`);
+            if (loggerRef) {
+                loggerRef.error(`Error: ${e}`, e);
+            } else {
+                vscode.window.showErrorMessage(`Error: ${e}`);
+            }
         }
     });
 }
@@ -412,7 +472,11 @@ async function handleLaravelListEntities() {
             const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
             await vscode.window.showTextDocument(doc);
         } catch (e) {
-            vscode.window.showErrorMessage(`Error: ${e}`);
+            if (loggerRef) {
+                loggerRef.error(`Error: ${e}`, e);
+            } else {
+                vscode.window.showErrorMessage(`Error: ${e}`);
+            }
         }
     });
 }
@@ -439,7 +503,11 @@ async function handleReactCreateComponent() {
             const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
             await vscode.window.showTextDocument(doc);
         } catch (e) {
-            vscode.window.showErrorMessage(`Error: ${e}`);
+            if (loggerRef) {
+                loggerRef.error(`Error: ${e}`, e);
+            } else {
+                vscode.window.showErrorMessage(`Error: ${e}`);
+            }
         }
     });
 }
@@ -463,7 +531,244 @@ async function handleReactCreateHook() {
             const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
             await vscode.window.showTextDocument(doc);
         } catch (e) {
-            vscode.window.showErrorMessage(`Error: ${e}`);
+            if (loggerRef) {
+                loggerRef.error(`Error: ${e}`, e);
+            } else {
+                vscode.window.showErrorMessage(`Error: ${e}`);
+            }
+        }
+    });
+}
+
+/**
+ * Git Handlers
+ */
+async function handleGenerateCommitMessage() {
+    if (!vscode.workspace.rootPath) {
+        vscode.window.showErrorMessage('No workspace open');
+        return;
+    }
+
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Generating Commit Message...",
+        cancellable: false
+    }, async () => {
+        try {
+            // Get staged diff
+            const diff = await new Promise((resolve, reject) => {
+                exec('git diff --cached', { cwd: vscode.workspace.rootPath }, (err, stdout) => {
+                    if (err) reject(err);
+                    else resolve(stdout);
+                });
+            });
+
+            if (!diff || diff.trim().length === 0) {
+                vscode.window.showInformationMessage('No staged changes found. Please stage your changes first.');
+                return;
+            }
+
+            const client = new AIClient();
+            // Truncate if too long (CLI limit safety)
+            const maxLength = 8000;
+            const truncatedDiff = diff.length > maxLength ? diff.substring(0, maxLength) + "\n...[truncated]" : diff;
+
+            const goal = `Generate a Conventional Commit message for these changes:\n\n${truncatedDiff}`;
+            const prompt = await client.generatePrompt(goal);
+            
+            const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
+            await vscode.window.showTextDocument(doc);
+
+        } catch (e) {
+            if (loggerRef) {
+                loggerRef.error(`Error: ${e}`, e);
+            } else {
+                vscode.window.showErrorMessage(`Error: ${e}`);
+            }
+        }
+    });
+}
+
+async function handleGeneratePRDescription() {
+    if (!vscode.workspace.rootPath) {
+        vscode.window.showErrorMessage('No workspace open');
+        return;
+    }
+
+    const targetBranch = await vscode.window.showInputBox({
+        prompt: "Target branch for PR (e.g. main, master, develop)",
+        placeHolder: "main",
+        value: "main"
+    });
+
+    if (!targetBranch) return;
+
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Generating PR Description...",
+        cancellable: false
+    }, async () => {
+        try {
+            // Get branch diff
+            const diff = await new Promise((resolve, reject) => {
+                exec(`git diff ${targetBranch}...HEAD`, { cwd: vscode.workspace.rootPath }, (err, stdout) => {
+                    if (err) reject(err);
+                    else resolve(stdout);
+                });
+            });
+
+            if (!diff || diff.trim().length === 0) {
+                vscode.window.showInformationMessage(`No changes found between ${targetBranch} and HEAD.`);
+                return;
+            }
+
+            const client = new AIClient();
+            const maxLength = 8000;
+            const truncatedDiff = diff.length > maxLength ? diff.substring(0, maxLength) + "\n...[truncated]" : diff;
+
+            const goal = `Generate a Pull Request description (Title, Summary, Changes, Impact) for these changes against ${targetBranch}:\n\n${truncatedDiff}`;
+            const prompt = await client.generatePrompt(goal);
+            
+            const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
+            await vscode.window.showTextDocument(doc);
+
+        } catch (e) {
+            if (loggerRef) {
+                loggerRef.error(`Error: ${e}`, e);
+            } else {
+                vscode.window.showErrorMessage(`Error: ${e}`);
+            }
+        }
+    });
+}
+
+async function handleGitCodeReview() {
+    if (!vscode.workspace.rootPath) {
+        vscode.window.showErrorMessage('No workspace open');
+        return;
+    }
+
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Running Code Review...",
+        cancellable: false
+    }, async () => {
+        try {
+            // Get staged diff (focus on what's about to be committed)
+            const diff = await new Promise((resolve, reject) => {
+                exec('git diff --cached', { cwd: vscode.workspace.rootPath }, (err, stdout) => {
+                    if (err) reject(err);
+                    else resolve(stdout);
+                });
+            });
+
+            if (!diff || diff.trim().length === 0) {
+                vscode.window.showInformationMessage('No staged changes found. Please stage changes to review.');
+                return;
+            }
+
+            const client = new AIClient();
+            const maxLength = 8000;
+            const truncatedDiff = diff.length > maxLength ? diff.substring(0, maxLength) + "\n...[truncated]" : diff;
+
+            const goal = `Perform a Code Review on these changes. Focus on:\n1. Potential Bugs\n2. Security Issues\n3. Performance Improvements\n4. Best Practices\n\nChanges:\n${truncatedDiff}`;
+            const prompt = await client.generatePrompt(goal);
+            
+            const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
+            await vscode.window.showTextDocument(doc);
+
+        } catch (e) {
+            if (loggerRef) {
+                loggerRef.error(`Error: ${e}`, e);
+            } else {
+                vscode.window.showErrorMessage(`Error: ${e}`);
+            }
+        }
+    });
+}
+
+async function handleContextSnap() {
+    if (!vscode.workspace.rootPath) {
+        vscode.window.showErrorMessage('No workspace open');
+        return;
+    }
+
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Snapping Context...",
+        cancellable: false
+    }, async () => {
+        try {
+            const timestamp = new Date().toISOString();
+            let content = `# 📸 Context Snap - ${timestamp}\n\n`;
+
+            // 1. Git Context
+            content += `## 🌿 Git Status\n`;
+            try {
+                const diff = await new Promise((resolve) => {
+                    exec('git diff', { cwd: vscode.workspace.rootPath }, (err, stdout) => resolve(stdout || ''));
+                });
+                const stagedDiff = await new Promise((resolve) => {
+                    exec('git diff --cached', { cwd: vscode.workspace.rootPath }, (err, stdout) => resolve(stdout || ''));
+                });
+
+                if (diff.trim()) {
+                    content += `### Unstaged Changes\n\`\`\`diff\n${diff.trim()}\n\`\`\`\n\n`;
+                }
+                if (stagedDiff.trim()) {
+                    content += `### Staged Changes\n\`\`\`diff\n${stagedDiff.trim()}\n\`\`\`\n\n`;
+                }
+                if (!diff.trim() && !stagedDiff.trim()) {
+                    content += `No changes detected.\n\n`;
+                }
+            } catch (e) {
+                content += `Error fetching git diff: ${e.message}\n\n`;
+            }
+
+            // 2. Open Editors
+            content += `## 📝 Open Files\n`;
+            const editors = vscode.window.visibleTextEditors;
+            if (editors.length > 0) {
+                for (const editor of editors) {
+                    const doc = editor.document;
+                    // Skip if document is the snap itself (avoid recursion if re-snapping)
+                    if (doc.languageId === 'markdown' && doc.getText().startsWith('# 📸 Context Snap')) continue;
+
+                    content += `### ${vscode.workspace.asRelativePath(doc.uri)}\n`;
+                    content += `\`\`\`${doc.languageId}\n${doc.getText()}\n\`\`\`\n\n`;
+                }
+            } else {
+                content += `No visible text editors.\n\n`;
+            }
+
+            // 3. Diagnostics (Errors/Warnings)
+            content += `## 🚨 Diagnostics\n`;
+            const diagnostics = vscode.languages.getDiagnostics();
+            let hasDiagnostics = false;
+            for (const [uri, diags] of diagnostics) {
+                if (diags.length > 0 && uri.fsPath.includes(vscode.workspace.rootPath)) {
+                    hasDiagnostics = true;
+                    content += `### ${vscode.workspace.asRelativePath(uri)}\n`;
+                    for (const diag of diags) {
+                        content += `- [${vscode.DiagnosticSeverity[diag.severity]}] Line ${diag.range.start.line + 1}: ${diag.message}\n`;
+                    }
+                    content += `\n`;
+                }
+            }
+            if (!hasDiagnostics) {
+                content += `No problems detected.\n\n`;
+            }
+
+            // Open Snap
+            const doc = await vscode.workspace.openTextDocument({ content: content, language: 'markdown' });
+            await vscode.window.showTextDocument(doc);
+
+        } catch (e) {
+            if (loggerRef) {
+                loggerRef.error(`Error: ${e}`, e);
+            } else {
+                vscode.window.showErrorMessage(`Error: ${e}`);
+            }
         }
     });
 }
@@ -477,7 +782,14 @@ module.exports = {
     handleLaravelListEntities,
     handleReactCreateComponent,
     handleReactCreateHook,
+    handleGenerateCommitMessage,
+    handleGeneratePRDescription,
+    handleGitCodeReview,
+    handleContextSnap,
     setAutomationI18n: (i18n) => {
         i18nRef = i18n;
+    },
+    setAutomationLogger: (logger) => {
+        loggerRef = logger;
     }
 };

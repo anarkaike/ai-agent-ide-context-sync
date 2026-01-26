@@ -51,7 +51,11 @@ class RitualScheduler {
                 console.log('[RitualScheduler] No critical drift detected.');
             }
         } catch (error) {
-            console.error('[RitualScheduler] Check failed:', error);
+            if (AIClient.logger) {
+                AIClient.logger.error('[RitualScheduler] Check failed:', error);
+            } else {
+                console.error('[RitualScheduler] Check failed:', error);
+            }
         }
     }
 

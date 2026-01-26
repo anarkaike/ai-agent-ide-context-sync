@@ -39,7 +39,8 @@ The **AI Agent IDE Context Sync** extension brings the power of the universal co
 - **👥 Visual Agent Management**: Create, edit, and manage AI Personas (identities) with a drag-and-drop interface.
 - **📋 Kanban & Tasks**: Full task management with interactive checklists and status tracking.
 - **⏱️ Pomodoro Timer**: Built-in focus timer with status bar integration to keep you in the flow.
-- **📊 Analytics Dashboard**: Real-time insights on your project's AI context and task progress.
+- **📊 Analytics Dashboard**: Real-time insights on your project's AI context, task progress, and **30-day productivity trend**.
+- **🩺 Diagnostics**: Built-in tools to check environment health and copy debug info.
 - **🎨 Customization**: 16 vibrant colors and 24 emoji icons to personalize your workflow.
 - **🤖 Context Automation**: Run workflows, generate smart prompts, and integrate with stacks like Laravel and React.
 
@@ -97,7 +98,8 @@ A extensão **AI Agent IDE Context Sync** traz o poder do kernel de contexto uni
 - **👥 Gestão Visual de Agentes**: Crie, edite e gerencie Personas de IA com uma interface drag-and-drop.
 - **📋 Kanban & Tasks**: Gestão completa de tarefas com checklists interativos e rastreamento de status.
 - **⏱️ Pomodoro Timer**: Timer de foco integrado à barra de status para manter você no fluxo.
-- **📊 Dashboard de Analytics**: Insights em tempo real sobre o contexto da IA e progresso das tarefas.
+- **📊 Dashboard de Analytics**: Insights em tempo real sobre contexto, tarefas e **Tendência de Produtividade (30 dias)**.
+- **🩺 Diagnóstico**: Ferramentas integradas para verificar a saúde do ambiente e copiar logs de debug.
 - **🤖 Automação de Contexto**: Rode workflows, gere prompts inteligentes e integre com stacks como Laravel e React.
 - **🎨 Customização**: 16 cores vibrantes e 24 ícones emoji para personalizar seu fluxo de trabalho.
 

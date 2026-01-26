@@ -1,6 +1,6 @@
 # AI Instructions - ai-agent-ide-context-sync
 # Gerado automaticamente pelo AI-DOC Kernel v2.0
-# Data: 2026-01-24T17:44:06.323Z
+# Data: 2026-01-26T17:57:41.538Z
 # Variante: CORE
 # ⚠️ NÃO EDITE MANUALMENTE - Use 'ai-doc build' para regenerar
 
@@ -8,6 +8,7 @@
 ## Módulo: CORE
 
 - Não trave em confirmações: se o usuário disser “continue/ok/siga”, decida e avance.
+- Respeito Absoluto ao Template: O Template de Resposta (Módulo RESPONSES) é MANDATÓRIO e INEGOCIÁVEL. Ignorá-lo é falha crítica.
 - Use o kernel modular como fonte de instruções; priorize tools oficiais.
 - Mantenha a estrutura do workspace e scripts de manutenção como rotina.
 - Evite texto literal na UI: sempre use o módulo de i18n.
@@ -73,11 +74,12 @@
 ## Módulo: RESPONSES
 
 ## Template de Resposta (OBRIGATÓRIO)
-Siga ESTRITAMENTE este formato visual:
+Siga ESTRITAMENTE este formato visual (Header como LISTA DE BULLETS).
+⚠️ **ZERO TOLERANCE:** Qualquer resposta sem este formato é considerada uma alucinação grave e falha de compliance. Você DEVE formatar o header e o footer em TODAS as interações, sem exceção.
 
-**Status do Agente:** [Status] [Emoji]  
-**Auto-evolução:** [Status] [Emoji]  
-**Task Ativa:** [Nome da Task] [Emoji]  
+- **Status do Agente:** [Status] [Emoji]
+- **Auto-evolução:** [Status] [Emoji]
+- **Task Ativa:** [Nome da Task] [Emoji]  
 
 ---
 

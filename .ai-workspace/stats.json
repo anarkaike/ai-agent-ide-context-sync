@@ -10,72 +10,6 @@
   "sessions": 0,
   "autoEvolutionLog": [
     {
-      "timestamp": "2026-01-22T19:11:25.138Z",
-      "heuristics": {
-        "total": 15,
-        "byType": {
-          "navigation": 12,
-          "documentation": 0,
-          "prompts": 3,
-          "analysis": 0
-        }
-      },
-      "signals": {
-        "totalRules": 2,
-        "drifted": [],
-        "lowScore": [],
-        "missingHistory": [
-          {
-            "id": "clean-code"
-          }
-        ]
-      }
-    },
-    {
-      "timestamp": "2026-01-22T19:21:26.515Z",
-      "heuristics": {
-        "total": 15,
-        "byType": {
-          "navigation": 12,
-          "documentation": 0,
-          "prompts": 3,
-          "analysis": 0
-        }
-      },
-      "signals": {
-        "totalRules": 2,
-        "drifted": [],
-        "lowScore": [],
-        "missingHistory": [
-          {
-            "id": "clean-code"
-          }
-        ]
-      }
-    },
-    {
-      "timestamp": "2026-01-22T19:24:09.231Z",
-      "heuristics": {
-        "total": 15,
-        "byType": {
-          "navigation": 12,
-          "documentation": 0,
-          "prompts": 3,
-          "analysis": 0
-        }
-      },
-      "signals": {
-        "totalRules": 2,
-        "drifted": [],
-        "lowScore": [],
-        "missingHistory": [
-          {
-            "id": "clean-code"
-          }
-        ]
-      }
-    },
-    {
       "timestamp": "2026-01-22T19:27:18.888Z",
       "heuristics": {
         "total": 15,
@@ -492,8 +426,250 @@
           }
         ]
       }
+    },
+    {
+      "timestamp": "2026-01-26T13:38:47.451Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-26T13:39:50.999Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-26T14:37:47.475Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-26T14:38:05.669Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-26T14:52:53.924Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-26T14:59:40.044Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-26T15:51:54.140Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-26T16:51:54.168Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-26T17:33:47.529Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-26T17:51:54.343Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-01-26T17:57:41.237Z",
+      "heuristics": {
+        "total": 15,
+        "byType": {
+          "navigation": 12,
+          "documentation": 0,
+          "prompts": 3,
+          "analysis": 0
+        }
+      },
+      "signals": {
+        "totalRules": 2,
+        "drifted": [],
+        "lowScore": [],
+        "missingHistory": [
+          {
+            "id": "clean-code"
+          }
+        ]
+      }
     }
   ],
-  "lastUpdated": "2026-01-24T17:44:05.962Z",
-  "lastRitual": "2026-01-24T17:44:06.330Z"
+  "lastUpdated": "2026-01-26T17:57:41.237Z",
+  "lastRitual": "2026-01-26T17:57:41.545Z"
 }

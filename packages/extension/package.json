@@ -3,7 +3,7 @@
     "displayName": "AI Agent IDE Context Sync",
     "description": "AI Kernel para desenvolvedores: personas, tasks, Pomodoro, Kanban, analytics e contexto unificado para múltiplos IDEs e agentes. Sistema Operacional para sua IA de desenvolvimento ficar sempre sincronizada com o git do projeto.",
     "icon": "resources/ai.png",
-    "version": "2.0.24",
+    "version": "2.0.31",
     "engines": {
         "vscode": "^1.80.0"
     },
@@ -14,7 +14,7 @@
         "Data Science",
         "Machine Learning"
     ],
-    "publisher": "junio-de-almeida-vitorino",
+    "publisher": "ai-agent-ide-context-sync",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -44,6 +44,16 @@
             {
                 "command": "ai-agent-sync.status",
                 "title": "AI Agent Sync: Show Status"
+            },
+            {
+                "command": "ai-agent-sync.showLogs",
+                "title": "AI Agent Sync: Show Logs",
+                "icon": "$(output)"
+            },
+            {
+                "command": "ai-agent-sync.copyErrorLogs",
+                "title": "AI Agent Sync: Copy Error Logs",
+                "icon": "$(clippy)"
             },
             {
                 "command": "ai-agent-sync.createPersona",
@@ -256,6 +266,21 @@
                 "command": "ai-agent-sync.react.createHook",
                 "title": "AI Agent Sync: React - Create Hook",
                 "icon": "$(plug)"
+            },
+            {
+                "command": "ai-agent-sync.git.commitMessage",
+                "title": "Generate Commit Message",
+                "icon": "$(git-commit)"
+            },
+            {
+                "command": "ai-agent-sync.git.prDescription",
+                "title": "Generate PR Description",
+                "icon": "$(git-pull-request)"
+            },
+            {
+                "command": "ai-agent-sync.copyDiagnosticInfo",
+                "title": "Copy Diagnostic Info\nCopia informações de diagnóstico para a área de transferência",
+                "icon": "$(output)"
             }
         ],
         "viewsContainers": {
@@ -341,6 +366,11 @@
                 {
                     "command": "ai-agent-sync.refreshAnalytics",
                     "when": "view == ai-agent-sync-analytics",
+                    "group": "navigation"
+                },
+                {
+                    "command": "ai-agent-sync.copyDiagnosticInfo",
+                    "when": "view == ai-agent-sync-status",
                     "group": "navigation"
                 }
             ],

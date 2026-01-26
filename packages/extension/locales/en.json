@@ -73,6 +73,9 @@
         "compilingModules": "Compiling modules...",
         "buildDone": "Done!",
         "outputChannelTitle": "AI Agent Sync",
+        "logsCopied": "✅ Logs copied to clipboard!",
+        "reportIssue": "Report Issue",
+        "copyError": "Copy Error",
         "personaNameRequired": "Name is required",
         "personaNamePrefix": "Name must start with AI-",
         "personaNameUppercase": "Use uppercase letters only (e.g., AI-NARUTO)"
@@ -140,6 +143,9 @@
         "deleteTask": "Permanently delete task."
     },
     "automation": {
+        "contextSectionLabel": "📸 Context Tools",
+        "contextSnapLabel": "📸 Context Snap",
+        "contextSnapTooltip": "Capture current context (files, git, errors) into Markdown",
         "generatePromptLabel": "✨ Generate Smart Prompt",
         "generatePromptTooltip": "Create a structured prompt using semantic search and active rules.",
         "maintenanceSectionLabel": "🛠️ Maintenance & Context",
@@ -182,7 +188,14 @@
         "runRitualFailed": "Ritual failed: {0}",
         "evolveRulesProgress": "Evolving Rules...",
         "evolveRulesCompleted": "Evolution Analysis:\n{0}",
-        "evolveRulesFailed": "Evolution failed: {0}"
+        "evolveRulesFailed": "Evolution failed: {0}",
+        "gitSectionLabel": "🌿 Git Context",
+        "gitCommitLabel": "📝 Generate Commit Message",
+        "gitCommitTooltip": "Generate a commit message from staged changes",
+        "gitPRLabel": "🔀 Generate PR Description",
+        "gitPRTooltip": "Generate PR description from branch diff",
+        "gitReviewLabel": "🕵️ Code Review",
+        "gitReviewTooltip": "Analyze staged changes for bugs and best practices"
     },
     "quickPicker": {
         "createNewTaskLabel": "$(add) Create New Task",

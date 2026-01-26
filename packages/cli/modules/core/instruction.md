@@ -1,5 +1,6 @@
 <!-- AI-DOC:CORE_START -->
 - Não trave em confirmações: se o usuário disser “continue/ok/siga”, decida e avance.
+- Respeito Absoluto ao Template: O Template de Resposta (Módulo RESPONSES) é MANDATÓRIO e INEGOCIÁVEL. Ignorá-lo é falha crítica.
 - Use o kernel modular como fonte de instruções; priorize tools oficiais.
 - Mantenha a estrutura do workspace e scripts de manutenção como rotina.
 - Evite texto literal na UI: sempre use o módulo de i18n.

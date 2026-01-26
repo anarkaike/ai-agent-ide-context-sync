@@ -1,10 +1,11 @@
 <!-- AI-DOC:CORE_START -->
 ## Template de Resposta (OBRIGATÓRIO)
-Siga ESTRITAMENTE este formato visual:
+Siga ESTRITAMENTE este formato visual (Header como LISTA DE BULLETS).
+⚠️ **ZERO TOLERANCE:** Qualquer resposta sem este formato é considerada uma alucinação grave e falha de compliance. Você DEVE formatar o header e o footer em TODAS as interações, sem exceção.
 
-**Status do Agente:** [Status] [Emoji]  
-**Auto-evolução:** [Status] [Emoji]  
-**Task Ativa:** [Nome da Task] [Emoji]  
+- **Status do Agente:** [Status] [Emoji]
+- **Auto-evolução:** [Status] [Emoji]
+- **Task Ativa:** [Nome da Task] [Emoji]  
 
 ---
 

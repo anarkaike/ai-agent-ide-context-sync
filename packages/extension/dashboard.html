@@ -156,6 +156,10 @@
             <div class="stat-value" id="completionRate">0%</div>
             <div class="stat-label">📈 Completion Rate</div>
         </div>
+        <div class="stat-card">
+            <div class="stat-value" id="trend">--</div>
+            <div class="stat-label">📊 30-Day Trend</div>
+        </div>
     </div>
 
     <div class="chart-container">
@@ -190,6 +194,19 @@
             document.getElementById('completedTasks').textContent = data.completedTasks || 0;
             document.getElementById('completionRate').textContent = 
                 (data.completionRate || 0) + '%';
+            
+            // Update trend
+            const trendElement = document.getElementById('trend');
+            if (data.trend) {
+                let icon = '➡️';
+                let color = 'var(--vscode-foreground)';
+                if (data.trend > 0) { icon = '⬆️'; color = '#43e97b'; }
+                else if (data.trend < 0) { icon = '⬇️'; color = '#fa709a'; }
+                trendElement.textContent = `${icon} ${data.trend > 0 ? '+' : ''}${data.trend}%`;
+                trendElement.style.color = color;
+            } else {
+                trendElement.textContent = '--';
+            }
 
             // Update charts
             updatePersonaChart(data.personaData || []);

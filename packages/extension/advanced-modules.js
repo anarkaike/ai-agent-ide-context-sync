@@ -355,15 +355,20 @@ class AdvancedAnalytics {
 
     calculateTrend(tasks) {
         // Simple trend calculation based on task completion over time
+        if (tasks.length < 2) return 0;
+
         const firstHalf = tasks.slice(0, Math.floor(tasks.length / 2));
         const secondHalf = tasks.slice(Math.floor(tasks.length / 2));
 
-        const firstRate = firstHalf.filter(t => t.completed === t.total).length / firstHalf.length;
-        const secondRate = secondHalf.filter(t => t.completed === t.total).length / secondHalf.length;
+        const firstRate = firstHalf.length > 0 
+            ? (firstHalf.filter(t => t.completed === t.total).length / firstHalf.length) * 100 
+            : 0;
+            
+        const secondRate = secondHalf.length > 0 
+            ? (secondHalf.filter(t => t.completed === t.total).length / secondHalf.length) * 100 
+            : 0;
 
-        if (secondRate > firstRate) return 'increasing';
-        if (secondRate < firstRate) return 'decreasing';
-        return 'stable';
+        return Math.round(secondRate - firstRate);
     }
 }
 

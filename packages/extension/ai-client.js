@@ -13,6 +13,10 @@ class AIClient {
         this.cliPath = path.resolve(__dirname, '../cli/cli/ai-doc.js');
     }
 
+    static setLogger(logger) {
+        AIClient.logger = logger;
+    }
+
     /**
      * Executa qualquer comando do CLI
      * @param {string[]} args 
@@ -30,7 +34,11 @@ class AIClient {
                 exec(checkCmd, (checkError) => {
                     if (checkError) {
                         const msg = `[AIClient] CLI não encontrado. Instale globalmente com 'npm install -g ai-agent-ide-context-sync' ou use 'npm link' no diretório do CLI.`;
-                        console.error(msg);
+                        if (AIClient.logger) {
+                            AIClient.logger.error(msg, checkError);
+                        } else {
+                            console.error(msg);
+                        }
                         vscode.window.showErrorMessage("AI Agent CLI not found! Please install it globally: npm install -g ai-agent-ide-context-sync");
                         reject(msg);
                         return;
@@ -47,10 +55,18 @@ class AIClient {
     }
 
     _runExecFile(command, commandArgs, resolve, reject) {
-        console.log(`[AIClient] Executing: ${command} ${commandArgs.join(' ')}`);
+        if (AIClient.logger) {
+            AIClient.logger.log(`[AIClient] Executing: ${command} ${commandArgs.join(' ')}`);
+        } else {
+            console.log(`[AIClient] Executing: ${command} ${commandArgs.join(' ')}`);
+        }
         execFile(command, commandArgs, { cwd: this.projectRoot }, (error, stdout, stderr) => {
             if (error) {
-                console.error(`[AIClient] Error: ${stderr}`);
+                if (AIClient.logger) {
+                    AIClient.logger.error(`[AIClient] Error: ${stderr}`, error);
+                } else {
+                    console.error(`[AIClient] Error: ${stderr}`);
+                }
                 reject(stderr || error.message);
                 return;
             }
@@ -90,11 +106,19 @@ class AIClient {
             try {
                 return JSON.parse(output);
             } catch (parseError) {
-                console.error('[AIClient] Failed to parse workflows JSON:', parseError);
+                if (AIClient.logger) {
+                    AIClient.logger.error('[AIClient] Failed to parse workflows JSON:', parseError);
+                } else {
+                    console.error('[AIClient] Failed to parse workflows JSON:', parseError);
+                }
                 return [];
             }
         } catch (e) {
-            console.error('[AIClient] Error listing workflows:', e);
+            if (AIClient.logger) {
+                AIClient.logger.error('[AIClient] Error listing workflows:', e);
+            } else {
+                console.error('[AIClient] Error listing workflows:', e);
+            }
             return [];
         }
     }
