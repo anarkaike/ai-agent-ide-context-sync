@@ -81,7 +81,7 @@ class ImmunitySystem {
             // Aceita a mudança como uma evolução legítima (ex: edição do usuário).
             this.graph.registerNode(filePath, node.type); // Recalcula hash e salva
             
-            // Se for o NUCLEUS, minta um novo SBT para oficializar
+            // Se for o NUCLEUS, emite (minta) um novo SBT para oficializar
             if (nodeId === 'NUCLEUS') {
                 const content = fs.readFileSync(filePath, 'utf8');
                 this.soul.mintSoulboundToken(content, 'Immune System: Adaptation Response');

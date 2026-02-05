@@ -1,0 +1,13 @@
+{
+  "id": "8731f15f-af31-4679-a944-f4efda39b3c6",
+  "title": "First Boot",
+  "description": "System Init",
+  "type": "ACHIEVEMENT",
+  "issuer": {
+    "project_id": "cli-manual"
+  },
+  "recipient": {},
+  "evidence": {},
+  "timestamp": "2026-02-05T05:16:15.463Z",
+  "signature": "6fc6cacfc7a6829c30263c4029135f96d0a2e70754f71510deae316dd446a55f"
+}

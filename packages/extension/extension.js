@@ -1046,6 +1046,12 @@ function activate(context) {
     statusBarManager.show();
     context.subscriptions.push(statusBarManager.statusBarItem);
 
+    // Health Monitor Polling (every 5 minutes)
+    const healthInterval = setInterval(() => {
+        statusProvider.refresh();
+    }, 5 * 60 * 1000);
+    context.subscriptions.push({ dispose: () => clearInterval(healthInterval) });
+
     // Register Commands
     registerCommands(context);
 }

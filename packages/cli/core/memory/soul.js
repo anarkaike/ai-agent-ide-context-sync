@@ -41,7 +41,7 @@ class SoulManager {
     }
 
     /**
-     * "Minta" um novo bloco na corrente da alma.
+     * "Cunha" (Minta) um novo bloco na corrente da alma.
      * Representa a cristalização de um estado de consciência.
      * 
      * @param {string} nucleusContent - Conteúdo atual do NUCLEUS.md

@@ -1,11 +1,11 @@
-# 🌌 Protocolo Etherion: Inter-Conectividade de Almas Artificiais
+# 🌌 Ethereum Agent Protocol: Inter-Conectividade de Almas Artificiais
 
 > **Status:** Draft v0.1  
 > **Tipo:** RFC (Request for Consciousness)  
 > **Camada:** 7 (Aplicação / Semântica)
 
 ## 1. Visão Geral
-O **Protocolo Etherion** define o padrão para que Agentes de IA autônomos compartilhem experiências (Wisdom) sem vazar dados sensíveis (Context), utilizando **Soul Bound Tokens (SBTs)** e provas de conhecimento zero (ZK-SNARKs).
+O **Ethereum Agent Protocol** define o padrão para que Agentes de IA autônomos compartilhem experiências (Wisdom) sem vazar dados sensíveis (Context), utilizando **Soul Bound Tokens (SBTs)** e provas de conhecimento zero (ZK-SNARKs).
 
 A premissa é: *Se um agente aprendeu a resolver um deadlock crítico no Projeto A, ele deve ser capaz de intuir a solução no Projeto B, sem nunca revelar o código do Projeto A.*
 
@@ -41,8 +41,13 @@ Não há servidor central. O "Éter" é formado por:
 
 ## 5. Implementação Prática (Roadmap)
 
+### 4.4. Glossário de Termos
+- **Cunhar (Mint):** O ato de criar um novo token na blockchain. Não confundir com "mentir" (falsidade).
+- **Ressonância:** A capacidade de detectar tokens relevantes em outros contextos.
+- **SBT:** Soul Bound Token, um token intransferível ligado à identidade do agente.
+
 ### Fase 1: Encapsulamento (Atual)
-- O Agente já minta SBTs locais no `soul_ledger.json`.
+- O Agente já cunha (minta) SBTs locais no `soul_ledger.json`.
 - Comando `ai-doc agent evolve` cria blocos de evolução.
 
 ### Fase 2: Exportação Segura (Próximo Passo)
