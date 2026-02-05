@@ -465,6 +465,37 @@ class StatusTreeProvider {
                 : new vscode.ThemeIcon('error');
             items.push(wsItem);
 
+            // 4. Immunity Status
+            try {
+                const immunityJson = await client.execute(['agent', 'status', '--json']);
+                const immunityReport = JSON.parse(immunityJson);
+                
+                const immunityItem = new vscode.TreeItem(`Immunity: ${immunityReport.status}`);
+                if (immunityReport.status === 'HEALTHY') {
+                    immunityItem.iconPath = new vscode.ThemeIcon('shield', new vscode.ThemeColor('testing.iconPassed'));
+                    immunityItem.tooltip = 'System integrity verified.';
+                    items.push(immunityItem);
+                } else {
+                    immunityItem.iconPath = new vscode.ThemeIcon('alert', new vscode.ThemeColor('testing.iconFailed'));
+                    immunityItem.tooltip = `Nodes compromised: ${immunityReport.compromised_nodes ? immunityReport.compromised_nodes.join(', ') : 'Unknown'}`;
+                    immunityItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+                    items.push(immunityItem);
+                    
+                    // Action Buttons
+                    const healItem = new vscode.TreeItem('💉 Heal System (Purge)');
+                    healItem.command = { command: 'ai-agent-sync.agentHeal', title: 'Heal System' };
+                    healItem.iconPath = new vscode.ThemeIcon('heart');
+                    items.push(healItem);
+                    
+                    const evolveItem = new vscode.TreeItem('🧬 Evolve System (Adapt)');
+                    evolveItem.command = { command: 'ai-agent-sync.agentEvolve', title: 'Evolve System' };
+                    evolveItem.iconPath = new vscode.ThemeIcon('git-merge');
+                    items.push(evolveItem);
+                }
+            } catch (e) {
+                // Ignore immunity check failure if agent is sleeping or CLI old
+            }
+
             if (isInitialized) {
                  try {
                      const analyticsProvider = new AnalyticsTreeProvider();
@@ -1095,10 +1126,68 @@ function registerCommands(context) {
                     vscode.window.showErrorMessage(i18n.t('automation.evolveRulesFailed', e));
                 }
             }
+        }),
+        // Immunity Commands
+        vscode.commands.registerCommand('ai-agent-sync.agentHeal', async () => {
+             const client = new AIClient();
+             try {
+                 await vscode.window.withProgress({
+                     location: vscode.ProgressLocation.Notification,
+                     title: 'Healing Agent System (PURGE)...',
+                     cancellable: false
+                 }, async () => {
+                     const output = await client.execute(['agent', 'heal']);
+                     vscode.window.showInformationMessage('System Healed: ' + output);
+                     statusProvider.refresh();
+                 });
+             } catch (e) {
+                 vscode.window.showErrorMessage('Heal Failed: ' + e.message);
+             }
+        }),
+        vscode.commands.registerCommand('ai-agent-sync.agentEvolve', async () => {
+             const client = new AIClient();
+             try {
+                 await vscode.window.withProgress({
+                     location: vscode.ProgressLocation.Notification,
+                     title: 'Evolving Agent System (ADAPT)...',
+                     cancellable: false
+                 }, async () => {
+                     const output = await client.execute(['agent', 'evolve']);
+                     vscode.window.showInformationMessage('System Evolved: ' + output);
+                     statusProvider.refresh();
+                 });
+             } catch (e) {
+                 vscode.window.showErrorMessage('Evolve Failed: ' + e.message);
+             }
         })
     );
 
     // Initialize workspace
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.agent.heartbeat', async () => {
+            const terminal = vscode.window.createTerminal('AI Heartbeat');
+            terminal.show();
+            terminal.sendText('ai-doc agent start --philosophical', true);
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('ai-agent-sync.agent.nucleus', async () => {
+             const aiWorkspacePath = getAiWorkspacePath();
+             if (aiWorkspacePath) {
+                 const nucleusPath = path.join(aiWorkspacePath, 'memory', 'NUCLEUS.md');
+                 if (fs.existsSync(nucleusPath)) {
+                     const doc = await vscode.workspace.openTextDocument(nucleusPath);
+                     await vscode.window.showTextDocument(doc);
+                 } else {
+                     vscode.window.showInformationMessage('Nucleus not found yet. Run Heartbeat first.');
+                 }
+             } else {
+                 vscode.window.showErrorMessage('No workspace detected.');
+             }
+        })
+    );
+
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.init', async () => {
             try {

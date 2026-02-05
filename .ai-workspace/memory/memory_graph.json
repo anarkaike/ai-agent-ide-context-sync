@@ -1,0 +1,58 @@
+{
+  "nodes": {
+    "NUCLEUS": {
+      "id": "NUCLEUS",
+      "type": "core_identity",
+      "path": "NUCLEUS.md",
+      "created_at": "2026-02-05T04:46:19.478Z",
+      "integrity_hash": "2e53b2a3",
+      "updated_at": "2026-02-05T05:00:35.246Z"
+    },
+    "ConceptA": {
+      "id": "ConceptA",
+      "type": "concept",
+      "path": "ConceptA.md",
+      "created_at": "2026-02-05T04:48:14.426Z",
+      "integrity_hash": null,
+      "updated_at": "2026-02-05T05:00:28.899Z"
+    },
+    "ConceptB": {
+      "id": "ConceptB",
+      "type": "concept",
+      "path": "ConceptB.md",
+      "created_at": "2026-02-05T04:48:14.435Z",
+      "integrity_hash": null,
+      "updated_at": "2026-02-05T05:00:28.899Z"
+    }
+  },
+  "edges": [
+    {
+      "from": "ConceptA",
+      "to": "ConceptB",
+      "type": "resonates_with",
+      "resonance": 1.2000000000000002,
+      "created_at": "2026-02-05T04:48:14.436Z",
+      "history": [
+        {
+          "timestamp": "2026-02-05T04:48:14.436Z",
+          "action": "genesis",
+          "note": "Vínculo criado"
+        },
+        {
+          "timestamp": "2026-02-05T04:48:14.436Z",
+          "action": "reconnect",
+          "nuance": {
+            "feeling": "admiration",
+            "intensity": "high",
+            "context": "deep_conversation"
+          }
+        }
+      ],
+      "nuance": {
+        "feeling": "admiration",
+        "intensity": "high",
+        "context": "deep_conversation"
+      }
+    }
+  ]
+}

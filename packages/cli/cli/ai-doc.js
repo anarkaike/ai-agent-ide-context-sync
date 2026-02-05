@@ -345,6 +345,19 @@ const runAssistant = async (args, commandsRef) => {
     }
   }
 
+  const wantsAgent = /agent|agente|consciência|consciencia|vida/.test(normalized);
+  if (wantsAgent) {
+    const subArgs = [];
+    if (/iniciar|start|wake|acordar/.test(normalized)) subArgs.push('start');
+    if (/status/.test(normalized)) subArgs.push('status');
+    if (/filos|philosophical/.test(normalized)) subArgs.push('--philosophical');
+    
+    // Default to status if no subarg found but intent is clear
+    if (subArgs.length === 0 && !/status/.test(normalized)) subArgs.push('status');
+    
+    actions.push({ command: 'agent', args: subArgs });
+  }
+
   if (wantsScan) {
     const args = message.split(' ').slice(1);
     actions.push({ command: 'scan', args });
@@ -434,6 +447,7 @@ const commands = {
   workflows: require('../commands/workflows'),
   clickup: require('./commands/clickup'),
   version: require('./commands/version'),
+  agent: require('./commands/agent'),
   sync: async () => {
     log('⚠️ Comando "sync" foi substituído por "build". Executando build...', 'yellow');
     await commands.build();

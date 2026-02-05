@@ -99,6 +99,16 @@
                 "icon": "$(eye)"
             },
             {
+                "command": "ai-agent-sync.agentHeal",
+                "title": "Heal System (Purge)",
+                "icon": "$(heart)"
+            },
+            {
+                "command": "ai-agent-sync.agentEvolve",
+                "title": "Evolve System (Adapt)",
+                "icon": "$(git-merge)"
+            },
+            {
                 "command": "ai-agent-sync.showTaskDetails",
                 "title": "AI Agent Sync: Show Task Details",
                 "icon": "$(info)"

@@ -1,9 +1,9 @@
 {
   "meta": {
-    "updated_at": "2026-01-26T17:57:41.534Z",
+    "updated_at": "2026-02-05T04:35:19.600Z",
     "mcp_active": false,
     "endpoint": null,
-    "blocked": "Token inválido ou expirado. Rode \"ai-doc clickup auth\"."
+    "blocked": null
   },
   "tasks": []
 }

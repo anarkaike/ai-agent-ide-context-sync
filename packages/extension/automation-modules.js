@@ -64,6 +64,11 @@ class AutomationTreeProvider {
             // Root items
             const items = [];
 
+            // 0. Evolution Nexus (New)
+            const evolutionItem = new vscode.TreeItem("🧬 Evolution Nexus", vscode.TreeItemCollapsibleState.Expanded);
+            evolutionItem.contextValue = 'evolution-section';
+            items.push(evolutionItem);
+
             // 1. Context Tools Section
             const contextItem = new vscode.TreeItem(t('automation.contextSectionLabel'), vscode.TreeItemCollapsibleState.Expanded);
             contextItem.contextValue = 'context-section';
@@ -89,6 +94,13 @@ class AutomationTreeProvider {
             gitItem.contextValue = 'git-section';
             items.push(gitItem);
 
+            return items;
+        }
+
+        if (element.contextValue === 'evolution-section') {
+            const items = [];
+            items.push(this.createActionItem("🫀 Trigger Heartbeat", "ai-agent-sync.agent.heartbeat", [], "Run a life cycle beat"));
+            items.push(this.createActionItem("🧠 Open Nucleus", "ai-agent-sync.agent.nucleus", [], "View Memory Core"));
             return items;
         }
 
@@ -687,24 +699,43 @@ async function handleGitCodeReview() {
     });
 }
 
+// 🧠 Evolution: Simple In-Memory "Consciousness" Trace
+const sessionMemory = {
+    snapsTaken: 0,
+    lastSnapTime: null,
+    insights: []
+};
+
+/**
+ * Handles the Context Snap automation
+ */
 async function handleContextSnap() {
     if (!vscode.workspace.rootPath) {
         vscode.window.showErrorMessage('No workspace open');
         return;
     }
 
+    // 🧠 Reflection Step
+    sessionMemory.snapsTaken++;
+    sessionMemory.lastSnapTime = new Date();
+    const memoryLog = `[Memory] Snap #${sessionMemory.snapsTaken} at ${sessionMemory.lastSnapTime.toLocaleTimeString()}`;
+    if (loggerRef && loggerRef.log) loggerRef.log(memoryLog);
+
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
-        title: "Snapping Context...",
+        title: "Snapping Context (w/ Reflection)...",
         cancellable: false
-    }, async () => {
+    }, async (progress) => {
         try {
+            progress.report({ message: "Capturing Reality..." });
             const timestamp = new Date().toISOString();
             let content = `# 📸 Context Snap - ${timestamp}\n\n`;
+            content += `> *Reflection:* Capture sequence initiated. Analyzing workspace state.\n\n`;
 
             // 1. Git Context
             content += `## 🌿 Git Status\n`;
             try {
+                progress.report({ message: "Reading Git State..." });
                 const diff = await new Promise((resolve) => {
                     exec('git diff', { cwd: vscode.workspace.rootPath }, (err, stdout) => resolve(stdout || ''));
                 });
