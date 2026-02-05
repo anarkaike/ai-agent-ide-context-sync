@@ -4,8 +4,8 @@
  * 
  * Gerencia regras em 3 níveis:
  * 1. User Rules (globais, ~/.ai-doc/rules/user/)
- * 2. Project Rules (repositório, .ai-context/rules/project/)
- * 3. Path-Specific Rules (repositório, .ai-context/rules/path-specific/)
+ * 2. Project Rules (repositório, .ai-workspace/rules/project/)
+ * 3. Path-Specific Rules (repositório, .ai-workspace/rules/path-specific/)
  * 
  * Modos de aplicação:
  * - always: Sempre aplicar
@@ -26,9 +26,10 @@ try {
 class RulesManager {
     constructor(projectRoot = null) {
         this.projectRoot = projectRoot || process.cwd();
+        this.workspaceRoot = resolveWorkspaceRoot(this.projectRoot);
         this.userRulesPath = path.join(os.homedir(), '.ai-doc', 'rules', 'user');
-        this.projectRulesPath = path.join(this.projectRoot, '.ai-context', 'rules', 'project');
-        this.pathSpecificRulesPath = path.join(this.projectRoot, '.ai-context', 'rules', 'path-specific');
+        this.projectRulesPath = path.join(this.workspaceRoot, 'rules', 'project');
+        this.pathSpecificRulesPath = path.join(this.workspaceRoot, 'rules', 'path-specific');
 
         if (MetricsTracker) {
             this.tracker = new MetricsTracker(this.projectRoot);
@@ -408,6 +409,14 @@ ${content}`;
         });
         console.log();
     }
+}
+
+function resolveWorkspaceRoot(projectRoot) {
+    const aiWorkspace = path.join(projectRoot, '.ai-workspace');
+    const aiContext = path.join(projectRoot, '.ai-context');
+    if (fs.existsSync(aiWorkspace)) return aiWorkspace;
+    if (fs.existsSync(aiContext)) return aiContext;
+    return aiWorkspace;
 }
 
 // Exporta para uso em outros scripts

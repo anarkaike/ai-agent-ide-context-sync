@@ -7,8 +7,8 @@ Sistema avançado de gerenciamento de regras com hierarquia e múltiplos modos d
 O RulesManager permite definir regras em 3 níveis diferentes, cada uma com seu próprio escopo e prioridade:
 
 1. **User Rules** (Globais) - `~/.ai-doc/rules/user/`
-2. **Project Rules** (Repositório) - `.ai-context/rules/project/`
-3. **Path-Specific Rules** (Repositório) - `.ai-context/rules/path-specific/`
+2. **Project Rules** (Repositório) - `.ai-workspace/rules/project/`
+3. **Path-Specific Rules** (Repositório) - `.ai-workspace/rules/path-specific/`
 
 ## 🔧 Modos de Aplicação
 

@@ -34,7 +34,7 @@ const yaml = require('js-yaml');
 class WorkflowManager {
     constructor(projectRoot = null) {
         this.projectRoot = projectRoot || process.cwd();
-        this.workflowsPath = path.join(this.projectRoot, '.ai-context', 'workflows');
+        this.workflowsPath = path.join(resolveWorkspaceRoot(this.projectRoot), 'workflows');
         this.globalWorkflowsPath = path.join(os.homedir(), '.ai-doc', 'workflows');
     }
 
@@ -181,6 +181,14 @@ class WorkflowManager {
     ensureDir(dir) {
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     }
+}
+
+function resolveWorkspaceRoot(projectRoot) {
+    const aiWorkspace = path.join(projectRoot, '.ai-workspace');
+    const aiContext = path.join(projectRoot, '.ai-context');
+    if (fs.existsSync(aiWorkspace)) return aiWorkspace;
+    if (fs.existsSync(aiContext)) return aiContext;
+    return aiWorkspace;
 }
 
 module.exports = WorkflowManager;

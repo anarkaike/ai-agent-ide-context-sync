@@ -121,13 +121,14 @@ const extractAfterKeyword = (value, keyword) => {
 };
 
 const getRulePath = (projectRoot, rule) => {
+  const wsRoot = resolveWorkspaceRoot(projectRoot);
   if (rule.level === 'user') {
     return path.join(require('os').homedir(), '.ai-doc', 'rules', 'user', rule.filename);
   }
   if (rule.level === 'project') {
-    return path.join(projectRoot, '.ai-context', 'rules', 'project', rule.filename);
+    return path.join(wsRoot, 'rules', 'project', rule.filename);
   }
-  return path.join(projectRoot, '.ai-context', 'rules', 'path-specific', rule.filename);
+  return path.join(wsRoot, 'rules', 'path-specific', rule.filename);
 };
 
 const updateRuleAlwaysApply = (projectRoot, rule, enabled) => {
@@ -417,6 +418,14 @@ const runAssistant = async (args, commandsRef) => {
   }
 };
 
+const resolveWorkspaceRoot = (projectRoot) => {
+  const aiWorkspace = path.join(projectRoot, '.ai-workspace');
+  const aiContext = path.join(projectRoot, '.ai-context');
+  if (fs.existsSync(aiWorkspace)) return aiWorkspace;
+  if (fs.existsSync(aiContext)) return aiContext;
+  return aiWorkspace;
+};
+
 const commands = {
   prompt: require('../commands/prompt'),
   run: require('../commands/run'),
@@ -425,6 +434,81 @@ const commands = {
   workflows: require('../commands/workflows'),
   clickup: require('./commands/clickup'),
   version: require('./commands/version'),
+  sync: async () => {
+    log('⚠️ Comando "sync" foi substituído por "build". Executando build...', 'yellow');
+    await commands.build();
+  },
+  heuristics: async () => {
+    log('⚠️ Comando "heuristics" foi migrado para "kernel heuristics".', 'yellow');
+    await commands.kernel(['heuristics']);
+  },
+  identity: async (args = []) => {
+    const projectRoot = process.cwd();
+    const wsPath = resolveWorkspaceRoot(projectRoot);
+    const personasPath = path.join(wsPath, 'personas');
+    const sub = (args[0] || 'list').toLowerCase();
+
+    if (sub === 'list') {
+      if (!fs.existsSync(personasPath)) {
+        log('⚠️ Nenhuma persona encontrada (pasta .ai-workspace/personas ausente).', 'yellow');
+        return;
+      }
+      const personas = fs.readdirSync(personasPath).filter(f => f.endsWith('.md'));
+      if (personas.length === 0) {
+        log('⚠️ Nenhuma persona cadastrada.', 'yellow');
+        return;
+      }
+      log('\n=== 👤 Personas ===\n', 'bright');
+      personas.forEach(file => log(`- ${file.replace('.md', '')}`));
+      return;
+    }
+
+    if (sub === 'create') {
+      const name = args.slice(1).join(' ').trim();
+      if (!name) {
+        log('❌ Informe o nome da persona. Ex: ai-doc identity create "AI-NOVA"', 'red');
+        return;
+      }
+      if (!fs.existsSync(personasPath)) fs.mkdirSync(personasPath, { recursive: true });
+      const filename = `${name}.md`;
+      const filePath = path.join(personasPath, filename);
+      if (fs.existsSync(filePath)) {
+        log('⚠️ Persona já existe.', 'yellow');
+        return;
+      }
+      const content = `---\ntitle: \"${name}\"\ndescription: AI Agent\ncreated: ${new Date().toISOString()}\nstatus: active\n---\n\n# ${name}\n\n`;
+      writeFileSafely(filePath, content);
+      log(`✅ Persona criada: ${path.relative(projectRoot, filePath)}`, 'green');
+      return;
+    }
+
+    log('❌ Subcomando inválido. Use: ai-doc identity list | ai-doc identity create <nome>', 'red');
+  },
+  module: async (args = []) => {
+    const sub = (args[0] || 'list').toLowerCase();
+    if (sub !== 'list') {
+      log('❌ Subcomando inválido. Use: ai-doc module list', 'red');
+      return;
+    }
+    const kernelPath = path.resolve(__dirname, '..');
+    const modulesPath = path.join(kernelPath, 'modules');
+    if (!fs.existsSync(modulesPath)) {
+      log('⚠️ Módulos não encontrados.', 'yellow');
+      return;
+    }
+    const modules = fs.readdirSync(modulesPath).filter(name => fs.statSync(path.join(modulesPath, name)).isDirectory());
+    log('\n=== 🧩 Módulos ===\n', 'bright');
+    modules.forEach(name => log(`- ${name}`));
+  },
+  soul: async (args = []) => {
+    const sub = (args[0] || 'status').toLowerCase();
+    if (sub !== 'status') {
+      log('❌ Subcomando inválido. Use: ai-doc soul status', 'red');
+      return;
+    }
+    log('⚠️ Comando "soul status" foi migrado para "kernel".', 'yellow');
+    await commands.kernel([]);
+  },
   scan: async (args = []) => {
     try {
       const { scanDirectory } = require('../modules/docs/tools/placeholder-scanner');
@@ -464,7 +548,7 @@ const commands = {
   build: async () => {
     const projectRoot = process.cwd();
     const kernelPath = path.resolve(__dirname, '..');
-    const wsPath = path.join(projectRoot, '.ai-workspace');
+    const wsPath = resolveWorkspaceRoot(projectRoot);
 
     if (!fs.existsSync(wsPath)) {
       log('❌ Workspace não encontrado. Rode "ai-doc init" primeiro.', 'red');
@@ -519,7 +603,7 @@ const commands = {
   kernel: async (args = []) => {
     const projectRoot = process.cwd();
     const kernelPath = path.resolve(__dirname, '..');
-    const wsPath = path.join(projectRoot, '.ai-workspace');
+    const wsPath = resolveWorkspaceRoot(projectRoot);
     const compiledDir = path.join(wsPath, 'cache', 'compiled');
     const smartCachePath = path.join(wsPath, 'cache', 'smart-cache.json');
     const embeddingsIndexPath = path.join(wsPath, 'cache', 'embeddings-index.json');
@@ -677,7 +761,7 @@ const commands = {
   },
   ritual: async () => {
     const projectRoot = process.cwd();
-    const wsPath = path.join(projectRoot, '.ai-workspace');
+    const wsPath = resolveWorkspaceRoot(projectRoot);
     const statsPath = path.join(wsPath, 'stats.json');
 
     // Always run init to ensure structure is up-to-date (idempotent)
@@ -707,7 +791,7 @@ const commands = {
   },
   evolve: async () => {
     const projectRoot = process.cwd();
-    const wsPath = path.join(projectRoot, '.ai-workspace');
+    const wsPath = resolveWorkspaceRoot(projectRoot);
     const statsPath = path.join(wsPath, 'stats.json');
 
     if (!fs.existsSync(wsPath)) {
@@ -721,7 +805,7 @@ const commands = {
   assist: async (args = []) => runAssistant(args, commands),
   init: async () => {
     const projectRoot = process.cwd();
-    const wsPath = path.join(projectRoot, '.ai-workspace');
+    const wsPath = resolveWorkspaceRoot(projectRoot);
     const docsPath = path.join(projectRoot, 'docs');
 
     // Ensure all required subdirectories exist (idempotent)
@@ -772,7 +856,12 @@ const commands = {
     log('  ai-doc docs [recipe]  Gera estrutura de documentação (backend|frontend|fullstack)');
     log('  ai-doc scan [dir]     Verifica placeholders na documentação');
     log('  ai-doc build          Compila e sincroniza regras e instruções');
+    log('  ai-doc sync           Alias de build (deprecated)');
     log('  ai-doc kernel         Navegação e status do kernel');
+    log('  ai-doc heuristics     Alias de kernel heuristics (deprecated)');
+    log('  ai-doc identity       Lista/cria personas (compat)');
+    log('  ai-doc module list    Lista módulos disponíveis (compat)');
+    log('  ai-doc soul status    Alias de kernel (deprecated)');
     log('  ai-doc ritual         Roda auto-ritual (evolução + kernel + build)');
     log('  ai-doc evolve         Roda ciclo de autoevolução e registra sinais');
     log('  ai-doc chat "..."     Interpreta intenção e executa comandos');

@@ -40,7 +40,7 @@ describe('RulesManager', () => {
         test('should set default paths correctly', () => {
             expect(rulesManager.projectRoot).toBe(mockProjectRoot);
             expect(rulesManager.userRulesPath).toContain('.ai-doc/rules/user');
-            expect(rulesManager.projectRulesPath).toContain('.ai-context/rules/project');
+            expect(rulesManager.projectRulesPath).toContain('.ai-workspace/rules/project');
         });
 
         test('should use process.cwd() if no root provided', () => {
@@ -296,7 +296,7 @@ describe('RulesManager', () => {
             rulesManager.createRule('project', ruleData);
             
             expect(fs.mkdirSync).toHaveBeenCalledWith(
-                expect.stringContaining('.ai-context/rules/project'),
+                expect.stringContaining('.ai-workspace/rules/project'),
                 { recursive: true }
             );
         });

@@ -37,7 +37,7 @@ describe('WorkflowManager', () => {
     });
 
     test('should initialize with correct paths', () => {
-        expect(manager.workflowsPath).toContain('.ai-context/workflows');
+        expect(manager.workflowsPath).toContain('.ai-workspace/workflows');
         expect(manager.globalWorkflowsPath).toContain('.ai-doc/workflows');
     });
 
@@ -46,7 +46,7 @@ describe('WorkflowManager', () => {
         fs.existsSync.mockImplementation(p => p.includes('workflows'));
         fs.readdirSync.mockImplementation(p => {
             if (p.includes('.ai-doc')) return ['g.yaml'];
-            if (p.includes('.ai-context')) return ['p.md'];
+            if (p.includes('.ai-workspace')) return ['p.md'];
             return [];
         });
         
@@ -71,7 +71,7 @@ describe('WorkflowManager', () => {
     });
 
     test('listWorkflows should handle file read errors', () => {
-        const dir = path.join(mockProjectRoot, '.ai-context', 'workflows');
+        const dir = path.join(mockProjectRoot, '.ai-workspace', 'workflows');
         fs.existsSync.mockReturnValue(true);
         fs.readdirSync.mockReturnValue(['error.yaml']);
         fs.readFileSync.mockImplementation(() => { throw new Error('Read failed'); });
@@ -156,7 +156,7 @@ describe('WorkflowManager', () => {
 
     test('listWorkflows should skip non-existent directories', () => {
         const globalDir = path.join(os.homedir(), '.ai-doc', 'workflows');
-        const projectDir = path.join(mockProjectRoot, '.ai-context', 'workflows');
+        const projectDir = path.join(mockProjectRoot, '.ai-workspace', 'workflows');
 
         fs.existsSync.mockImplementation((path) => {
             if (path === globalDir) return false;
@@ -171,7 +171,7 @@ describe('WorkflowManager', () => {
     });
 
     test('listWorkflows should ignore files that fail to parse or have no steps', () => {
-        const dir = path.join(mockProjectRoot, '.ai-context', 'workflows');
+        const dir = path.join(mockProjectRoot, '.ai-workspace', 'workflows');
         fs.existsSync.mockReturnValue(true);
         fs.readdirSync.mockReturnValue(['no-steps.yaml', 'invalid.yaml']);
         
