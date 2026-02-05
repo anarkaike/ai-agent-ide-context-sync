@@ -8,6 +8,9 @@ const { I18n, SmartNotifications } = require('./modules');
 const { KanbanManager, AdvancedAnalytics, ThemeManager, CloudSyncManager } = require('./advanced-modules');
 const { AutomationTreeProvider, handleGeneratePrompt, handleRunWorkflow, handleLaravelAnalyze, handleLaravelCreateLayer, handleLaravelListEntities, handleReactCreateComponent, handleReactCreateHook, handleGenerateCommitMessage, handleGeneratePRDescription, handleGitCodeReview, handleContextSnap, setAutomationI18n, setAutomationLogger } = require('./automation-modules');
 const { SwarmTreeDataProvider, handleSwarmConnect } = require('./swarm-modules');
+const { SoulTreeDataProvider, handleSoulMint, handleSoulResonate } = require('./soul-modules');
+const { SecurityTreeDataProvider, handleApproveTask, handleRejectTask } = require('./security-modules');
+const cp = require('child_process');
 const RitualScheduler = require('./modules/RitualScheduler');
 
 // Global Management Instances
@@ -994,6 +997,26 @@ function activate(context) {
     if (aiWorkspacePath) {
         notifications.start(aiWorkspacePath);
         ensureWorkspacePersonas(aiWorkspacePath);
+        
+        // 🛡️ Auto-Audit on Boot (Self-Healing Check)
+        setTimeout(async () => {
+            const client = new AIClient();
+            try {
+                logger.log('🛡️ Running Auto-Audit...');
+                const output = await client.execute(['task', 'audit']);
+                if (output && output.includes('interrompidas detectadas')) {
+                    logger.log(output);
+                    vscode.window.showWarningMessage(i18n.t('notifications.auditWarning') || '⚠️ AI Agent detected interrupted operations from previous session.', 'Check Details')
+                        .then(sel => {
+                            if (sel === 'Check Details') logger.show();
+                        });
+                } else {
+                    logger.log('✅ Auto-Audit passed. System healthy.');
+                }
+            } catch (e) {
+                logger.error('Auto-Audit failed', e);
+            }
+        }, 3000); // Wait 3s for workspace to settle
     }
 
     // Initialize Ritual Scheduler
@@ -1012,11 +1035,22 @@ function activate(context) {
     statusProvider = new StatusTreeProvider();
     analyticsProvider = new AnalyticsTreeProvider();
     timerProvider = new PomodoroTreeProvider();
+    const swarmProvider = new SwarmTreeDataProvider();
+    const soulProvider = new SoulTreeDataProvider();
+    const securityProvider = new SecurityTreeDataProvider();
 
     vscode.window.registerTreeDataProvider('ai-agent-sync-personas', personasProvider);
     vscode.window.registerTreeDataProvider('ai-agent-sync-status', statusProvider);
     vscode.window.registerTreeDataProvider('ai-agent-sync-analytics', analyticsProvider);
     vscode.window.registerTreeDataProvider('ai-agent-sync-timer', timerProvider);
+    vscode.window.registerTreeDataProvider('ai-agent-sync-swarm', swarmProvider);
+    vscode.window.registerTreeDataProvider('ai-agent-sync-soul', soulProvider);
+    vscode.window.registerTreeDataProvider('ai-agent-sync-security', securityProvider);
+
+    // Security Commands
+    vscode.commands.registerCommand('ai-agent-sync.security.refresh', () => securityProvider.refresh());
+    vscode.commands.registerCommand('ai-agent-sync.security.approve', handleApproveTask);
+    vscode.commands.registerCommand('ai-agent-sync.security.reject', handleRejectTask);
 
     // Watch for file changes
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -1029,14 +1063,17 @@ function activate(context) {
         watcher.onDidChange(() => {
             personasProvider.refresh();
             analyticsProvider.refresh();
+            securityProvider.refresh();
         });
         watcher.onDidCreate(() => {
             personasProvider.refresh();
             analyticsProvider.refresh();
+            securityProvider.refresh();
         });
         watcher.onDidDelete(() => {
             personasProvider.refresh();
             analyticsProvider.refresh();
+            securityProvider.refresh();
         });
 
         context.subscriptions.push(watcher);
@@ -1165,8 +1202,20 @@ function registerCommands(context) {
                  });
              } catch (e) {
                  vscode.window.showErrorMessage('Evolve Failed: ' + e.message);
-             }
-        })
+            }
+        }),
+
+        // Swarm Commands
+        vscode.commands.registerCommand('ai-agent-sync.swarm.connect', async (agent) => {
+            await handleSwarmConnect(agent);
+        }),
+
+        // Soul Commands
+        vscode.commands.registerCommand('ai-agent-sync.soul.refresh', () => {
+            soulProvider.refresh();
+        }),
+        vscode.commands.registerCommand('ai-agent-sync.soul.mint', handleSoulMint),
+        vscode.commands.registerCommand('ai-agent-sync.soul.resonate', handleSoulResonate)
     );
 
     // Initialize workspace

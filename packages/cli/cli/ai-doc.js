@@ -516,12 +516,148 @@ const commands = {
   },
   soul: async (args = []) => {
     const sub = (args[0] || 'status').toLowerCase();
-    if (sub !== 'status') {
-      log('❌ Subcomando inválido. Use: ai-doc soul status', 'red');
+    
+    if (sub === 'status') {
+      log('⚠️ Comando "soul status" foi migrado para "kernel".', 'yellow');
+      await commands.kernel([]);
       return;
     }
-    log('⚠️ Comando "soul status" foi migrado para "kernel".', 'yellow');
-    await commands.kernel([]);
+
+    const VaultManager = require('../core/ethereum_bridge/VaultManager');
+    const SBT = require('../core/ethereum_bridge/SBT');
+    const vault = new VaultManager();
+
+    if (sub === 'mint') {
+      // Extract args: title is args[1], others are flags
+      const title = args[1];
+      const typeArg = args.find(a => a.startsWith('--type='));
+      const descArg = args.find(a => a.startsWith('--desc='));
+      
+      const type = typeArg ? typeArg.split('=')[1] : 'ACHIEVEMENT';
+      const desc = descArg ? descArg.split('=')[1] : 'No description provided';
+
+      if (!title) {
+        log('❌ Usage: ai-doc soul mint <title> --type=<type> --desc=<desc>', 'red');
+        return;
+      }
+
+      const sbt = new SBT({ title, type, description: desc });
+      const result = vault.storeSBT(sbt);
+
+      if (result.success) {
+        log(`✅ SBT Minted: ${title}`, 'green');
+        log(`   ID: ${sbt.id}`, 'dim');
+        log(`   Path: ${result.path}`, 'dim');
+      } else {
+        log(`❌ Failed to mint SBT: ${result.message}`, 'red');
+      }
+      return;
+    }
+
+    if (sub === 'resonate') {
+      const jsonMode = args.includes('--json');
+      const sbts = vault.listSBTs();
+
+      if (jsonMode) {
+        console.log(JSON.stringify(sbts, null, 2));
+        return;
+      }
+
+      log('\n=== 🔮 Soul Resonance (SBT Vault) ===\n', 'magenta');
+      if (sbts.length === 0) {
+        log('No SBTs found in the vault.', 'dim');
+      } else {
+        sbts.forEach(sbt => {
+          log(`- [${sbt.type}] ${sbt.title}`, 'white');
+          log(`  ID: ${sbt.id}`, 'dim');
+          log(`  Date: ${sbt.timestamp}`, 'dim');
+          log('');
+        });
+      }
+      return;
+    }
+
+    log('❌ Unknown subcommand. Use: status, mint, resonate', 'red');
+  },
+  swarm: async (args = []) => {
+    const sub = (args[0] || 'list').toLowerCase();
+    const Registry = require('../core/swarm/Registry');
+    const registry = new Registry();
+
+    if (sub === 'list') {
+        const agents = registry.listAgents();
+        log('\n=== 🐝 Swarm Network (Active Agents) ===\n', 'yellow');
+        if (agents.length === 0) {
+            log('No agents found in the swarm.');
+        } else {
+            agents.forEach(a => {
+                log(`- [${a.id}] ${a.name}`);
+                log(`  Path: ${a.path}`, 'dim');
+                log(`  Last Seen: ${a.last_seen}`, 'dim');
+                log('');
+            });
+        }
+        return;
+    }
+
+    if (sub === 'delegate') {
+        const targetId = args[1];
+        const taskDesc = args.slice(2).join(' ');
+
+        if (!targetId || !taskDesc) {
+            log('❌ Usage: ai-doc swarm delegate <agentId> <task description>', 'red');
+            return;
+        }
+
+        const agent = registry.findAgent(targetId);
+        if (!agent) {
+            log(`❌ Agent not found: ${targetId}`, 'red');
+            return;
+        }
+
+        // Logic to write task to agent's workspace
+        const targetTasksDir = path.join(agent.path, '.ai-workspace', 'tasks', 'active');
+        if (!fs.existsSync(targetTasksDir)) {
+            log(`❌ Target agent workspace not found or invalid structure: ${targetTasksDir}`, 'red');
+            return;
+        }
+
+        const taskId = `DELEGATED-${Date.now()}`;
+        const taskFile = path.join(targetTasksDir, `${taskId}.md`);
+        
+        const content = `---
+title: "Delegated Task: ${taskDesc.substring(0, 50)}..."
+status: todo
+priority: high
+created: ${new Date().toISOString()}
+sender: CLI_USER
+context: Delegated via Swarm
+---
+
+# Delegated Task
+
+**Objective:** ${taskDesc}
+
+**Context:**
+This task was delegated by an external agent via Swarm Protocol.
+
+**Instructions:**
+- Analyze the request.
+- Execute if safe.
+- Report completion status.
+`;
+
+        try {
+            fs.writeFileSync(taskFile, content, 'utf-8');
+            log(`✅ Task delegated successfully to [${agent.name}]!`, 'green');
+            log(`   📄 File: ${taskFile}`);
+        } catch (e) {
+            log(`❌ Failed to delegate task: ${e.message}`, 'red');
+        }
+        return;
+    }
+    
+    log('❌ Unknown subcommand. Use: list, delegate', 'red');
   },
   scan: async (args = []) => {
     try {

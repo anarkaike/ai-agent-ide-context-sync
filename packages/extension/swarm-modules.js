@@ -83,10 +83,10 @@ class SwarmTreeDataProvider {
         }
 
         // Actions
-        const connectItem = new vscode.TreeItem('📡 Connect / Send Task');
+        const connectItem = new vscode.TreeItem('📡 Delegate Task');
         connectItem.command = {
             command: 'ai-agent-sync.swarm.connect',
-            title: 'Connect to Agent',
+            title: 'Delegate Task to Agent',
             arguments: [agent]
         };
         connectItem.iconPath = new vscode.ThemeIcon('radio-tower');
@@ -100,7 +100,7 @@ async function handleSwarmConnect(agent) {
     if (!agent) return;
 
     const message = await vscode.window.showInputBox({
-        prompt: `Send task to ${agent.name}`,
+        prompt: `Delegate task to ${agent.name}`,
         placeHolder: 'Ex: Refactor the login module...'
     });
 
@@ -108,8 +108,8 @@ async function handleSwarmConnect(agent) {
 
     const terminal = vscode.window.createTerminal(`Swarm Link: ${agent.name}`);
     terminal.show();
-    // Use the CLI command we updated earlier
-    terminal.sendText(`node packages/cli/bin/ai-doc.js agent connect ${agent.id} "${message}"`);
+    // Use the new CLI command swarm delegate
+    terminal.sendText(`node packages/cli/cli/ai-doc.js swarm delegate ${agent.id} "${message}"`);
 }
 
 module.exports = {

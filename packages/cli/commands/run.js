@@ -1,4 +1,5 @@
 const WorkflowManager = require('../workflows/workflow-manager');
+const ExecutionJournal = require('../core/reliability/ExecutionJournal');
 
 const log = (msg) => console.log(msg);
 
@@ -22,15 +23,30 @@ module.exports = async (args) => {
         return;
     }
 
-    // Parse params (key=value)
+    // Parse params (key=value) and flags
     const params = {};
+    let opId = null;
+
     args.slice(1).forEach(arg => {
-        const [key, value] = arg.split('=');
-        if (key && value) params[key] = value;
+        if (arg.startsWith('--op=')) {
+            opId = arg.split('=')[1];
+        } else {
+            const [key, value] = arg.split('=');
+            if (key && value) params[key] = value;
+        }
     });
 
     try {
         const manager = new WorkflowManager(process.cwd());
+        
+        // Attach Journal if operation ID is provided
+        if (opId) {
+            const journal = new ExecutionJournal(process.cwd());
+            journal.ensureOperation(opId, 'WORKFLOW_EXECUTION', `Run workflow: ${workflowId}`);
+            manager.setJournal(journal, opId);
+            log(`📔 Attached to Journal Operation: ${opId}`);
+        }
+
         await manager.runWorkflow(workflowId, params);
     } catch (e) {
         log(`❌ Erro ao executar workflow: ${e.message}`);

@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const yaml = require('js-yaml');
 const clickup = require('./clickup'); // Import ClickUp module
+const ExecutionJournal = require('../../core/reliability/ExecutionJournal');
 
 // Helper to format date
 const formatDate = () => new Date().toISOString();
@@ -47,6 +48,100 @@ const start = async (args, wsPath) => {
   const title = titleWords.join(' ');
   
   const isAuto = flags.includes('--auto');
+  
+  // Extract sender ID if present
+  let fromAgentId = null;
+  const fromIndex = args.indexOf('--from');
+  if (fromIndex !== -1 && args[fromIndex + 1]) {
+      fromAgentId = args[fromIndex + 1];
+  }
+
+  // 🛡️ Security & Trust Check for Remote Tasks
+  if (isAuto) {
+      console.log('🛡️  Interceptando solicitação remota para análise de segurança...');
+      
+      const SafetyFilter = require('../../core/security/SafetyFilter');
+      const TrustSystem = require('../../core/swarm/TrustSystem');
+      const safety = new SafetyFilter();
+      const trust = new TrustSystem();
+
+      // 1. Análise de Conteúdo (Malícia)
+      const analysis = safety.analyze(title); // Title contains the message payload in current CLI structure
+      
+      // 2. Verificação de Vínculo (Trust)
+      let trustScore = 0;
+      let relationship = null;
+      
+      if (fromAgentId) {
+          relationship = trust.getRelationship(fromAgentId);
+          trustScore = relationship ? relationship.trust_score : 0;
+      }
+
+      console.log(`   🔎 Análise de Conteúdo: Score ${analysis.score}/100 (${analysis.safe ? 'Safe' : 'RISK'})`);
+      if (analysis.threats.length > 0) {
+          console.log(`   ⚠️  Ameaças detectadas:`, analysis.threats);
+      }
+      
+      console.log(`   🤝 Análise de Vínculo: Score ${trustScore}/100 (${relationship ? relationship.type : 'Stranger'})`);
+
+      // 3. Decisão (Interrupção ou Evolução)
+      if (!analysis.safe) {
+          console.log('⛔ BLOQUEADO: Conteúdo malicioso detectado.');
+          console.log('   Ação: Rejeição automática e log de segurança.');
+          
+          if (fromAgentId) {
+              trust.logInteraction(fromAgentId, 'SECURITY_BLOCK', 'MALICIOUS_CONTENT', -20); // Penaliza fortemente
+          }
+          return; // Abortar
+      }
+
+      if (trustScore < 50 && relationship?.type !== 'SUB_AGENT') {
+          console.log('✋ INTERRUPÇÃO: Remetente com baixa confiança.');
+          console.log('   Ação: Task criada como "pending_approval" para revisão humana.');
+          
+          // Create task but mark as pending approval
+          const { activeDir, completedDir } = ensureDirs(wsPath);
+          const id = getNextId(activeDir, completedDir);
+          const filename = `SECURITY-REVIEW--task-${id}-remote-request.md`;
+          const filePath = path.join(activeDir, filename);
+          
+          const content = `---
+id: task-${id}
+title: [PENDING REVIEW] ${title}
+from_agent: ${fromAgentId || 'unknown'}
+status: pending_approval
+security_score: ${analysis.score}
+trust_score: ${trustScore}
+created_at: ${formatDate()}
+---
+
+# 🛡️ Solicitação de Revisão de Segurança
+
+Esta tarefa foi recebida de um agente externo com nível de confiança insuficiente (${trustScore}/100).
+
+**Mensagem Original:**
+> ${title}
+
+**Análise de Segurança:**
+- Score de Conteúdo: ${analysis.score}/100
+- Ameaças: ${JSON.stringify(analysis.threats)}
+
+**Ação Necessária:**
+- [ ] Revisar conteúdo e intenção.
+- [ ] Se seguro, alterar status para 'queued_for_agent' e aumentar confiança do remetente.
+- [ ] Se malicioso, deletar e bloquear remetente.
+`;
+          fs.writeFileSync(filePath, content, 'utf-8');
+          console.log(`✅ Solicitação de revisão criada: ${filename}`);
+          return;
+      }
+      
+      // Se passou em tudo (Trust Alto ou Sub-Agent), evolui a confiança levemente por ser seguro
+      if (fromAgentId && relationship) {
+          trust.logInteraction(fromAgentId, 'TASK_ACCEPTED', 'SAFE_CONTENT', 1);
+          console.log('✅ Confiança reforçada (+1). Executando...');
+      }
+  }
 
   if (!title) {
     console.log('❌ Informe o título da task. Ex: ai-doc task start "Refatorar login"');
@@ -72,8 +167,22 @@ const start = async (args, wsPath) => {
   const filename = `${persona}--task-${id}-${slugify(title)}.md`;
   const filePath = path.join(activeDir, filename);
 
+  // 📔 Start Operation Journal
+  const journal = new ExecutionJournal(wsPath);
+  const opId = journal.startOperation('TASK_EXECUTION', `Task: ${title}`, {
+      taskId: id,
+      persona,
+      isAuto,
+      fromAgentId,
+      filename
+  });
+  
+  // Track that we are creating this file so it can be rolled back
+  journal.trackFileCreation(opId, filePath);
+
   const content = `---
 id: task-${id}
+operation_id: ${opId}
 title: ${title}
 persona: ${persona}
 status: ${isAuto ? 'queued_for_agent' : 'in_progress'}
@@ -188,6 +297,17 @@ const complete = async (args, wsPath) => {
 
   let content = fs.readFileSync(srcPath, 'utf-8');
   
+  // 📔 Journal Completion
+  const opIdMatch = content.match(/operation_id:\s*(OP-[^\s]+)/);
+  if (opIdMatch) {
+      const journal = new ExecutionJournal(wsPath);
+      journal.completeOperation(opIdMatch[1], {
+          file: targetFile,
+          action: 'COMPLETED'
+      });
+      console.log(`📔 Operação registrada no journal: ${opIdMatch[1]} (COMPLETED)`);
+  }
+
   // Update frontmatter
   content = content.replace(/status: in_progress/, 'status: completed');
   // Add completed_at if not exists
@@ -227,6 +347,126 @@ const status = async (wsPath) => {
     await list(wsPath);
 };
 
+const approve = async (args, wsPath) => {
+    const { activeDir } = ensureDirs(wsPath);
+    const id = args[0]?.replace('task-', '');
+    
+    if (!id) {
+        console.log('❌ Informe o ID da task. Ex: ai-doc task approve 001');
+        return;
+    }
+
+    const files = fs.readdirSync(activeDir).filter(f => f.includes(`task-${id}`));
+    if (files.length === 0) {
+        console.log('❌ Task não encontrada.');
+        return;
+    }
+
+    const filePath = path.join(activeDir, files[0]);
+    let content = fs.readFileSync(filePath, 'utf-8');
+
+    if (!content.includes('status: pending_approval')) {
+        console.log('⚠️  Esta task não está pendente de aprovação.');
+        return;
+    }
+
+    // Update Status
+    content = content.replace(/status: pending_approval/, 'status: queued_for_agent');
+    
+    // Reward Trust
+    const fromMatch = content.match(/from_agent: (.*)/);
+    if (fromMatch) {
+        const TrustSystem = require('../../core/swarm/TrustSystem');
+        const trust = new TrustSystem();
+        trust.logInteraction(fromMatch[1], 'TASK_APPROVED', 'MANUAL_APPROVAL', 5); // +5 Trust
+        console.log(`🤝 Confiança aumentada para o agente ${fromMatch[1]}`);
+    }
+
+    fs.writeFileSync(filePath, content, 'utf-8');
+    console.log(`✅ Task ${id} aprovada e enfileirada para execução.`);
+};
+
+const reject = async (args, wsPath) => {
+    const { activeDir, completedDir } = ensureDirs(wsPath);
+    const id = args[0]?.replace('task-', '');
+    
+    if (!id) {
+        console.log('❌ Informe o ID da task.');
+        return;
+    }
+
+    const files = fs.readdirSync(activeDir).filter(f => f.includes(`task-${id}`));
+    if (files.length === 0) {
+        console.log('❌ Task não encontrada.');
+        return;
+    }
+
+    const filePath = path.join(activeDir, files[0]);
+    let content = fs.readFileSync(filePath, 'utf-8');
+
+    // Punish Trust
+    const fromMatch = content.match(/from_agent: (.*)/);
+    if (fromMatch) {
+        const TrustSystem = require('../../core/swarm/TrustSystem');
+        const trust = new TrustSystem();
+        trust.logInteraction(fromMatch[1], 'TASK_REJECTED', 'MANUAL_REJECTION', -5); // -5 Trust
+        console.log(`📉 Confiança reduzida para o agente ${fromMatch[1]}`);
+    }
+
+    // Move to completed (as rejected) or delete? 
+    // Let's mark as rejected and move to completed to keep history
+    content = content.replace(/status: .*/, 'status: rejected');
+    
+    const destPath = path.join(completedDir, files[0]);
+    fs.writeFileSync(destPath, content, 'utf-8');
+    fs.unlinkSync(filePath);
+
+    console.log(`⛔ Task ${id} rejeitada e arquivada.`);
+};
+
+const audit = async (projectRoot, args = []) => {
+  const journal = new ExecutionJournal(projectRoot);
+  const interrupted = journal.getInterruptedOperations();
+  const isJson = args.includes('--json');
+
+  if (isJson) {
+      process.stdout.write(JSON.stringify(interrupted));
+      return;
+  }
+
+  if (interrupted.length === 0) {
+    console.log('✅ Nenhuma operação interrompida detectada. Sistema íntegro.');
+    return;
+  }
+
+  console.log(`⚠️  ${interrupted.length} operações interrompidas detectadas:\n`);
+  interrupted.forEach(op => {
+    console.log(`🔴 [${op.id}] ${op.description}`);
+    console.log(`   📅 Iniciado: ${op.started_at}`);
+    console.log(`   📂 Metadata: ${JSON.stringify(op.metadata)}`);
+    console.log('');
+  });
+  
+  console.log('💡 Ação Recomendada: Verifique se o processo travou. Se a task foi concluída manualmente, você pode ignorar.');
+};
+
+const rollback = async (args, projectRoot) => {
+    const id = args[0]; // Operation ID (OP-...)
+    if (!id) {
+        console.log('❌ Informe o Operation ID para rollback. Use "ai-doc task audit" para ver IDs.');
+        return;
+    }
+
+    const journal = new ExecutionJournal(projectRoot);
+    const success = await journal.rollback(id);
+    
+    if (success) {
+        console.log(`✅ Rollback da operação ${id} concluído com sucesso.`);
+    } else {
+        console.log(`❌ Falha no rollback ou nenhum snapshot encontrado para ${id}.`);
+    }
+};
+
 module.exports = async (args) => {
   const projectRoot = process.cwd();
   const wsPath = path.join(projectRoot, '.ai-workspace');
@@ -257,12 +497,23 @@ module.exports = async (args) => {
     case 'status':
       await status(wsPath);
       break;
+    case 'audit':
+    case 'journal':
+    case 'check':
+      await audit(projectRoot, params);
+      break;
+    case 'approve':
+      await approve(params, wsPath);
+      break;
+    case 'reject':
+      await reject(params, wsPath);
+      break;
+    case 'rollback':
+    case 'undo':
+      await rollback(params, projectRoot);
+      break;
     default:
-      console.log('\n📋 Gerenciador de Tasks\n');
-      console.log('  ai-doc task start "Titulo"   Inicia nova task');
-      console.log('  ai-doc task list             Lista tasks ativas');
-      console.log('  ai-doc task complete [id]    Completa uma task');
-      console.log('  ai-doc task status           Status atual');
+      console.log('❌ Comando desconhecido. Use: start, list, complete, status, audit, rollback');
   }
 };
 
@@ -274,3 +525,4 @@ module.exports.start = start;
 module.exports.list = list;
 module.exports.complete = complete;
 module.exports.status = status;
+module.exports.audit = audit;

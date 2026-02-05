@@ -27,7 +27,9 @@
         "onView:ai-agent-sync-status",
         "onView:ai-agent-sync-timer",
         "onView:ai-agent-sync-automation",
-        "onView:ai-agent-sync-swarm"
+        "onView:ai-agent-sync-swarm",
+        "onView:ai-agent-sync-soul",
+        "onView:ai-agent-sync-security"
     ],
     "main": "./extension.js",
     "contributes": {
@@ -292,6 +294,40 @@
                 "command": "ai-agent-sync.copyDiagnosticInfo",
                 "title": "Copy Diagnostic Info\nCopia informações de diagnóstico para a área de transferência",
                 "icon": "$(output)"
+            },
+            {
+                "command": "ai-agent-sync.git.codeReview",
+                "title": "Git: Code Review (AI)"
+            },
+            {
+                "command": "ai-agent-sync.security.refresh",
+                "title": "Refresh Security",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "ai-agent-sync.security.approve",
+                "title": "Approve Task",
+                "icon": "$(check)"
+            },
+            {
+                "command": "ai-agent-sync.security.reject",
+                "title": "Reject Task",
+                "icon": "$(x)"
+            },
+            {
+                "command": "ai-agent-sync.soul.mint",
+                "title": "Mint New SBT",
+                "icon": "$(add)"
+            },
+            {
+                "command": "ai-agent-sync.soul.resonate",
+                "title": "Resonate (Import) SBT",
+                "icon": "$(radio-tower)"
+            },
+            {
+                "command": "ai-agent-sync.soul.refresh",
+                "title": "Refresh Soul",
+                "icon": "$(refresh)"
             }
         ],
         "viewsContainers": {
@@ -318,6 +354,10 @@
                     "name": "⚙️ Kernel Status"
                 },
                 {
+                    "id": "ai-agent-sync-security",
+                    "name": "🛡️ Security & Approvals"
+                },
+                {
                     "id": "ai-agent-sync-timer",
                     "name": "⏱️ Pomodoro & Focus"
                 },
@@ -328,6 +368,10 @@
                 {
                     "id": "ai-agent-sync-swarm",
                     "name": "🐝 Swarm (Active Agents)"
+                },
+                {
+                    "id": "ai-agent-sync-soul",
+                    "name": "💎 Soul (SBTs & Achievements)"
                 }
             ]
         },
@@ -387,6 +431,31 @@
                     "command": "ai-agent-sync.copyDiagnosticInfo",
                     "when": "view == ai-agent-sync-status",
                     "group": "navigation"
+                },
+                {
+                    "command": "ai-agent-sync.security.refresh",
+                    "when": "view == ai-agent-sync-security",
+                    "group": "navigation"
+                },
+                {
+                    "command": "ai-agent-sync.swarm.refresh",
+                    "when": "view == ai-agent-sync-swarm",
+                    "group": "navigation"
+                },
+                {
+                    "command": "ai-agent-sync.soul.mint",
+                    "when": "view == ai-agent-sync-soul",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "ai-agent-sync.soul.resonate",
+                    "when": "view == ai-agent-sync-soul",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "ai-agent-sync.soul.refresh",
+                    "when": "view == ai-agent-sync-soul",
+                    "group": "navigation@3"
                 }
             ],
             "view/item/context": [
@@ -424,6 +493,16 @@
                     "command": "ai-agent-sync.deleteTask",
                     "when": "view == ai-agent-sync-personas && viewItem == task",
                     "group": "inline@2"
+                },
+                {
+                    "command": "ai-agent-sync.security.approve",
+                    "when": "view == ai-agent-sync-security && viewItem == pendingTask",
+                    "group": "inline"
+                },
+                {
+                    "command": "ai-agent-sync.security.reject",
+                    "when": "view == ai-agent-sync-security && viewItem == pendingTask",
+                    "group": "inline"
                 }
             ]
         },

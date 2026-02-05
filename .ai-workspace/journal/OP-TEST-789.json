@@ -1,0 +1,20 @@
+{
+  "id": "OP-TEST-789",
+  "status": "FAILED",
+  "type": "WORKFLOW_EXECUTION",
+  "description": "Run workflow: test-undo",
+  "started_at": "2026-02-05T17:42:58.926Z",
+  "metadata": {},
+  "state": {
+    "snapshots": [
+      {
+        "original": "/Users/junio/Documents/PROJETOS/ai-agent-ide-context-sync/test-undo.txt",
+        "action": "created",
+        "timestamp": "2026-02-05T17:42:58.940Z"
+      }
+    ]
+  },
+  "updated_at": "2026-02-05T17:42:58.940Z",
+  "failed_at": "2026-02-05T17:45:48.282Z",
+  "error": "Rolled back by user/system"
+}

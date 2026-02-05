@@ -1,0 +1,20 @@
+{
+  "id": "OP-1770321258395-36f59fd1",
+  "status": "FAILED",
+  "type": "TEST_OP",
+  "description": "Testing Rollback",
+  "started_at": "2026-02-05T19:54:18.396Z",
+  "metadata": {},
+  "state": {
+    "snapshots": [
+      {
+        "original": "/Users/junio/Documents/PROJETOS/ai-agent-ide-context-sync/test-undo-file.txt",
+        "action": "created",
+        "timestamp": "2026-02-05T19:54:18.404Z"
+      }
+    ]
+  },
+  "updated_at": "2026-02-05T19:54:18.404Z",
+  "failed_at": "2026-02-05T19:54:18.405Z",
+  "error": "Rolled back by user/system"
+}

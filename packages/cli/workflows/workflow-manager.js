@@ -36,6 +36,13 @@ class WorkflowManager {
         this.projectRoot = projectRoot || process.cwd();
         this.workflowsPath = path.join(resolveWorkspaceRoot(this.projectRoot), 'workflows');
         this.globalWorkflowsPath = path.join(os.homedir(), '.ai-doc', 'workflows');
+        this.journal = null;
+        this.opId = null;
+    }
+
+    setJournal(journal, opId) {
+        this.journal = journal;
+        this.opId = opId;
     }
 
     /**
@@ -154,6 +161,26 @@ class WorkflowManager {
         const contentSolved = processTemplate(step.content);
         const commandSolved = processTemplate(step.command);
 
+        // Snapshot Logic for File Operations
+        if (['create_file', 'append_file', 'edit_file'].includes(action) && this.journal && this.opId && pathSolved) {
+            const fullPath = path.join(this.projectRoot, pathSolved);
+            if (fs.existsSync(fullPath)) {
+                try {
+                    this.journal.snapshotFile(this.opId, fullPath);
+                    console.log(`   📸 Snapshot created for: ${pathSolved}`);
+                } catch (e) {
+                    console.warn(`   ⚠️ Failed to snapshot ${pathSolved}: ${e.message}`);
+                }
+            } else if (action === 'create_file') {
+                try {
+                    this.journal.trackFileCreation(this.opId, fullPath);
+                    console.log(`   📸 Tracking creation for rollback: ${pathSolved}`);
+                } catch (e) {
+                    console.warn(`   ⚠️ Failed to track creation ${pathSolved}: ${e.message}`);
+                }
+            }
+        }
+
         switch (action) {
             case 'create_file':
                 this.ensureDir(path.dirname(path.join(this.projectRoot, pathSolved)));
@@ -171,6 +198,28 @@ class WorkflowManager {
                 this.ensureDir(path.dirname(path.join(this.projectRoot, pathSolved)));
                 fs.appendFileSync(path.join(this.projectRoot, pathSolved), contentSolved);
                 console.log(`   Appended to: ${pathSolved}`);
+                break;
+
+            case 'edit_file':
+                const fullPath = path.join(this.projectRoot, pathSolved);
+                if (fs.existsSync(fullPath)) {
+                    let content = fs.readFileSync(fullPath, 'utf-8');
+                    const search = processTemplate(step.search || step.old_string);
+                    const replace = processTemplate(step.replace || step.new_string);
+                    
+                    if (search && replace !== undefined) {
+                        // Create regex if it looks like regex, otherwise literal
+                        // For now, simple string replace (first occurrence or global?)
+                        // Let's do global replace if it's a string
+                        content = content.split(search).join(replace);
+                        fs.writeFileSync(fullPath, content);
+                        console.log(`   Edited: ${pathSolved}`);
+                    } else {
+                        console.warn(`   ⚠️  Missing search/replace params for edit_file in ${pathSolved}`);
+                    }
+                } else {
+                    console.warn(`   ⚠️  File not found for edit: ${pathSolved}`);
+                }
                 break;
 
             default:

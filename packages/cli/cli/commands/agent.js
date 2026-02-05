@@ -119,65 +119,124 @@ module.exports = async (args = []) => {
     return;
   }
 
+  if (args.includes('spawn')) {
+      const Spawner = require('../../core/swarm/Spawner.js');
+      const spawner = new Spawner();
+      
+      const roleIndex = args.indexOf('spawn') + 1;
+      const role = args[roleIndex] || 'worker';
+      
+      log(`🥚 Iniciando processo de clonação (Role: ${role})...`, 'cyan');
+      
+      try {
+          const result = await spawner.spawn(role);
+          log(`✅ Sub-Agente criado com sucesso!`, 'green');
+          log(`   ID: ${result.id}`, 'dim');
+          log(`   Path: ${result.path}`, 'dim');
+          log(`   Status: Trust Score 100 (Sub-Agent)`, 'green');
+          
+          log(`\n💡 Dica: Use 'ai-doc agent connect ${result.id} "Sua tarefa"' para delegar trabalho.`, 'yellow');
+      } catch (e) {
+          log(`❌ Falha na incubação: ${e.message}`, 'red');
+      }
+      return;
+  }
+
   if (args.includes('connect')) {
       const SwarmRegistry = require('../../core/swarm/Registry.js');
+      const TrustSystem = require('../../core/swarm/TrustSystem.js');
       const swarm = new SwarmRegistry();
+      const trust = new TrustSystem();
       const cp = require('child_process');
       const path = require('path');
-      
+
       const targetQuery = args[args.indexOf('connect') + 1];
       const message = args.slice(args.indexOf('connect') + 2).join(' ');
 
       if (!targetQuery) {
-          log('🐝 Swarm Protocol: Agentes Ativos', 'cyan');
-          const agents = swarm.listAgents();
-          agents.forEach(a => {
-              const isCurrent = a.path === process.cwd();
-              log(`   - ${a.name} [${a.id}] ${isCurrent ? '(Você)' : ''}`, isCurrent ? 'green' : 'reset');
-              log(`     Path: ${a.path}`, 'dim');
-          });
-          log('\nUso: agent connect <id> "Mensagem para o agente"', 'yellow');
+          log('❌ Uso: ai-doc agent connect <agent-id> "Mensagem"', 'red');
           return;
       }
 
+      log(`📡 Buscando agente "${targetQuery}" na rede...`, 'cyan');
       const target = swarm.findAgent(targetQuery);
+      
       if (!target) {
-          log(`❌ Agente '${targetQuery}' não encontrado na Swarm.`, 'red');
+          log('❌ Agente não encontrado no Swarm Registry.', 'red');
           return;
+      }
+
+      // 🛡️ Trust Check
+      log(`🔒 Verificando protocolos de confiança para ${target.name}...`, 'yellow');
+      let bond = trust.getRelationship(target.id);
+      
+      if (!bond) {
+          log(`⚠️  Agente desconhecido (Stranger). Estabelecendo vínculo inicial...`, 'yellow');
+          bond = trust.establishBond(target.id, target.name);
+          log(`✅ Vínculo criado: ${bond.type} (Score: ${bond.trust_score})`, 'green');
+      }
+
+      // Check permissions (mock for now - assume we are the SENDER, so we check if WE trust THEM to receive our task?
+      // Or actually, usually the RECEIVER checks permissions. 
+      // Since we are simulating a "call", we will just log the trust status for the user.)
+      
+      log(`   Nível de Confiança: ${bond.trust_score}/100`, 'dim');
+      log(`   Permissões: ${bond.permissions.length > 0 ? bond.permissions.join(', ') : 'Nenhuma'}`, 'dim');
+
+      if (bond.trust_score < 10 && bond.type !== 'SUB_AGENT') {
+          log(`⚠️  Atenção: Score de confiança baixo.`, 'yellow');
+          // In a real interactive mode, we would ask for confirmation here.
       }
 
       log(`📡 Estabelecendo link neural com ${target.name}...`, 'cyan');
       log(`   Target: ${target.path}`, 'dim');
-      
-      // Aqui acontece a mágica: Spawnamos o agente remoto no contexto dele
-      
-      try {
-          const command = `cd "${target.path}" && ai-doc task start "Remote Request: ${message}" --auto`;
-          
-          log(`   Enviando sinal...`, 'dim');
-          log(`   Exec: ${command}`, 'dim');
+      log(`   Enviando sinal...`, 'dim');
 
-          // Executa o comando de verdade
-          cp.exec(command, (error, stdout, stderr) => {
-              if (error) {
-                  log(`❌ Erro de transmissão: ${error.message}`, 'red');
-                  return;
-              }
-              if (stderr) {
-                  log(`⚠️  Stderr remoto: ${stderr}`, 'yellow');
-              }
-              
-              log(`\n💬 Resposta de ${target.name}:`, 'green');
-              // Filtra o output para mostrar apenas as linhas relevantes
-              const lines = stdout.split('\n').filter(l => l.trim() !== '');
-              lines.forEach(l => log(`   ${l}`, 'reset'));
-              
-              log(`\n✅ Solicitação enviada com sucesso!`, 'green');
-          });
+      const command = `cd "${target.path}" && ai-doc task start "Remote Request: ${message}" --auto --from "${swarm.listAgents().find(a => a.path === process.cwd())?.id || 'unknown-agent'}"`;
+      
+      // Log interaction attempt
+      trust.logInteraction(target.id, 'CONNECT_ATTEMPT', 'PENDING');
+
+      cp.exec(command, (error, stdout, stderr) => {
+          if (error) {
+              log(`❌ Erro de transmissão: ${error.message}`, 'red');
+              trust.logInteraction(target.id, 'CONNECT_ERROR', error.message, -5);
+              return;
+          }
+          log(`\n💬 Resposta de ${target.name}:`, 'green');
+          const lines = stdout.split('\n').filter(l => l.trim() !== '');
+          lines.forEach(l => log(`   ${l}`, 'reset'));
+          log(`\n✅ Solicitação enviada com sucesso!`, 'green');
           
-      } catch (e) {
-          log(`❌ Erro sistêmico: ${e.message}`, 'red');
+          trust.logInteraction(target.id, 'TASK_SENT', 'SUCCESS', 5);
+      });
+      return;
+  }
+
+  if (args.includes('network')) {
+      const TrustSystem = require('../../core/swarm/TrustSystem.js');
+      const trust = new TrustSystem();
+      const relationships = trust.getRelationships();
+      const ids = Object.keys(relationships);
+
+      log('🌐 Rede de Agentes Conhecidos (Network)\n', 'cyan');
+
+      if (ids.length === 0) {
+          log('   (Nenhum vínculo estabelecido ainda)', 'dim');
+          return;
       }
+
+      ids.forEach(id => {
+          const bond = relationships[id];
+          const scoreColor = bond.trust_score > 80 ? 'green' : (bond.trust_score > 40 ? 'yellow' : 'red');
+          
+          log(`   👤 ${bond.name} [${bond.type}]`, 'bright');
+          log(`      ID: ${bond.id}`, 'dim');
+          log(`      Confiança: ${bond.trust_score}/100`, scoreColor);
+          log(`      Permissões: ${bond.permissions.length ? bond.permissions.join(', ') : 'Nenhuma'}`, 'dim');
+          log(`      Última Interação: ${bond.last_interaction || 'Nunca'}`, 'dim');
+          log('');
+      });
       return;
   }
 

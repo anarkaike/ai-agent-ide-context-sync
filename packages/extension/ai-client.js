@@ -126,12 +126,18 @@ class AIClient {
     /**
      * Executa um workflow
      */
-    async runWorkflow(workflowId, params = {}) {
-        const paramsStr = Object.entries(params)
-            .map(([key, value]) => `${key}=${value}`)
-            .join(' ');
+    async runWorkflow(workflowId, params = {}, options = {}) {
+        const args = ['run', workflowId];
 
-        return this.execute(['run', workflowId, paramsStr]);
+        Object.entries(params).forEach(([key, value]) => {
+            args.push(`${key}=${value}`);
+        });
+
+        if (options.opId) {
+            args.push(`--op=${options.opId}`);
+        }
+
+        return this.execute(args);
     }
 
     async scanDocs(targetDir = '.') {

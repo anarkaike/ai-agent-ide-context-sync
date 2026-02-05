@@ -1,0 +1,9 @@
+name: Test Undo
+description: Test complex undo
+steps:
+  - name: Create Test File
+    action: create_file
+    path: test-undo.txt
+    content: |
+      This is a test file for undo.
+

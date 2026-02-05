@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
 const AIClient = require('./ai-client');
+const ExecutionJournal = require('../cli/core/reliability/ExecutionJournal');
 
 let i18nRef = null;
 let loggerRef = null;
@@ -99,8 +100,24 @@ class AutomationTreeProvider {
 
         if (element.contextValue === 'evolution-section') {
             const items = [];
+            
+            // Heartbeat
             items.push(this.createActionItem("🫀 Trigger Heartbeat", "ai-agent-sync.agent.heartbeat", [], "Run a life cycle beat"));
+            
+            // Nucleus
             items.push(this.createActionItem("🧠 Open Nucleus", "ai-agent-sync.agent.nucleus", [], "View Memory Core"));
+            
+            // Soul / SBT
+            const mintItem = new vscode.TreeItem("Cunhar SBT (Mint)", vscode.TreeItemCollapsibleState.None);
+            mintItem.command = { command: 'ai-doc.soul.mint', title: 'Cunhar SBT' };
+            mintItem.iconPath = new vscode.ThemeIcon('verified');
+            items.push(mintItem);
+
+            const resonateItem = new vscode.TreeItem("Ressonar SBT (Resonate)", vscode.TreeItemCollapsibleState.None);
+            resonateItem.command = { command: 'ai-doc.soul.resonate', title: 'Ressonar SBT' };
+            resonateItem.iconPath = new vscode.ThemeIcon('radio-tower');
+            items.push(resonateItem);
+
             return items;
         }
 
@@ -404,11 +421,31 @@ async function handleRunWorkflow(workflowId, workflowParams) {
         title: t('automation.runningWorkflowTitle', targetWorkflow),
         cancellable: false
     }, async (progress) => {
+        let opId = null;
+        let journal = null;
         try {
+            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+                const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+                journal = new ExecutionJournal(rootPath);
+                opId = journal.startOperation('WORKFLOW_EXECUTION', `Run Workflow: ${targetWorkflow}`, {
+                    workflowId: targetWorkflow,
+                    params
+                });
+            }
+
             const client = new AIClient();
-            await client.runWorkflow(targetWorkflow, params);
+            await client.runWorkflow(targetWorkflow, params, { opId });
+            
+            if (journal && opId) {
+                journal.completeOperation(opId, { status: 'success' });
+            }
+            
             vscode.window.showInformationMessage(t('automation.workflowCompleted', targetWorkflow));
         } catch (e) {
+            if (journal && opId) {
+                journal.failOperation(opId, e);
+            }
+
             if (loggerRef) {
                 loggerRef.error(t('automation.workflowError', e), e);
             } else {
@@ -804,6 +841,64 @@ async function handleContextSnap() {
     });
 }
 
+/**
+ * Soul / SBT Handlers
+ */
+async function handleSoulMint() {
+    const title = await vscode.window.showInputBox({
+        prompt: 'Título do SBT (ex: Mestre em Python)',
+        placeHolder: 'Título da Conquista ou Habilidade'
+    });
+    if (!title) return;
+
+    const type = await vscode.window.showQuickPick(['ACHIEVEMENT', 'SKILL', 'REPUTATION'], {
+        placeHolder: 'Tipo de SBT'
+    });
+    if (!type) return;
+
+    const client = new AIClient();
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: `Cunhando SBT: ${title}...`,
+        cancellable: false
+    }, async () => {
+        try {
+            // Note: Quotes around title to handle spaces
+            const output = await client.execute(['soul', 'mint', `"${title}"`, `--type=${type}`]);
+            
+            if (output.includes('✅')) {
+                 vscode.window.showInformationMessage(`SBT Cunhado: ${title}`);
+            } else {
+                 vscode.window.showErrorMessage(`Falha: ${output}`);
+            }
+            
+            if (loggerRef) loggerRef.log(output);
+        } catch (e) {
+            vscode.window.showErrorMessage(`Erro ao cunhar SBT: ${e.message}`);
+        }
+    });
+}
+
+async function handleSoulResonate() {
+    const client = new AIClient();
+    vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "Ressonando SBTs...",
+        cancellable: false
+    }, async () => {
+        try {
+            const output = await client.execute(['soul', 'resonate']);
+            if (loggerRef) {
+                loggerRef.show();
+                loggerRef.log(output);
+            }
+            vscode.window.showInformationMessage('Lista de SBTs enviada para o Output Channel.');
+        } catch (e) {
+            vscode.window.showErrorMessage(`Erro ao listar SBTs: ${e.message}`);
+        }
+    });
+}
+
 module.exports = {
     AutomationTreeProvider,
     handleGeneratePrompt,
@@ -822,5 +917,7 @@ module.exports = {
     },
     setAutomationLogger: (logger) => {
         loggerRef = logger;
-    }
+    },
+    handleSoulMint,
+    handleSoulResonate
 };
