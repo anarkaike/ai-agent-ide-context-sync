@@ -41,7 +41,13 @@ const ensureDirs = (wsPath) => {
 };
 
 const start = async (args, wsPath) => {
-  const title = args.join(' ');
+  // Extract flags and clean title
+  const flags = args.filter(arg => arg.startsWith('--'));
+  const titleWords = args.filter(arg => !arg.startsWith('--'));
+  const title = titleWords.join(' ');
+  
+  const isAuto = flags.includes('--auto');
+
   if (!title) {
     console.log('❌ Informe o título da task. Ex: ai-doc task start "Refatorar login"');
     return;
@@ -70,8 +76,9 @@ const start = async (args, wsPath) => {
 id: task-${id}
 title: ${title}
 persona: ${persona}
-status: in_progress
+status: ${isAuto ? 'queued_for_agent' : 'in_progress'}
 created_at: ${formatDate()}
+auto_execute: ${isAuto}
 objectives:
   - [ ] 
 deliverables:
@@ -81,6 +88,7 @@ deliverables:
 # ${title}
 
 ## Contexto
+${isAuto ? '> 🤖 **Auto-Generated Task**: This task was requested by another agent via Swarm Protocol.' : ''}
 ...
 
 ## Plano de Ação

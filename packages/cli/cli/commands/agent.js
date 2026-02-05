@@ -150,25 +150,33 @@ module.exports = async (args = []) => {
       log(`   Target: ${target.path}`, 'dim');
       
       // Aqui acontece a mágica: Spawnamos o agente remoto no contexto dele
-      // Mas enviamos o input via STDIN ou argumento
-      // Simplificação MVP: Rodar um comando lá e pegar o output
       
       try {
-          // O Agente remoto vai receber isso como um prompt externo
-          // Assumindo que o binário 'ai-doc' está global ou acessível
           const command = `cd "${target.path}" && ai-doc task start "Remote Request: ${message}" --auto`;
           
           log(`   Enviando sinal...`, 'dim');
-          
-          // Nota: Em um sistema real, usaríamos IPC ou Sockets. 
-          // Aqui estamos usando a própria infra de tasks para "pedir" algo.
-          
-          // Simulando resposta por enquanto para não travar o teste se o binário não estiver no path
-          log(`\n💬 Resposta de ${target.name}:`, 'green');
-          log(`   "Recebi sua solicitação: '${message}'. Iniciei uma task autônoma para processar."`, 'reset');
+          log(`   Exec: ${command}`, 'dim');
+
+          // Executa o comando de verdade
+          cp.exec(command, (error, stdout, stderr) => {
+              if (error) {
+                  log(`❌ Erro de transmissão: ${error.message}`, 'red');
+                  return;
+              }
+              if (stderr) {
+                  log(`⚠️  Stderr remoto: ${stderr}`, 'yellow');
+              }
+              
+              log(`\n💬 Resposta de ${target.name}:`, 'green');
+              // Filtra o output para mostrar apenas as linhas relevantes
+              const lines = stdout.split('\n').filter(l => l.trim() !== '');
+              lines.forEach(l => log(`   ${l}`, 'reset'));
+              
+              log(`\n✅ Solicitação enviada com sucesso!`, 'green');
+          });
           
       } catch (e) {
-          log(`❌ Erro de transmissão: ${e.message}`, 'red');
+          log(`❌ Erro sistêmico: ${e.message}`, 'red');
       }
       return;
   }

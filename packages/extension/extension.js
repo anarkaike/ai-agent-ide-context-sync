@@ -7,6 +7,7 @@ const Logger = require('./modules/Logger');
 const { I18n, SmartNotifications } = require('./modules');
 const { KanbanManager, AdvancedAnalytics, ThemeManager, CloudSyncManager } = require('./advanced-modules');
 const { AutomationTreeProvider, handleGeneratePrompt, handleRunWorkflow, handleLaravelAnalyze, handleLaravelCreateLayer, handleLaravelListEntities, handleReactCreateComponent, handleReactCreateHook, handleGenerateCommitMessage, handleGeneratePRDescription, handleGitCodeReview, handleContextSnap, setAutomationI18n, setAutomationLogger } = require('./automation-modules');
+const { SwarmTreeDataProvider, handleSwarmConnect } = require('./swarm-modules');
 const RitualScheduler = require('./modules/RitualScheduler');
 
 // Global Management Instances
