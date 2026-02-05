@@ -8,6 +8,33 @@
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
+
+// Tone Integration
+let currentTone = 'neutral';
+try {
+  const tonePath = path.join(os.homedir(), '.ai-workspace', 'live-state', 'ui-tone.json');
+  if (fs.existsSync(tonePath)) {
+    const data = JSON.parse(fs.readFileSync(tonePath, 'utf-8'));
+    currentTone = data.tone || 'neutral';
+  }
+} catch (e) {}
+
+const toneColors = {
+  neutral: 'cyan',
+  focused: 'green',
+  creative: 'magenta',
+  urgent: 'red',
+  cautious: 'yellow'
+};
+
+const toneEmoji = {
+  neutral: '💧',
+  focused: '🎯',
+  creative: '✨',
+  urgent: '🔥',
+  cautious: '🛡️'
+};
 
 // Colors helper
 const colors = {
@@ -23,9 +50,28 @@ const colors = {
   white: "\x1b[37m"
 };
 
-const log = (msg, color = 'white') => {
-  console.log(`${colors[color] || colors.white}${msg}${colors.reset}`);
+const log = (msg, color = null) => {
+  const targetColor = color || toneColors[currentTone] || 'white';
+  console.log(`${colors[targetColor] || colors.white}${msg}${colors.reset}`);
 };
+
+// Log Tone Banner
+if (process.argv.length > 2) {
+   // Only show if running a command
+   const emoji = toneEmoji[currentTone] || '🤖';
+   // Use direct console.log for banner to ensure specific formatting
+   console.log(`${colors[toneColors[currentTone] || 'white']}${emoji} AI Context: [${currentTone.toUpperCase()}]${colors.reset}`);
+}
+
+// Special command to get raw tone (for shell integration)
+if (process.argv[2] === 'tone') {
+  console.log(JSON.stringify({
+    tone: currentTone,
+    color: toneColors[currentTone] || 'white',
+    emoji: toneEmoji[currentTone] || '🤖'
+  }));
+  process.exit(0);
+}
 
 const { build } = require('./commands/build');
 const RulesManager = require('../core/rules-manager');
@@ -448,6 +494,66 @@ const commands = {
   clickup: require('./commands/clickup'),
   version: require('./commands/version'),
   agent: require('./commands/agent'),
+  swarm: require('./commands/swarm'),
+  project: async (args = []) => {
+    const sub = (args[0] || 'list').toLowerCase();
+    const registryPath = path.join(require('os').homedir(), '.ai-doc', 'registry.json');
+    let registry = { projects: [] };
+
+    try {
+        if (fs.existsSync(registryPath)) {
+            registry = JSON.parse(fs.readFileSync(registryPath, 'utf-8'));
+        }
+    } catch (e) {
+        log('⚠️ Failed to load registry. Creating new one.', 'yellow');
+    }
+
+    if (sub === 'register' || sub === 'watch') {
+        let targetPath = args[1] ? path.resolve(args[1]) : process.cwd();
+        
+        // Validate path
+        if (!fs.existsSync(targetPath)) {
+            log(`❌ Path not found: ${targetPath}`, 'red');
+            return;
+        }
+
+        // Check duplicates
+        const exists = registry.projects.find(p => p.path === targetPath);
+        if (exists) {
+            log(`⚠️ Project already registered: ${targetPath}`, 'yellow');
+            return;
+        }
+
+        const projectName = path.basename(targetPath);
+        registry.projects.push({
+            path: targetPath,
+            name: projectName,
+            registeredAt: new Date().toISOString(),
+            lastSeen: new Date().toISOString()
+        });
+
+        const dir = path.dirname(registryPath);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        
+        fs.writeFileSync(registryPath, JSON.stringify(registry, null, 2));
+        log(`✅ Project registered: ${projectName} (${targetPath})`, 'green');
+        return;
+    }
+
+    if (sub === 'list') {
+        log('\n=== 🔭 Watched Projects ===\n', 'cyan');
+        if (registry.projects.length === 0) {
+            log('No projects registered. Use: ai-doc project register <path>', 'dim');
+        } else {
+            registry.projects.forEach(p => {
+                log(`- ${p.name} (${p.path})`, 'white');
+            });
+        }
+        return;
+    }
+
+    log('❌ Unknown subcommand. Use: list, register <path>', 'red');
+  },
   sync: async () => {
     log('⚠️ Comando "sync" foi substituído por "build". Executando build...', 'yellow');
     await commands.build();

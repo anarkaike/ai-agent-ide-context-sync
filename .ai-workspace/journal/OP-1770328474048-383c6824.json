@@ -1,0 +1,25 @@
+{
+  "id": "OP-1770328474048-383c6824",
+  "status": "FAILED",
+  "type": "TEST",
+  "description": "Testing rollback",
+  "started_at": "2026-02-05T21:54:34.049Z",
+  "metadata": {},
+  "state": {
+    "snapshots": [
+      {
+        "original": "/Users/junio/Documents/PROJETOS/ai-agent-ide-context-sync/test-temp/existing.txt",
+        "snapshot": "/Users/junio/Documents/PROJETOS/ai-agent-ide-context-sync/.ai-workspace/journal/snapshots/OP-1770328474048-383c6824/existing.txt",
+        "timestamp": "2026-02-05T21:54:34.068Z"
+      },
+      {
+        "original": "/Users/junio/Documents/PROJETOS/ai-agent-ide-context-sync/test-temp/created.txt",
+        "action": "created",
+        "timestamp": "2026-02-05T21:54:34.069Z"
+      }
+    ]
+  },
+  "updated_at": "2026-02-05T21:54:34.069Z",
+  "failed_at": "2026-02-05T21:54:34.070Z",
+  "error": "Rolled back by user/system"
+}

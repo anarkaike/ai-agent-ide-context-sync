@@ -997,6 +997,54 @@ function activate(context) {
     if (aiWorkspacePath) {
         notifications.start(aiWorkspacePath);
         ensureWorkspacePersonas(aiWorkspacePath);
+
+        // 🟢 Onboarding: Clone & Chat Handshake
+        const setupPath = path.join(os.homedir(), '.ai-doc', 'setup_complete');
+        if (!fs.existsSync(setupPath)) {
+            vscode.window.showInformationMessage(
+                "👋 Hello! I'm your Sovereign Agent. Ready to initialize this environment?",
+                'Start Setup', 'Later'
+            ).then(selection => {
+                if (selection === 'Start Setup') {
+                    vscode.commands.executeCommand('ai-agent-sync.init');
+                    try {
+                        const dir = path.dirname(setupPath);
+                        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+                        fs.writeFileSync(setupPath, new Date().toISOString());
+                    } catch (e) { }
+                }
+            });
+        }
+
+        // 🔭 Cross-Project Visibility: Auto-Register
+        try {
+            const registryPath = path.join(os.homedir(), '.ai-doc', 'registry.json');
+            let registry = { projects: [] };
+            if (fs.existsSync(registryPath)) {
+                registry = JSON.parse(fs.readFileSync(registryPath, 'utf-8'));
+            }
+            const currentPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            const exists = registry.projects.find(p => p.path === currentPath);
+            
+            if (!exists) {
+                registry.projects.push({
+                    path: currentPath,
+                    name: path.basename(currentPath),
+                    registeredAt: new Date().toISOString(),
+                    lastSeen: new Date().toISOString()
+                });
+                const dir = path.dirname(registryPath);
+                if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+                fs.writeFileSync(registryPath, JSON.stringify(registry, null, 2));
+                logger.log(`🔭 Project registered for Cross-Visibility: ${path.basename(currentPath)}`);
+            } else {
+                // Update last seen
+                exists.lastSeen = new Date().toISOString();
+                fs.writeFileSync(registryPath, JSON.stringify(registry, null, 2));
+            }
+        } catch (e) {
+            logger.error('Failed to register project visibility', e);
+        }
         
         // 🛡️ Auto-Audit on Boot (Self-Healing Check)
         setTimeout(async () => {

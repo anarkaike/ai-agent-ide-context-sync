@@ -1,0 +1,26 @@
+{
+  "name": "@ai-doc/desktop-ui",
+  "version": "1.0.0",
+  "main": "main.js",
+  "description": "Standalone Chat Interface for AI Agent",
+  "scripts": {
+    "start": "concurrently -k \"npm run dev\" \"wait-on tcp:5173 && electron .\"",
+    "dev": "vite",
+    "build": "vite build",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "socket.io-client": "^4.7.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^9.2.1",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "vite": "^5.0.0",
+    "wait-on": "^9.0.3"
+  }
+}
