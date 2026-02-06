@@ -1,0 +1,167 @@
+{
+  "version": "1.0.0",
+  "buildAt": "2026-02-06T22:37:51.412Z",
+  "skills": [
+    {
+      "name": "automation-workflows",
+      "description": "Capacidade de criar, gerenciar e executar workflows de automação para desenvolvimento",
+      "category": "automation",
+      "capabilities": [
+        "workflow-creation",
+        "workflow-execution",
+        "workflow-scheduling",
+        "workflow-monitoring",
+        "trigger-management",
+        "action-chaining"
+      ],
+      "examples": [
+        {
+          "scenario": "Criar workflow de build automatizado",
+          "code": "await aiSkill.execute(\"automation-workflows\", { action: \"create\", name: \"auto-build\", triggers: [\"git-push\"], actions: [\"npm-test\", \"npm-build\", \"deploy\"] })",
+          "description": "Cria um workflow que executa build e deploy automaticamente após push"
+        },
+        {
+          "scenario": "Executar workflow de testes",
+          "code": "await aiSkill.execute(\"automation-workflows\", { action: \"execute\", workflow: \"test-suite\", params: { coverage: true } })",
+          "description": "Executa suíte de testes com cobertura de código"
+        },
+        {
+          "scenario": "Agendar workflow de limpeza",
+          "code": "await aiSkill.execute(\"automation-workflows\", { action: \"schedule\", workflow: \"cleanup\", schedule: \"0 2 * * *\" })",
+          "description": "Agenda limpeza automática de arquivos temporários todos os dias às 2h"
+        }
+      ],
+      "adapters": [
+        "github-actions",
+        "gitlab-ci",
+        "jenkins",
+        "npm-scripts",
+        "custom-hooks"
+      ],
+      "metadata": {
+        "version": "1.0.0",
+        "author": "AI Skills Team",
+        "tags": [
+          "automation",
+          "workflows",
+          "ci-cd",
+          "devops",
+          "scheduling"
+        ],
+        "complexity": "advanced",
+        "dependencies": [
+          "fs-extra",
+          "path",
+          "child_process",
+          "cron-parser"
+        ]
+      }
+    },
+    {
+      "name": "context-management",
+      "description": "Capacidade avançada de gerenciamento de contexto de projetos para IAs",
+      "category": "context-management",
+      "capabilities": [
+        "context-extraction",
+        "context-optimization",
+        "context-synchronization",
+        "context-filtering",
+        "context-persistence",
+        "context-retrieval"
+      ],
+      "examples": [
+        {
+          "scenario": "Extrair contexto de projeto",
+          "code": "await aiSkill.execute(\"context-management\", { action: \"extract\", path: \"./src\", depth: 3 })",
+          "description": "Extrai contexto estruturado do projeto com profundidade configurável"
+        },
+        {
+          "scenario": "Otimizar contexto para IA",
+          "code": "await aiSkill.execute(\"context-management\", { action: \"optimize\", target: \"claude\", maxSize: \"100KB\" })",
+          "description": "Otimiza o contexto para limites específicos de IA"
+        },
+        {
+          "scenario": "Sincronizar contexto entre ambientes",
+          "code": "await aiSkill.execute(\"context-management\", { action: \"sync\", from: \"dev\", to: \"prod\" })",
+          "description": "Sincroniza contexto entre diferentes ambientes do projeto"
+        }
+      ],
+      "adapters": [
+        "cursor",
+        "windsurf",
+        "claude",
+        "github-copilot"
+      ],
+      "metadata": {
+        "version": "1.0.0",
+        "author": "AI Skills Team",
+        "tags": [
+          "context",
+          "management",
+          "optimization",
+          "ai"
+        ],
+        "complexity": "advanced",
+        "dependencies": [
+          "fs-extra",
+          "path",
+          "glob",
+          "yaml"
+        ]
+      }
+    },
+    {
+      "name": "ide-integration",
+      "description": "Capacidade de integração e automação com múltiplas IDEs (Cursor, Windsurf, Claude, GitHub Copilot, etc.)",
+      "category": "ide-integration",
+      "capabilities": [
+        "context-synchronization",
+        "file-management",
+        "project-structure-analysis",
+        "multi-ide-compatibility",
+        "automation-workflows"
+      ],
+      "examples": [
+        {
+          "scenario": "Sincronizar contexto entre IDEs",
+          "code": "await aiSkill.execute(\"ide-integration\", { action: \"sync-context\", target: \"all-ides\" })",
+          "description": "Sincroniza automaticamente o contexto do projeto entre todas as IDEs configuradas"
+        },
+        {
+          "scenario": "Analisar estrutura de projeto",
+          "code": "await aiSkill.execute(\"ide-integration\", { action: \"analyze-structure\", path: \"./src\" })",
+          "description": "Analisa a estrutura do projeto e sugere melhorias de organização"
+        },
+        {
+          "scenario": "Configurar nova IDE",
+          "code": "await aiSkill.execute(\"ide-integration\", { action: \"setup-ide\", ide: \"cursor\", config: {...} })",
+          "description": "Configura automaticamente uma nova IDE com as melhores práticas"
+        }
+      ],
+      "adapters": [
+        "cursor",
+        "windsurf",
+        "claude",
+        "github-copilot",
+        "trae",
+        "gemini"
+      ],
+      "metadata": {
+        "version": "1.0.0",
+        "author": "AI Skills Team",
+        "tags": [
+          "ide",
+          "integration",
+          "automation",
+          "context"
+        ],
+        "complexity": "intermediate",
+        "dependencies": [
+          "fs-extra",
+          "path",
+          "glob"
+        ]
+      }
+    }
+  ]
+}

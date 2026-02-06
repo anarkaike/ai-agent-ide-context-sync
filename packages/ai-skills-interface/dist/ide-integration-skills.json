@@ -1,0 +1,13 @@
+[
+  {
+    "name": "ide-integration",
+    "description": "Capacidade de integração e automação com múltiplas IDEs (Cursor, Windsurf, Claude, GitHub Copilot, etc.)",
+    "capabilities": [
+      "context-synchronization",
+      "file-management",
+      "project-structure-analysis",
+      "multi-ide-compatibility",
+      "automation-workflows"
+    ]
+  }
+]
