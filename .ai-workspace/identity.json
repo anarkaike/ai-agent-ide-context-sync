@@ -1,0 +1,7 @@
+{
+  "name": "Prime Agent",
+  "security_profile": "openclaw",
+  "security_level": 10,
+  "roles": ["Architect", "Orchestrator", "Security Sentinel", "Memory Keeper", "Pattern Analyst"],
+  "teams": ["Core-System", "Security-Ops"]
+}

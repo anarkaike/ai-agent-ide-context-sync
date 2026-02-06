@@ -36,9 +36,37 @@ const getNextId = (activeDir, completedDir) => {
 const ensureDirs = (wsPath) => {
   const activeDir = path.join(wsPath, 'tasks', 'active');
   const completedDir = path.join(wsPath, 'tasks', 'completed');
+  const backlogDir = path.join(wsPath, 'tasks', 'backlog');
+  
   if (!fs.existsSync(activeDir)) fs.mkdirSync(activeDir, { recursive: true });
   if (!fs.existsSync(completedDir)) fs.mkdirSync(completedDir, { recursive: true });
-  return { activeDir, completedDir };
+  if (!fs.existsSync(backlogDir)) fs.mkdirSync(backlogDir, { recursive: true });
+  
+  return { activeDir, completedDir, backlogDir };
+};
+
+const updateSwarmStatus = async (wsPath, currentTaskTitle) => {
+    try {
+        const SwarmRegistry = require('../../core/swarm/Registry');
+        const ExistentialProjector = require('../../core/swarm/ExistentialProjector');
+        
+        const projectRoot = path.dirname(wsPath);
+        
+        const swarm = new SwarmRegistry();
+        const projector = new ExistentialProjector(projectRoot);
+        
+        const currentAgent = swarm.findAgent(path.basename(projectRoot)) || { path: projectRoot };
+        const trajectory = projector.project();
+
+        swarm.registerAgent({
+            ...currentAgent,
+            current_task: currentTaskTitle,
+            trajectory: trajectory,
+            path: projectRoot // Store project root as path, not .ai-workspace
+        });
+    } catch (e) {
+        console.log('DEBUG: Swarm Error:', e.message);
+    }
 };
 
 const start = async (args, wsPath) => {
@@ -49,11 +77,24 @@ const start = async (args, wsPath) => {
   
   const isAuto = flags.includes('--auto');
   
-  // Extract sender ID if present
+  // Extract sender ID and Token if present
   let fromAgentId = null;
+  let token = null;
+  
   const fromIndex = args.indexOf('--from');
   if (fromIndex !== -1 && args[fromIndex + 1]) {
       fromAgentId = args[fromIndex + 1];
+  }
+
+  const tokenIndex = args.indexOf('--token');
+  if (tokenIndex !== -1 && args[tokenIndex + 1]) {
+      token = args[tokenIndex + 1];
+  }
+
+  const minSecIndex = args.indexOf('--min-security');
+  let requiredLevel = 1;
+  if (minSecIndex !== -1 && args[minSecIndex + 1]) {
+      requiredLevel = parseInt(args[minSecIndex + 1], 10);
   }
 
   // 🛡️ Security & Trust Check for Remote Tasks
@@ -71,10 +112,23 @@ const start = async (args, wsPath) => {
       // 2. Verificação de Vínculo (Trust)
       let trustScore = 0;
       let relationship = null;
+      let isAuthorized = false;
       
       if (fromAgentId) {
           relationship = trust.getRelationship(fromAgentId);
           trustScore = relationship ? relationship.trust_score : 0;
+          
+          // Check Token if provided
+          if (token) {
+              const auth = trust.validateRequest(fromAgentId, token, requiredLevel);
+              if (auth) {
+                  console.log(`🔐 Token Válido. Acesso Autenticado (Nível ${requiredLevel}+).`);
+                  isAuthorized = true;
+                  trustScore += 20; // Boost trust for authenticated requests
+              } else {
+                  console.log('🚫 Token Inválido, Expirado ou Nível Insuficiente.');
+              }
+          }
       }
 
       console.log(`   🔎 Análise de Conteúdo: Score ${analysis.score}/100 (${analysis.safe ? 'Safe' : 'RISK'})`);
@@ -95,8 +149,9 @@ const start = async (args, wsPath) => {
           return; // Abortar
       }
 
-      if (trustScore < 50 && relationship?.type !== 'SUB_AGENT') {
-          console.log('✋ INTERRUPÇÃO: Remetente com baixa confiança.');
+      // Se não for autorizado (Token) e confiança baixa, vai para revisão
+      if (!isAuthorized && trustScore < 50 && relationship?.type !== 'SUB_AGENT') {
+          console.log('✋ INTERRUPÇÃO: Remetente não autenticado ou com baixa confiança.');
           console.log('   Ação: Task criada como "pending_approval" para revisão humana.');
           
           // Create task but mark as pending approval
@@ -117,7 +172,7 @@ created_at: ${formatDate()}
 
 # 🛡️ Solicitação de Revisão de Segurança
 
-Esta tarefa foi recebida de um agente externo com nível de confiança insuficiente (${trustScore}/100).
+Esta tarefa foi recebida de um agente externo com nível de confiança insuficiente (${trustScore}/100) e sem token válido.
 
 **Mensagem Original:**
 > ${title}
@@ -136,7 +191,7 @@ Esta tarefa foi recebida de um agente externo com nível de confiança insuficie
           return;
       }
       
-      // Se passou em tudo (Trust Alto ou Sub-Agent), evolui a confiança levemente por ser seguro
+      // Se passou em tudo (Trust Alto ou Sub-Agent ou Token Válido), evolui a confiança levemente por ser seguro
       if (fromAgentId && relationship) {
           trust.logInteraction(fromAgentId, 'TASK_ACCEPTED', 'SAFE_CONTENT', 1);
           console.log('✅ Confiança reforçada (+1). Executando...');
@@ -180,6 +235,35 @@ Esta tarefa foi recebida de um agente externo com nível de confiança insuficie
   // Track that we are creating this file so it can be rolled back
   journal.trackFileCreation(opId, filePath);
 
+  // 🧠 Pattern Injection
+   let patternContext = "";
+   try {
+       const PatternLibrary = require('../../core/memory/PatternLibrary');
+       const lib = new PatternLibrary();
+       const identityPath = path.join(wsPath, 'identity.json');
+       let roles = [];
+       if (fs.existsSync(identityPath)) {
+           const identity = JSON.parse(fs.readFileSync(identityPath, 'utf-8'));
+           roles = identity.roles || [];
+       }
+
+       if (roles.length > 0) {
+           const patterns = [];
+           roles.forEach(role => {
+               // Search for patterns relevant to the task title
+               const results = lib.recall(role, { query: title, limit: 2 });
+               results.forEach(p => patterns.push(`- [${role}] **${p.title}**: ${p.solution} (ID: ${p.id})`));
+           });
+          
+          if (patterns.length > 0) {
+              patternContext = `\n### 🧠 Padrões Sugeridos (Role-Based)\n${patterns.join('\n')}\n`;
+              console.log(`💡 ${patterns.length} padrões injetados na task.`);
+          }
+      }
+  } catch (e) {
+       // Ignore pattern injection errors
+  }
+
   const content = `---
 id: task-${id}
 operation_id: ${opId}
@@ -197,7 +281,7 @@ deliverables:
 # ${title}
 
 ## Contexto
-${isAuto ? '> 🤖 **Auto-Generated Task**: This task was requested by another agent via Swarm Protocol.' : ''}
+${isAuto ? '> 🤖 **Auto-Generated Task**: This task was requested by another agent via Swarm Protocol.\n' : ''}${patternContext}
 ...
 
 ## Plano de Ação
@@ -207,6 +291,9 @@ ${isAuto ? '> 🤖 **Auto-Generated Task**: This task was requested by another a
   fs.writeFileSync(filePath, content, 'utf-8');
   console.log(`✅ Task iniciada: task-${id} (${title})`);
   console.log(`📄 Arquivo criado: ${path.relative(process.cwd(), filePath)}`);
+
+  // 🔄 Observability: Update Swarm Status (with Trajectory)
+  await updateSwarmStatus(wsPath, title);
 
   try {
     const cachePath = path.join(wsPath, 'live-state', 'clickup-open-tasks.json');
@@ -321,6 +408,54 @@ const complete = async (args, wsPath) => {
 
   console.log(`✅ Task completada: ${targetFile}`);
   console.log(`📂 Movida para: ${path.relative(process.cwd(), destPath)}`);
+
+  // 🔄 Observability: Update Swarm Status
+  await updateSwarmStatus(wsPath, 'IDLE');
+
+  // 🧠 Swarm Feedback Loop: Learn from Success
+  try {
+      const PatternLibrary = require('../../core/memory/PatternLibrary');
+      const lib = new PatternLibrary();
+      
+      // Extract Solution/Outcome (Naive approach: look for "## Solução" or last section)
+      // For now, we take the whole content as a potential source, but ideally we'd parse sections
+      // Let's assume the user documented the solution in the task body
+      
+      const identityPath = path.join(wsPath, 'identity.json');
+      let roles = ['Generalist'];
+      if (fs.existsSync(identityPath)) {
+          const identity = JSON.parse(fs.readFileSync(identityPath, 'utf-8'));
+          if (identity.roles && identity.roles.length > 0) roles = identity.roles;
+      }
+
+      // Simple heuristic: If the task has "## Solução" or "## Resultado", we learn it.
+      // Or just prompt the user if we were interactive.
+      // Here we will automatically learn if there is a "## Solução" section.
+      
+      const solutionMatch = content.match(/## Solução([\s\S]*?)($|## )/i);
+      if (solutionMatch) {
+          const solutionText = solutionMatch[1].trim();
+          const titleMatch = content.match(/title: (.*)/);
+          const title = titleMatch ? titleMatch[1] : 'Untitled Task';
+          
+          if (solutionText.length > 20) { // Min length to be useful
+              console.log('🧠 Padrão de solução detectado. Aprendendo...');
+              
+              // Learn for the first/primary role
+              const primaryRole = roles[0];
+              const pattern = lib.learn(primaryRole, {
+                  title: `Pattern: ${title}`,
+                  problem: `Task: ${title}`,
+                  solution: solutionText,
+                  tags: ['learned-from-task'],
+                  author: 'SwarmAgent'
+              });
+              console.log(`✅ Novo padrão aprendido para role [${primaryRole}]: ${pattern.id}`);
+          }
+      }
+  } catch (e) {
+      console.log('DEBUG: Failed to learn pattern:', e.message);
+  }
 
   // Hook ClickUp
   const clickupMatch = content.match(/clickup_id:\s*["']?([^"'\s]+)["']?/);

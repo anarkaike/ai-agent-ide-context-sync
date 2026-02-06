@@ -1,0 +1,24 @@
+{
+  "id": "OP-1770405798053-5722d9ea",
+  "status": "STARTED",
+  "type": "TASK_EXECUTION",
+  "description": "Task: Test Security Task agent-openclaw b50ced1c1bd1b30ddde5324733569987f7f98679ea111f407952358011370f97 8",
+  "started_at": "2026-02-06T19:23:18.054Z",
+  "metadata": {
+    "taskId": "020",
+    "persona": "AI-DEV",
+    "isAuto": true,
+    "fromAgentId": "agent-openclaw",
+    "filename": "AI-DEV--task-020-test-security-task-agent-openclaw-b50ced1c1bd1b30ddde5324733569987f7f98679ea111f407952358011370f97-8.md"
+  },
+  "state": {
+    "snapshots": [
+      {
+        "original": "/Users/junio/Documents/PROJETOS/ai-agent-ide-context-sync/.ai-workspace/tasks/active/AI-DEV--task-020-test-security-task-agent-openclaw-b50ced1c1bd1b30ddde5324733569987f7f98679ea111f407952358011370f97-8.md",
+        "action": "created",
+        "timestamp": "2026-02-06T19:23:18.073Z"
+      }
+    ]
+  },
+  "updated_at": "2026-02-06T19:23:18.074Z"
+}

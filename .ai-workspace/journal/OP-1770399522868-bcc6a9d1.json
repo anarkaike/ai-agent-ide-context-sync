@@ -1,0 +1,24 @@
+{
+  "id": "OP-1770399522868-bcc6a9d1",
+  "status": "STARTED",
+  "type": "TASK_EXECUTION",
+  "description": "Task: Test Observability",
+  "started_at": "2026-02-06T17:38:42.868Z",
+  "metadata": {
+    "taskId": "011",
+    "persona": "AI-DEV",
+    "isAuto": false,
+    "fromAgentId": null,
+    "filename": "AI-DEV--task-011-test-observability.md"
+  },
+  "state": {
+    "snapshots": [
+      {
+        "original": "/Users/junio/Documents/PROJETOS/ai-agent-ide-context-sync/.ai-workspace/tasks/active/AI-DEV--task-011-test-observability.md",
+        "action": "created",
+        "timestamp": "2026-02-06T17:38:42.868Z"
+      }
+    ]
+  },
+  "updated_at": "2026-02-06T17:38:42.868Z"
+}

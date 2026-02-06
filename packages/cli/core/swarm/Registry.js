@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const NetworkLayer = require('./NetworkLayer');
 
 /**
  * 🐝 Swarm Registry (A Lista Telefônica dos Agentes)
@@ -12,14 +13,17 @@ class SwarmRegistry {
     constructor() {
         this.homeDir = os.homedir();
         this.baseDir = path.join(this.homeDir, '.ai-doc', 'swarm');
-        this.registryFile = path.join(this.baseDir, 'registry.json');
+        this.registryFile = process.env.AI_DOC_SWARM_REGISTRY || path.join(this.baseDir, 'registry.json');
         
+        this.network = new NetworkLayer();
         this.init();
     }
 
     init() {
-        if (!fs.existsSync(this.baseDir)) {
-            fs.mkdirSync(this.baseDir, { recursive: true });
+        // If custom registry path is provided, ensure its directory exists
+        const dir = path.dirname(this.registryFile);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
         }
         if (!fs.existsSync(this.registryFile)) {
             fs.writeFileSync(this.registryFile, JSON.stringify([], null, 2));
@@ -33,13 +37,23 @@ class SwarmRegistry {
     registerAgent(agentInfo) {
         const registry = this.listAgents();
         const existingIndex = registry.findIndex(a => a.path === agentInfo.path);
+        
+        const netInfo = this.network.getNetworkInfo();
 
         const entry = {
             id: agentInfo.id || path.basename(agentInfo.path),
             name: agentInfo.name || 'Anonymous Drone',
             path: agentInfo.path,
             last_seen: new Date().toISOString(),
-            capabilities: agentInfo.capabilities || ['general-purpose']
+            capabilities: agentInfo.capabilities || ['general-purpose'],
+            network: {
+                ip: netInfo.address,
+                provider: netInfo.provider,
+                secure: netInfo.is_secure
+            },
+            security_level: agentInfo.security_level || 5, // Default to Standard
+            current_task: agentInfo.current_task || 'IDLE',
+            trajectory: agentInfo.trajectory || [] // Future plans
         };
 
         if (existingIndex >= 0) {

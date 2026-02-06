@@ -494,7 +494,17 @@ const commands = {
   clickup: require('./commands/clickup'),
   version: require('./commands/version'),
   agent: require('./commands/agent'),
+  soul: require('./commands/soul'),
   swarm: require('./commands/swarm'),
+  memory: require('./commands/memory'),
+  pattern: async (args = []) => {
+    const patternCmd = require('./commands/pattern');
+    const subCmd = args[0];
+    if (subCmd && patternCmd[subCmd]) {
+        return patternCmd[subCmd](args.slice(1));
+    }
+    console.log("Usage: ai-doc pattern <learn|list|search> ...");
+  },
   project: async (args = []) => {
     const sub = (args[0] || 'list').toLowerCase();
     const registryPath = path.join(require('os').homedir(), '.ai-doc', 'registry.json');
@@ -685,86 +695,7 @@ const commands = {
 
     log('❌ Unknown subcommand. Use: status, mint, resonate', 'red');
   },
-  swarm: async (args = []) => {
-    const sub = (args[0] || 'list').toLowerCase();
-    const Registry = require('../core/swarm/Registry');
-    const registry = new Registry();
 
-    if (sub === 'list') {
-        const agents = registry.listAgents();
-        log('\n=== 🐝 Swarm Network (Active Agents) ===\n', 'yellow');
-        if (agents.length === 0) {
-            log('No agents found in the swarm.');
-        } else {
-            agents.forEach(a => {
-                log(`- [${a.id}] ${a.name}`);
-                log(`  Path: ${a.path}`, 'dim');
-                log(`  Last Seen: ${a.last_seen}`, 'dim');
-                log('');
-            });
-        }
-        return;
-    }
-
-    if (sub === 'delegate') {
-        const targetId = args[1];
-        const taskDesc = args.slice(2).join(' ');
-
-        if (!targetId || !taskDesc) {
-            log('❌ Usage: ai-doc swarm delegate <agentId> <task description>', 'red');
-            return;
-        }
-
-        const agent = registry.findAgent(targetId);
-        if (!agent) {
-            log(`❌ Agent not found: ${targetId}`, 'red');
-            return;
-        }
-
-        // Logic to write task to agent's workspace
-        const targetTasksDir = path.join(agent.path, '.ai-workspace', 'tasks', 'active');
-        if (!fs.existsSync(targetTasksDir)) {
-            log(`❌ Target agent workspace not found or invalid structure: ${targetTasksDir}`, 'red');
-            return;
-        }
-
-        const taskId = `DELEGATED-${Date.now()}`;
-        const taskFile = path.join(targetTasksDir, `${taskId}.md`);
-        
-        const content = `---
-title: "Delegated Task: ${taskDesc.substring(0, 50)}..."
-status: todo
-priority: high
-created: ${new Date().toISOString()}
-sender: CLI_USER
-context: Delegated via Swarm
----
-
-# Delegated Task
-
-**Objective:** ${taskDesc}
-
-**Context:**
-This task was delegated by an external agent via Swarm Protocol.
-
-**Instructions:**
-- Analyze the request.
-- Execute if safe.
-- Report completion status.
-`;
-
-        try {
-            fs.writeFileSync(taskFile, content, 'utf-8');
-            log(`✅ Task delegated successfully to [${agent.name}]!`, 'green');
-            log(`   📄 File: ${taskFile}`);
-        } catch (e) {
-            log(`❌ Failed to delegate task: ${e.message}`, 'red');
-        }
-        return;
-    }
-    
-    log('❌ Unknown subcommand. Use: list, delegate', 'red');
-  },
   scan: async (args = []) => {
     try {
       const { scanDirectory } = require('../modules/docs/tools/placeholder-scanner');

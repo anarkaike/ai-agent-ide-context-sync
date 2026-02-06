@@ -1,0 +1,24 @@
+{
+  "id": "OP-1770405579365-54558269",
+  "status": "STARTED",
+  "type": "TASK_EXECUTION",
+  "description": "Task: Test Security Task agent-nanobot bc57b6b652dd6dd7ebddd5f73bb1095436116f757dc409fa23b6574eae0b5719 1",
+  "started_at": "2026-02-06T19:19:39.369Z",
+  "metadata": {
+    "taskId": "014",
+    "persona": "AI-DEV",
+    "isAuto": true,
+    "fromAgentId": "agent-nanobot",
+    "filename": "AI-DEV--task-014-test-security-task-agent-nanobot-bc57b6b652dd6dd7ebddd5f73bb1095436116f757dc409fa23b6574eae0b5719-1.md"
+  },
+  "state": {
+    "snapshots": [
+      {
+        "original": "/Users/junio/Documents/PROJETOS/ai-agent-ide-context-sync/.ai-workspace/tasks/active/AI-DEV--task-014-test-security-task-agent-nanobot-bc57b6b652dd6dd7ebddd5f73bb1095436116f757dc409fa23b6574eae0b5719-1.md",
+        "action": "created",
+        "timestamp": "2026-02-06T19:19:39.409Z"
+      }
+    ]
+  },
+  "updated_at": "2026-02-06T19:19:39.409Z"
+}

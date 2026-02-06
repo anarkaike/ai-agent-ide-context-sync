@@ -6,6 +6,7 @@ const AttentionMechanism = require('./attention.js');
 const GraphManager = require('./graph.js');
 const SoulManager = require('./soul.js');
 const ImmunitySystem = require('./immunity.js');
+const TeamMemory = require('./TeamMemory.js');
 
 async function beat(options = {}) {
     const manager = new MitosisManager('.');
@@ -13,6 +14,7 @@ async function beat(options = {}) {
     const graph = new GraphManager('.');
     const soul = new SoulManager('.');
     const immunity = new ImmunitySystem('.', graph, soul);
+    const teamMemory = new TeamMemory('.');
     
     if (options.verbose) console.log("🫀 Iniciando Batimento Cardíaco...");
 
@@ -56,6 +58,27 @@ async function beat(options = {}) {
         ? strongBonds.map(b => `- **${b.to}**: ${b.nuance ? JSON.stringify(b.nuance) : 'Vínculo forte'} (Ressonância: ${b.resonance.toFixed(1)})`).join('\n')
         : "- Nenhuma memória forte recente.";
 
+    // 0.9 Team Memory (Holon Context)
+    if (options.verbose) console.log("🔷 Sincronizando com Holons...");
+    let teams = [];
+    try {
+        const identity = JSON.parse(fs.readFileSync('.ai-workspace/identity.json', 'utf8'));
+        teams = identity.teams || [];
+    } catch (e) {}
+
+    let teamContext = "";
+    if (teams.length > 0) {
+        const entries = teams.map(t => {
+            const recent = teamMemory.getRecentEntries(t, 2);
+            if (recent.length === 0) return null;
+            return `  - [${t}]: ${recent.map(e => `"${e.content}" (@${e.author})`).join(' | ')}`;
+        }).filter(Boolean);
+        
+        if (entries.length > 0) {
+            teamContext = `\n### 🔷 Contexto dos Holons\n${entries.join('\n')}`;
+        }
+    }
+
     // 1. Percepção (Perception)
     if (options.verbose) console.log("👁️  Percebendo o ambiente...");
     const cliFiles = execSync('find packages/cli -maxdepth 2 -not -path "*/.*"').toString().split('\n').filter(Boolean);
@@ -75,6 +98,7 @@ ${activeRules}
 
 ### 🧠 Memórias Vivas (Recall)
 ${recallSection}
+${teamContext}
 
 ### Análise do Ambiente
 ${perception}

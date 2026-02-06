@@ -1,0 +1,17 @@
+{
+  "patterns": [
+    {
+      "id": "mlbbv18np9puz",
+      "timestamp": "2026-02-06T20:18:10.823Z",
+      "title": "Block Port 80",
+      "problem": "",
+      "solution": "Use iptables -A INPUT -p tcp --dport 80 -j DROP",
+      "tags": [
+        "firewall",
+        "security"
+      ],
+      "author": "CLI-User",
+      "usageCount": 0
+    }
+  ]
+}

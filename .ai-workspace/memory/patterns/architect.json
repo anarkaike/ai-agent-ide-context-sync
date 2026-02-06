@@ -1,0 +1,30 @@
+{
+  "patterns": [
+    {
+      "id": "mlb77hnl5796z",
+      "timestamp": "2026-02-06T18:07:53.889Z",
+      "title": "Holonic Scalability",
+      "problem": null,
+      "solution": "Use recursive composition of agents.",
+      "tags": [
+        "scaling",
+        "structure"
+      ],
+      "author": "cli-user",
+      "usageCount": 0
+    },
+    {
+      "id": "mlbaalc5fgjf4",
+      "timestamp": "2026-02-06T19:34:17.477Z",
+      "title": "Scalable Microservices Pattern",
+      "problem": "How to handle high load",
+      "solution": "Use Kubernetes HPA and stateless containers.",
+      "tags": [
+        "scaling",
+        "microservices"
+      ],
+      "author": "Human",
+      "usageCount": 0
+    }
+  ]
+}

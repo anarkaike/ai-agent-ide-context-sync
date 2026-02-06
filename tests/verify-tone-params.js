@@ -61,7 +61,7 @@ async function test() {
         },
         {
             tone: 'cautious',
-            expectedTemp: '0.0',
+            expectedTemp: '0',
             expectedModel: 'robust-security',
             goal: 'Review auth logic'
         }

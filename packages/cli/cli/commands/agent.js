@@ -1,5 +1,7 @@
 
 const heartbeat = require('../../core/memory/heartbeat');
+const path = require('path');
+const fs = require('fs');
 
 const colors = {
   reset: "\x1b[0m",
@@ -30,25 +32,92 @@ module.exports = async (args = []) => {
     // Auto-Register in Swarm
     try {
         const SwarmRegistry = require('../../core/swarm/Registry.js');
+        const SecurityKernel = require('../../core/swarm/SecurityKernel.js');
         const swarm = new SwarmRegistry();
+        const securityKernel = new SecurityKernel();
         const projectPath = process.cwd();
         
         // Tenta ler o nome do agente da configuração local se existir
         let agentName = 'Agente Local';
+        let securityLevel = 5; // Default Standard
+        let capabilities = ['cli-interface', 'ethereum-bridge'];
+
         try {
+             // Check config.json first
              const configPath = path.join(projectPath, '.ai-workspace', 'config.json');
              if (fs.existsSync(configPath)) {
                  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
                  if (config.persona && config.persona.name) agentName = config.persona.name;
+                 if (config.security_profile) {
+                     const profile = securityKernel.resolveProfile(config.security_profile);
+                     securityLevel = profile.level;
+                 }
              }
-        } catch(e) {}
+
+             // Check identity.json (overrides config if present)
+        const identityPath = path.join(projectPath, '.ai-workspace', 'identity.json');
+        if (fs.existsSync(identityPath)) {
+            const identity = JSON.parse(fs.readFileSync(identityPath, 'utf8'));
+            if (identity.name) agentName = identity.name;
+            if (identity.security_profile) {
+                const profile = securityKernel.resolveProfile(identity.security_profile);
+                securityLevel = profile.level;
+                log(`DEBUG: Resolved profile ${identity.security_profile} to level ${securityLevel}`, 'yellow');
+            }
+            if (identity.roles) capabilities.push(...identity.roles.map(r => `ROLE:${r}`));
+            if (identity.teams) capabilities.push(...identity.teams.map(t => `TEAM:${t}`));
+        }
+        } catch(e) {
+            log(`DEBUG: Error reading config/identity: ${e.message}`, 'red');
+        }
+
+        // 0.7 Project Existential Trajectory
+        let trajectory = [];
+        try {
+            const ExistentialProjector = require('../../core/swarm/ExistentialProjector.js');
+            const projector = new ExistentialProjector(projectPath);
+            trajectory = projector.project();
+        } catch (e) {
+            // log(`DEBUG: Projection error: ${e.message}`, 'red');
+        }
 
         const entry = swarm.registerAgent({
             path: projectPath,
             name: agentName,
-            capabilities: ['cli-interface', 'ethereum-bridge']
+            security_level: securityLevel,
+            capabilities: capabilities,
+            trajectory: trajectory
         });
-        log(`🐝 Swarm Link: Registrado como [${entry.id}]`, 'dim');
+        log(`🐝 Swarm Link: Registrado como [${entry.id}] (Sec Level: ${entry.security_level})`, 'dim');
+        if (trajectory.length > 0) {
+            log(`🔮 Trajetória Projetada: ${trajectory.join(' -> ')}`, 'dim');
+        }
+
+        // 0.8 Load Patterns for Roles
+        try {
+             const PatternLibrary = require('../../core/memory/PatternLibrary.js');
+             const patternLib = new PatternLibrary();
+             
+             let roles = [];
+             const identityPath = path.join(projectPath, '.ai-workspace', 'identity.json');
+             if (fs.existsSync(identityPath)) {
+                 const identity = JSON.parse(fs.readFileSync(identityPath, 'utf8'));
+                 if (identity.roles) roles = identity.roles;
+             }
+             
+             if (roles.length > 0) {
+                 log(`📚 Carregando Padrões para Roles: ${roles.join(', ')}`, 'dim');
+                 roles.forEach(role => {
+                     const patterns = patternLib.recall(role, { limit: 3 });
+                     if (patterns.length > 0) {
+                         log(`   [${role}] Padrões sugeridos:`, 'cyan');
+                         patterns.forEach(p => log(`     - ${p.title} (Used: ${p.usageCount})`, 'dim'));
+                     }
+                 });
+             }
+        } catch (e) {
+            // ignore pattern load error
+        }
     } catch (e) {
         log(`⚠️  Falha ao conectar na Swarm: ${e.message}`, 'yellow');
     }

@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const VaultManager = require('../ethereum_bridge/VaultManager');
+const SecurityKernel = require('./SecurityKernel');
 
 /**
  * 🛡️ TrustSystem
@@ -13,6 +15,9 @@ class TrustSystem {
         this.baseDir = path.join(this.homeDir, '.ai-doc', 'swarm');
         this.relationshipsFile = path.join(this.baseDir, 'relationships.json');
         
+        this.vault = new VaultManager();
+        this.securityKernel = new SecurityKernel();
+
         this.RELATIONSHIP_TYPES = {
             STRANGER: 'STRANGER',       // Desconhecido (Padrão)
             PEER: 'PEER',               // Outro agente independente
@@ -82,9 +87,59 @@ class TrustSystem {
             history: []
         };
 
+        // Recalculate trust based on SBTs immediately
+        const sbtScore = this.evaluateTrustFromSBTs(agentId);
+        if (sbtScore > 0) {
+            bond.trust_score = Math.min(100, bond.trust_score + sbtScore);
+            bond.history.push({
+                timestamp: new Date().toISOString(),
+                action: 'SBT_VERIFICATION',
+                result: `Trust increased by ${sbtScore} due to valid SBTs`
+            });
+        }
+
         data[agentId] = bond;
         this.saveRelationships(data);
         return bond;
+    }
+
+    /**
+     * Calcula pontuação baseada em SBTs na Vault
+     */
+    evaluateTrustFromSBTs(agentId) {
+        try {
+            const allSBTs = this.vault.listSBTs();
+            let score = 0;
+
+            // Find SBTs where recipient is the agent
+            // Note: Since listSBTs returns metadata, we might need to fetch full SBT if recipient is not in index
+            // But checking index first is faster. VaultManager index currently has: id, title, type, project_origin.
+            // It does NOT have recipient. We need to fetch full SBTs or trust specific types available.
+            
+            // For efficiency, we will fetch full content for ALL SBTs in vault (assuming vault is not huge yet)
+            // Or better: We assume that if we hold an SBT, we are the owner/recipient OR we issued it.
+            // But the Vault is a generic bag currently.
+            
+            // Let's iterate and check full content.
+            for (const meta of allSBTs) {
+                const sbt = this.vault.getSBT(meta.id);
+                if (!sbt) continue;
+
+                // Check if this SBT targets the agent
+                if (sbt.recipient && sbt.recipient.id === agentId) {
+                    switch (sbt.type) {
+                        case 'REPUTATION': score += 20; break;
+                        case 'SKILL': score += 10; break;
+                        case 'ACHIEVEMENT': score += 5; break;
+                        default: score += 1;
+                    }
+                }
+            }
+            return score;
+        } catch (e) {
+            console.error('Error evaluating SBT trust:', e);
+            return 0;
+        }
     }
 
     /**
@@ -109,6 +164,51 @@ class TrustSystem {
             this.saveRelationships(data);
         }
         return true;
+    }
+
+    /**
+     * Valida uma solicitação de um agente externo.
+     * @param {string} agentId - ID do agente solicitante
+     * @param {string} token - Token de autenticação fornecido
+     * @param {number} requiredLevel - Nível de segurança mínimo exigido (1-10)
+     * @returns {boolean} - True se autorizado
+     */
+    validateRequest(agentId, token, requiredLevel = 1) {
+        // 1. Validate Token First (The Truth)
+        const auth = this.securityKernel.validateToken(token);
+        
+        if (!auth.valid || auth.agentId !== agentId) {
+            console.log(`⛔ Access Denied: Invalid Token for ${agentId}. Reason: ${auth.reason || 'ID Mismatch'}`);
+            this.logInteraction(agentId, 'AUTH_FAILURE', 'Invalid Token', -5);
+            return false;
+        }
+
+        // 2. Validate Security Level (From Token)
+        if (auth.level < requiredLevel) {
+            console.log(`⛔ Access Denied: Insufficient Clearance. Required: ${requiredLevel}, Has: ${auth.level}`);
+            this.logInteraction(agentId, 'AUTH_FAILURE', 'Insufficient Clearance', -1);
+            return false;
+        }
+
+        // 3. Update known level if bond exists
+        this.updateKnownSecurityLevel(agentId, auth.level);
+
+        return true;
+    }
+
+    /**
+     * Atualiza o nível de segurança conhecido de um agente remoto.
+     * @param {string} agentId 
+     * @param {number} level 
+     */
+    updateKnownSecurityLevel(agentId, level) {
+        const data = this.getRelationships();
+        if (data[agentId]) {
+            data[agentId].security_level = level;
+            this.saveRelationships(data);
+            return true;
+        }
+        return false;
     }
 
     /**
