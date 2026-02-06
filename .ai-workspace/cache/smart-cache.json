@@ -4,6 +4,72 @@
       "prompt": "## 🎯 OBJETIVO\ncache test\n\n## 📋 CONTEXTO\n### 📏 Regras Aplicadas\n- **clean-code** (project): Padrões de código limpo\n\n## ⚠️ CONSTRAINTS & REGRAS DETALHADAS\n\n### clean-code\n# Clean Code\nMantenha o código limpo e legível.\nUse nomes significativos.\nFunções pequenas.",
       "timestamp": 1769101850470,
       "fileSnapshots": {}
+    },
+    "8e336995e4585a3f4553b506e69fa158": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMaintain a neutral, professional tone.\n\n> **Parameters**: Temp=0.5, MaxTokens=2048, ModelHint=standard\n\n## 🎯 OBJETIVO\nWrite a poem about code",
+      "timestamp": 1770374931688,
+      "fileSnapshots": {}
+    },
+    "ee1a88582db42de94d043aa4257667f8": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMaintain a neutral, professional tone.\n\n> **Parameters**: Temp=0.5, MaxTokens=2048, ModelHint=standard\n\n## 🎯 OBJETIVO\nFix this bug",
+      "timestamp": 1770374932644,
+      "fileSnapshots": {}
+    },
+    "2e31eebb42cbf11fdf1b6f587dfed70e": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMaintain a neutral, professional tone.\n\n> **Parameters**: Temp=0.5, MaxTokens=2048, ModelHint=standard\n\n## 🎯 OBJETIVO\nServer is down",
+      "timestamp": 1770374933597,
+      "fileSnapshots": {}
+    },
+    "7d81d914553558b13fe7723f23e0656b": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMaintain a neutral, professional tone.\n\n> **Parameters**: Temp=0.5, MaxTokens=2048, ModelHint=standard\n\n## 🎯 OBJETIVO\nReview auth logic\n\n## 📋 CONTEXTO\n### 📂 Arquivos Relevantes\n- `mock-search/auth.js`",
+      "timestamp": 1770374934267,
+      "fileSnapshots": {
+        "mock-search/auth.js": 0
+      }
+    },
+    "b3763b45d4e7ffca509766e3b2eaf819": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMaintain a neutral, professional tone.\n\n> **Parameters**: Temp=0.5, MaxTokens=2048, ModelHint=standard\n\n## 🎯 OBJETIVO\nWrite a poem about code",
+      "timestamp": 1770375005417,
+      "fileSnapshots": {}
+    },
+    "899fe171acefda30d20fab1010a4ccfd": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMaintain a neutral, professional tone.\n\n> **Parameters**: Temp=0.5, MaxTokens=2048, ModelHint=standard\n\n## 🎯 OBJETIVO\nFix this bug",
+      "timestamp": 1770375006257,
+      "fileSnapshots": {}
+    },
+    "b4f36c44bbf27ded8ecdae4f2f7c7516": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMaintain a neutral, professional tone.\n\n> **Parameters**: Temp=0.5, MaxTokens=2048, ModelHint=standard\n\n## 🎯 OBJETIVO\nServer is down",
+      "timestamp": 1770375006933,
+      "fileSnapshots": {}
+    },
+    "e2ca5d3c283da5e86007a08d5b5c80a2": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMaintain a neutral, professional tone.\n\n> **Parameters**: Temp=0.5, MaxTokens=2048, ModelHint=standard\n\n## 🎯 OBJETIVO\nReview auth logic\n\n## 📋 CONTEXTO\n### 📂 Arquivos Relevantes\n- `mock-search/auth.js`",
+      "timestamp": 1770375007574,
+      "fileSnapshots": {
+        "mock-search/auth.js": 0
+      }
+    },
+    "8655600e0de637f0696e03397c6996db": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMODE: CREATIVE. Explore multiple solutions. Be verbose, explanatory, and innovative. Use analogies. Think outside the box. Prioritize novelty over brevity.\n\n> **Parameters**: Temp=0.9, MaxTokens=4096, ModelHint=creative-reasoning\n\n## 🎯 OBJETIVO\nWrite a poem about code",
+      "timestamp": 1770375167222,
+      "fileSnapshots": {}
+    },
+    "41b2b3cc1b003352411406c1edb82169": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMODE: FOCUSED. Be concise. Do not explain unless asked. Output only the necessary code or answer. No chit-chat. Prioritize efficiency.\n\n> **Parameters**: Temp=0.2, MaxTokens=1024, ModelHint=precise-coding\n\n## 🎯 OBJETIVO\nFix this bug",
+      "timestamp": 1770375167825,
+      "fileSnapshots": {}
+    },
+    "225fb75ffb8e0077611f63c14736d560": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMODE: URGENT. Critical situation. Bullet points only. Immediate solution required. Minimal text. Skip introductions and conclusions.\n\n> **Parameters**: Temp=0.1, MaxTokens=512, ModelHint=fast-inference\n\n## 🎯 OBJETIVO\nServer is down",
+      "timestamp": 1770375168450,
+      "fileSnapshots": {}
+    },
+    "62a611def86146873992dd7a77f8f276": {
+      "prompt": "## 🎭 TONE & STYLE INSTRUCTIONS\nMODE: CAUTIOUS. Verify every step. Double-check for security vulnerabilities. Explain your reasoning for safety. Prefer safe, established patterns over new ones. Assume high risk.\n\n> **Parameters**: Temp=0, MaxTokens=2048, ModelHint=robust-security\n\n## 🎯 OBJETIVO\nReview auth logic\n\n## 📋 CONTEXTO\n### 📂 Arquivos Relevantes\n- `mock-search/auth.js`",
+      "timestamp": 1770375169048,
+      "fileSnapshots": {
+        "mock-search/auth.js": 0
+      }
     }
   },
   "files": {}

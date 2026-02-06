@@ -2479,6 +2479,25 @@ status: active
             // Collect and send data
             function sendDashboardData() {
                 const aiWorkspacePath = getAiWorkspacePath();
+                
+                // Get SBTs from Global State
+                let sbts = [];
+                try {
+                    // Path to Global Vault Index
+                    const sbtPath = path.join(os.homedir(), '.ai-doc', 'ethereum_bridge', 'vault', 'index.json');
+                    if (fs.existsSync(sbtPath)) {
+                        sbts = JSON.parse(fs.readFileSync(sbtPath, 'utf-8'));
+                    } else {
+                        // Fallback/Legacy
+                        const legacyPath = path.join(os.homedir(), '.ai-workspace', 'live-state', 'sbt-vault.json');
+                         if (fs.existsSync(legacyPath)) {
+                            sbts = JSON.parse(fs.readFileSync(legacyPath, 'utf-8'));
+                        }
+                    }
+                } catch (e) {
+                    // ignore
+                }
+
                 if (!aiWorkspacePath) {
                     panel.webview.postMessage({
                         totalPersonas: 0,
@@ -2486,6 +2505,7 @@ status: active
                         completedTasks: 0,
                         completionRate: 0,
                         trend: 0,
+                        sbts: sbts,
                         personaData: [],
                         progressData: {},
                         personaProgress: []
@@ -2586,6 +2606,7 @@ status: active
                     completedTasks,
                     completionRate,
                     trend,
+                    sbts,
                     personaData,
                     progressData: {
                         total: totalItems,

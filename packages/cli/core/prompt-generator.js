@@ -8,6 +8,7 @@
  */
 
 const RulesManager = require('./rules-manager');
+const ToneConfigManager = require('./ToneConfigManager');
 const path = require('path');
 const fs = require('fs');
 let SemanticSearch = null;
@@ -21,6 +22,7 @@ class PromptGenerator {
     constructor(projectRoot = null) {
         this.projectRoot = projectRoot || process.cwd();
         this.rulesManager = new RulesManager(this.projectRoot);
+        this.toneManager = new ToneConfigManager(this.projectRoot);
         this.semanticSearch = SemanticSearch ? new SemanticSearch(this.projectRoot) : null;
         this.cache = SmartCache ? new SmartCache(this.projectRoot) : null;
     }
@@ -92,9 +94,17 @@ class PromptGenerator {
 
         const limitedHistory = budget.maxHistoryItems ? history.slice(0, budget.maxHistoryItems) : history;
 
-        // 0.5 Verifica Cache
+        // 0.5 Get Tone Config (Moved up for cache key)
+        const toneConfig = this.toneManager.getConfig();
+
+        // 0.6 Verifica Cache
         if (this.cache) {
-            const cached = this.cache.getCachedPrompt(goal, finalContextFiles);
+            // Include tone params in cache key to differentiate prompts
+            const cacheExtra = {
+                temp: toneConfig?.temperature,
+                model: toneConfig?.model_hint
+            };
+            const cached = this.cache.getCachedPrompt(goal, finalContextFiles, cacheExtra);
             if (cached) {
                 return cached + "\n\n<!-- CACHED (SmartCache) -->";
             }
@@ -112,8 +122,11 @@ class PromptGenerator {
             }));
         }
 
+        // (Removed previous 1.5 Get Tone Config location)
+
         // 2. Monta seções
         const sections = [
+            this.buildToneSection(toneConfig),
             this.buildGoalSection(goal),
             this.buildContextSection(finalContextFiles, rules, limitedHistory),
             this.buildConstraintsSection(rules)
@@ -127,7 +140,11 @@ class PromptGenerator {
 
         // Salva cache
         if (this.cache) {
-            this.cache.setCachedPrompt(goal, finalContextFiles, finalPrompt);
+            const cacheExtra = {
+                temp: toneConfig?.temperature,
+                model: toneConfig?.model_hint
+            };
+            this.cache.setCachedPrompt(goal, finalContextFiles, finalPrompt, cacheExtra);
         }
 
         return finalPrompt;
@@ -159,6 +176,11 @@ class PromptGenerator {
             seen.add(rule.id);
             return true;
         });
+    }
+
+    buildToneSection(config) {
+        if (!config) return '';
+        return `## 🎭 TONE & STYLE INSTRUCTIONS\n${config.instruction}\n\n> **Parameters**: Temp=${config.temperature}, MaxTokens=${config.max_tokens}, ModelHint=${config.model_hint}`;
     }
 
     buildGoalSection(goal) {

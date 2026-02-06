@@ -131,6 +131,67 @@
             font-size: 12px;
             color: var(--vscode-descriptionForeground);
         }
+
+        /* SBT Styles */
+        .sbt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .sbt-card {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.2s;
+        }
+
+        .sbt-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--vscode-focusBorder);
+        }
+
+        .sbt-icon {
+            font-size: 24px;
+            background: var(--vscode-badge-background);
+            color: var(--vscode-badge-foreground);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sbt-info {
+            flex: 1;
+        }
+
+        .sbt-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .sbt-type {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--vscode-descriptionForeground);
+            background: var(--vscode-input-background);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        .sbt-desc {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+        }
     </style>
 </head>
 <body>
@@ -157,8 +218,8 @@
             <div class="stat-label">📈 Completion Rate</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value" id="trend">--</div>
-            <div class="stat-label">📊 30-Day Trend</div>
+            <div class="stat-value" id="totalSBTs">0</div>
+            <div class="stat-label">� Soulbound Tokens</div>
         </div>
     </div>
 
@@ -175,6 +236,11 @@
     <div class="persona-list">
         <div class="chart-title">Persona Progress</div>
         <div id="personaProgressList"></div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">💎 Soulbound Tokens (Vault)</div>
+        <div id="sbtList" class="sbt-grid"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -194,6 +260,7 @@
             document.getElementById('completedTasks').textContent = data.completedTasks || 0;
             document.getElementById('completionRate').textContent = 
                 (data.completionRate || 0) + '%';
+            document.getElementById('totalSBTs').textContent = (data.sbts || []).length;
             
             // Update trend
             const trendElement = document.getElementById('trend');
@@ -206,6 +273,37 @@
                 trendElement.style.color = color;
             } else {
                 trendElement.textContent = '--';
+            }
+
+            // Render SBTs
+            const sbtList = document.getElementById('sbtList');
+            sbtList.innerHTML = '';
+            
+            if (data.sbts && data.sbts.length > 0) {
+                data.sbts.forEach(sbt => {
+                    const el = document.createElement('div');
+                    el.className = 'sbt-card';
+                    
+                    let icon = '💎';
+                    if (sbt.type === 'SKILL') icon = '⚡';
+                    if (sbt.type === 'ACHIEVEMENT') icon = '🏆';
+                    if (sbt.type === 'IDENTITY') icon = '🆔';
+                    
+                    el.innerHTML = `
+                        <div class="sbt-icon">${icon}</div>
+                        <div class="sbt-info">
+                            <div class="sbt-type">${sbt.type}</div>
+                            <div class="sbt-title">${sbt.title}</div>
+                            <div class="sbt-desc">${sbt.description || ''}</div>
+                            <div class="sbt-meta" style="font-size: 10px; color: var(--vscode-disabledForeground); margin-top: 5px;">
+                                📅 ${sbt.timestamp ? new Date(sbt.timestamp).toLocaleString() : 'Unknown Date'}
+                            </div>
+                        </div>
+                    `;
+                    sbtList.appendChild(el);
+                });
+            } else {
+                sbtList.innerHTML = '<div style="color:var(--vscode-descriptionForeground)">No Soulbound Tokens found yet.</div>';
             }
 
             // Update charts

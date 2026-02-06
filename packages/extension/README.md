@@ -38,6 +38,8 @@ The **AI Agent IDE Context Sync** extension brings the power of the universal co
 
 - **👥 Visual Agent Management**: Create, edit, and manage AI Personas (identities) with a drag-and-drop interface.
 - **📋 Kanban & Tasks**: Full task management with interactive checklists and status tracking.
+- **🐝 Swarm & Delegation**: Delegate tasks to other agents and monitor their execution with security interception.
+- **💎 Soul Vault**: View earned Soulbound Tokens (SBTs) for achievements and skills directly in the dashboard.
 - **⏱️ Pomodoro Timer**: Built-in focus timer with status bar integration to keep you in the flow.
 - **📊 Analytics Dashboard**: Real-time insights on your project's AI context, task progress, and **30-day productivity trend**.
 - **🩺 Diagnostics**: Built-in tools to check environment health and copy debug info.
@@ -97,6 +99,8 @@ A extensão **AI Agent IDE Context Sync** traz o poder do kernel de contexto uni
 
 - **👥 Gestão Visual de Agentes**: Crie, edite e gerencie Personas de IA com uma interface drag-and-drop.
 - **📋 Kanban & Tasks**: Gestão completa de tarefas com checklists interativos e rastreamento de status.
+- **🐝 Swarm & Delegação**: Delegue tarefas para outros agentes e monitore a execução com interceptação de segurança.
+- **💎 Cofre de Alma**: Visualize Tokens Soulbound (SBTs) de conquistas e habilidades diretamente no painel.
 - **⏱️ Pomodoro Timer**: Timer de foco integrado à barra de status para manter você no fluxo.
 - **📊 Dashboard de Analytics**: Insights em tempo real sobre contexto, tarefas e **Tendência de Produtividade (30 dias)**.
 - **🩺 Diagnóstico**: Ferramentas integradas para verificar a saúde do ambiente e copiar logs de debug.

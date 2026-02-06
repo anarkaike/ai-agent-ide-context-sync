@@ -1,0 +1,26 @@
+{
+  "id": "OP-1770351789582-d2365697",
+  "status": "FAILED",
+  "type": "TASK_EXECUTION",
+  "description": "Task: Test Rollback 2",
+  "started_at": "2026-02-06T04:23:09.582Z",
+  "metadata": {
+    "taskId": "011",
+    "persona": "AI-DEV",
+    "isAuto": false,
+    "fromAgentId": null,
+    "filename": "AI-DEV--task-011-test-rollback-2.md"
+  },
+  "state": {
+    "snapshots": [
+      {
+        "original": "/Users/junio/Documents/PROJETOS/ai-agent-ide-context-sync/.ai-workspace/tasks/active/AI-DEV--task-011-test-rollback-2.md",
+        "action": "created",
+        "timestamp": "2026-02-06T04:23:09.589Z"
+      }
+    ]
+  },
+  "updated_at": "2026-02-06T04:23:09.589Z",
+  "failed_at": "2026-02-06T04:23:22.512Z",
+  "error": "Rolled back by user/system"
+}

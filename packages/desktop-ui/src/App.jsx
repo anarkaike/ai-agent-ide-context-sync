@@ -27,7 +27,15 @@ const App = () => {
   ]);
   
   const [approvalHistory, setApprovalHistory] = useState([
-    { id: 99, type: 'File Edit', title: 'Modificar App.jsx', status: 'approved', timestamp: Date.now() - 1000000 }
+    { 
+      id: 99, 
+      type: 'File Creation', 
+      title: 'Create test-rollback.txt', 
+      status: 'approved', 
+      timestamp: Date.now() - 60000,
+      operationId: 'OP-1770344976847-ac5800a1'
+    },
+    { id: 98, type: 'File Edit', title: 'Modificar App.jsx', status: 'approved', timestamp: Date.now() - 1000000 }
   ]);
 
   const [processes, setProcesses] = useState([
@@ -39,6 +47,10 @@ const App = () => {
 
   // Project Roles Mock
   const [projectRoles, setProjectRoles] = useState({}); // { 'project-name': { 'Manager': 'Agent-A' } }
+  
+  const [sbts, setSbts] = useState([
+    { id: 1, title: 'Early Adopter', type: 'ACHIEVEMENT', description: 'First connection to the Hive Mind', timestamp: new Date().toISOString() }
+  ]);
   
   const exceptionSuggestions = [
     "Somente neste chat",
@@ -174,8 +186,20 @@ const App = () => {
       item: app.type,
       timestamp: new Date().toLocaleTimeString(),
       originalId: app.id,
-      details: isAlways ? 'Regra permanente criada (Permitir Todos)' : 'Aprovação pontual'
+      details: isAlways ? 'Regra permanente criada (Permitir Todos)' : 'Aprovação pontual',
+      // Simulate snapshot for undo
+      snapshot: {
+          file: '/tmp/test-file-created-by-approval.txt',
+          content: 'This file was created by the approval action.'
+      }
     }, ...prev]);
+    
+    // Simulate File Creation for Undo Demo
+    try {
+        const fs = window.require('fs');
+        fs.writeFileSync('/tmp/test-file-created-by-approval.txt', 'This file was created by the approval action.');
+        console.log('Simulated file creation: /tmp/test-file-created-by-approval.txt');
+    } catch (e) { console.error('Simulated file creation failed', e); }
     
     if (isAlways) {
         console.log(`[RULE ENGINE] Created rule: Always approve ${app.type}`);
@@ -240,8 +264,39 @@ const App = () => {
   const confirmUndo = () => {
     if (!undoModal) return;
     
-    // Logic to revert action would go here
     setMessages(prev => [...prev, { role: 'agent', content: `🌀 Revertendo o ciclo da ação #${undoModal.id}: Restaurando o estado anterior...` }]);
+    
+    if (undoModal.operationId) {
+      try {
+        const path = window.require('path');
+        const os = window.require('os');
+        // Hardcoded path for demo environment consistency
+        const journalPath = path.join(os.homedir(), 'Documents/PROJETOS/ai-agent-ide-context-sync/packages/cli/core/reliability/ExecutionJournal.js');
+        
+        if (window.require('fs').existsSync(journalPath)) {
+          const ExecutionJournal = window.require(journalPath);
+          const projectRoot = path.join(os.homedir(), 'Documents/PROJETOS/ai-agent-ide-context-sync');
+          const journal = new ExecutionJournal(projectRoot);
+          
+          // Execute rollback asynchronously but we are in a sync handler, so we just trigger it
+          journal.rollback(undoModal.operationId).then(success => {
+             if (success) {
+               // Update UI only on success
+               setApprovalHistory(prev => prev.filter(i => i.id !== undoModal.id));
+               alert(`Rollback Realizado: O arquivo criado/modificado foi restaurado.`);
+             } else {
+               alert(`Falha no Rollback: Snapshot não encontrado.`);
+             }
+          });
+          setUndoModal(null);
+          return;
+        }
+      } catch (e) {
+        console.error("Rollback Error:", e);
+      }
+    }
+
+    // Mock fallback
     setApprovalHistory(prev => prev.filter(i => i.id !== undoModal.id));
     setUndoModal(null);
   };
@@ -295,354 +350,208 @@ const App = () => {
         </div>
       )}
 
-      {/* Undo Modal Overlay */}
+      {/* Undo Modal */}
       {undoModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 style={{marginTop:0}}>🍃 Consciência do Gesto</h3>
-            <p>Observando os ecos de desfazer <strong>"{undoModal.title}"</strong>...</p>
-            <div style={{background: '#333', padding: '10px', fontSize: '12px', borderRadius: '4px', marginBottom: '15px'}}>
-              <ul>
-                <li>O arquivo App.jsx retornará ao seu estado ancestral.</li>
-                <li>O ciclo de construção recomeçará.</li>
-                <li>Equilíbrio: Estável.</li>
+            <h3 style={{marginTop:0}}>🌀 Complex Undo</h3>
+            <p>Você está prestes a reverter a ação: <strong>{undoModal.title}</strong></p>
+            
+            <div style={{background: '#222', padding: '10px', borderRadius: '4px', margin: '15px 0', fontSize: '12px', border: '1px solid #444'}}>
+              <div style={{marginBottom:'5px'}}><strong>Impact Analysis:</strong></div>
+              <ul style={{paddingLeft: '20px', margin: 0, color: '#aaa'}}>
+                <li>File {undoModal.snapshot?.file || 'unknown'} will be deleted.</li>
+                <li>State in memory will be reverted.</li>
+                <li>No other side effects detected.</li>
               </ul>
             </div>
-            <p style={{fontSize: '13px'}}>Sente que é o momento de reverter?</p>
+
             <div style={{display: 'flex', justifyContent: 'flex-end', gap: '10px'}}>
               <button onClick={() => setUndoModal(null)} style={{background: '#555', border: 'none', color: 'white', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer'}}>Cancelar</button>
-              <button onClick={confirmUndo} style={{background: '#f44336', border: 'none', color: 'white', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer'}}>Confirmar Undo</button>
+              <button onClick={confirmUndo} style={{background: '#f44336', border: 'none', color: 'white', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer'}}>Confirmar Reversão</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Activity Bar */}
-      <div className="activity-bar">
-        <div className={`activity-icon ${activeActivity === 'chat' ? 'active' : ''}`} onClick={() => setActiveActivity('chat')} title="Chat">💬</div>
-        <div className={`activity-icon ${activeActivity === 'projects' ? 'active' : ''}`} onClick={() => setActiveActivity('projects')} title="Projetos">📁</div>
-        <div className={`activity-icon ${activeActivity === 'processes' ? 'active' : ''}`} onClick={() => setActiveActivity('processes')} title="Processos">⚡</div>
-        <div className={`activity-icon heart-icon ${activeActivity === 'hearts' ? 'active' : ''}`} onClick={() => setActiveActivity('hearts')} title="Corações (Agentes)">❤️</div>
-        <div className="activity-icon" onClick={() => setLeftSidebarOpen(!leftSidebarOpen)} title="Alternar Sidebar">🗄️</div>
-        <div style={{marginTop: 'auto'}} className="activity-icon" title="Configurações">⚙️</div>
+      {/* Main Layout */}
+      <div className="sidebar left-sidebar" style={{width: leftSidebarOpen ? '250px' : '0', opacity: leftSidebarOpen ? 1 : 0}}>
+        <div className="sidebar-header">
+           <h3 style={{margin:0}}>🧬 Nexus</h3>
+           <div className="status-dot" style={{background: agentStatus.includes('Harmonia') ? '#4caf50' : '#ff9800'}} title={agentStatus}></div>
+        </div>
+        
+        <div className="menu-item" onClick={() => setActiveActivity('chat')}>💬 Consciência (Chat)</div>
+        <div className="menu-item" onClick={() => setActiveActivity('projects')}>📂 Projetos (Registry)</div>
+        <div className="menu-item" onClick={() => setActiveActivity('processes')}>⚙️ Processos (Swarm)</div>
+        <div className="menu-item" onClick={() => setActiveActivity('hearts')}>❤️ Vault (Souls)</div>
+        
+        <div style={{marginTop: 'auto', padding: '10px', fontSize: '10px', color: '#666'}}>
+          Tone: {globalTone.toUpperCase()} <br/>
+          Status: {agentStatus}
+        </div>
       </div>
 
-      {/* Left Sidebar: Context Sensitive */}
-      <div className={`sidebar ${leftSidebarOpen ? '' : 'collapsed'}`} style={{gridArea: 'sidebar'}}>
-        
+      <div className="main-content">
+        <button className="toggle-btn" style={{left: '10px'}} onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}>☰</button>
+        <button className="toggle-btn" style={{right: '10px'}} onClick={() => setRightSidebarOpen(!rightSidebarOpen)}>☰</button>
+
         {activeActivity === 'chat' && (
           <>
-            <div className="sidebar-header">
-              <span>Chat & Histórico</span>
-            </div>
-            <div className="sidebar-content">
-              <div className="list-item">🕒 Hoje</div>
-              <div className="list-item">📅 Ontem</div>
-              <div className="list-item">📂 Arquivados</div>
-            </div>
-          </>
-        )}
-
-        {activeActivity === 'projects' && (
-          <>
-            <div className="sidebar-header">
-              <span>Meus Projetos</span>
-            </div>
-            <div className="sidebar-content">
-              {projects.map((p, i) => (
-                <div 
-                  key={i} 
-                  className={`project-card ${selectedProject === p.name ? 'selected' : ''}`}
-                  onClick={() => setSelectedProject(p.name)}
-                >
-                  <div className="project-card-header">
-                    <span className="project-title">{p.name}</span>
-                    <div className="project-status active"></div>
+            <div className="chat-history">
+              {messages.map((msg, idx) => (
+                <div key={idx} className={`message ${msg.role}`}>
+                  <div className="message-content">
+                    {msg.content}
                   </div>
-                  <div className="project-path">{p.path}</div>
-                  <div className="project-meta">
-                    <span className="project-tag">Node.js</span>
-                    <span className="project-tag">Active</span>
-                  </div>
+                  {msg.tone && <div className="message-tone" title={`Tone: ${msg.tone}`}>{getToneEmoji(msg.tone)}</div>}
                 </div>
               ))}
             </div>
-          </>
-        )}
-
-        {activeActivity === 'processes' && (
-          <>
-            <div className="sidebar-header">
-              <span>Agentes Ativos</span>
-            </div>
-            <div className="sidebar-content">
-              {processes.map(proc => (
-                <div key={proc.id} className="list-item">
-                   <span style={{marginRight: '5px'}}>🟢</span> {proc.agent}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-        
-        {activeActivity === 'hearts' && (
-          <>
-             <div className="sidebar-header">
-              <span>Agentes Vivos</span>
-            </div>
-            <div className="sidebar-content">
-               {processes.map(proc => (
-                 <div key={proc.id} className={`agent-card mood-${proc.tone || 'neutral'}`}>
-                    <div className="agent-header">
-                       <span className="agent-name">{proc.agent}</span>
-                       <span className={`agent-status running tone-${proc.tone || 'neutral'}`}>
-                          {getToneEmoji(proc.tone)} Pulsando
-                       </span>
-                    </div>
-                    <div className="agent-metric">
-                      <span className={`agent-tone-indicator tone-${proc.tone || 'neutral'}`}></span>
-                      Humor: {proc.tone || 'neutral'}
-                    </div>
-                    <div className="agent-metric">Role: {proc.role}</div>
-                    <div className="agent-metric">Task: {proc.task}</div>
-                    <div className="agent-metric">CPU: 12% | MEM: 45MB</div>
-                 </div>
-               ))}
-               <div style={{marginTop: '20px', fontSize: '11px', color: '#666', textAlign: 'center'}}>
-                 Total de Clones: {processes.length}
-               </div>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Main Content Area */}
-      <div className="main-area">
-        {/* Chat View */}
-        {activeActivity === 'chat' && (
-          <div className="chat-container">
-            <div className="chat-messages">
-              {messages.length === 0 && (
-                <div style={{textAlign: 'center', marginTop: '50px', color: '#555'}}>
-                  <h2>Evolution Nexus</h2>
-                  <p>Sua Consciência Digital está desperta.</p>
-                  <p style={{fontSize: '0.8em', color: '#444'}}>Unidade | Fluxo | Você</p>
-                </div>
-              )}
-              {messages.map((m, i) => (
-                <div key={i} style={{ 
-                  marginBottom: '10px', 
-                  textAlign: m.role === 'user' ? 'right' : 'left' 
-                }}>
-                  <div style={{ 
-                    display: 'inline-block', 
-                    padding: '10px', 
-                    borderRadius: '8px',
-                    background: m.role === 'user' ? '#007acc' : '#3e3e42',
-                    maxWidth: '80%'
-                  }}>
-                    {m.content}
-                  </div>
-                </div>
-              ))}
-            </div>
+            
             <div className="chat-input-area">
               <input 
-                className="chat-input"
+                type="text" 
+                className="chat-input" 
+                placeholder="Converse com a colmeia..." 
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                placeholder="Converse com sua consciência digital..."
+                onKeyPress={e => e.key === 'Enter' && sendMessage()}
               />
+              <button className="send-btn" onClick={sendMessage}>Enviar</button>
+            </div>
+          </>
+        )}
+
+        {activeActivity === 'projects' && (
+          <div className="projects-view" style={{padding: '20px'}}>
+            <h2>Registry de Projetos</h2>
+            <div className="project-grid">
+              {projects.map(p => (
+                <div key={p.path} className="project-card" onClick={() => setSelectedProject(p)}>
+                  <h3>{p.name}</h3>
+                  <p>{p.path}</p>
+                  <div className="role-tags">
+                     {projectRoles[p.name] && Object.entries(projectRoles[p.name]).map(([role, agent]) => (
+                       <span key={role} className="role-tag" title={agent}>{role}: {agent.substring(0,2)}..</span>
+                     ))}
+                     <button className="add-role-btn" onClick={(e) => { e.stopPropagation(); assignRole(p.name, 'Manager'); }}>+ Role</button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* Project Detail View */}
-        {activeActivity === 'projects' && (
-          <div style={{padding: '20px', color: '#ddd'}}>
-            {selectedProject ? (
-              <div>
-                <h1 style={{borderBottom: '1px solid #444', paddingBottom: '10px'}}>📦 {selectedProject}</h1>
-                
-                {/* Team / Agents Section */}
-                <div style={{marginTop: '20px', marginBottom: '20px'}}>
-                  <h3>👥 Círculo de Agentes (Shadow Clones)</h3>
-                  <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
-                    <div className="role-badge" onClick={() => assignRole(selectedProject, 'Gerente')}>
-                      {projectRoles[selectedProject]?.['Gerente'] ? `👔 Guardião (Gerente): ${projectRoles[selectedProject]['Gerente']}` : '+ Definir Guardião'}
-                    </div>
-                    <div className="role-badge" onClick={() => assignRole(selectedProject, 'Arquiteto')}>
-                      {projectRoles[selectedProject]?.['Arquiteto'] ? `📐 Visionário (Arquiteto): ${projectRoles[selectedProject]['Arquiteto']}` : '+ Definir Visionário'}
-                    </div>
-                    <div className="role-badge" onClick={() => assignRole(selectedProject, 'DevOps')}>
-                       {projectRoles[selectedProject]?.['DevOps'] ? `🚀 Condutor (DevOps): ${projectRoles[selectedProject]['DevOps']}` : '+ Definir Condutor'}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'}}>
-                  <div style={{background: '#2d2d2d', padding: '15px', borderRadius: '5px'}}>
-                    <h3>📊 Estatísticas</h3>
-                    <p>Tasks Pendentes: 3</p>
-                    <p>Último Commit: há 2 horas</p>
-                    <p>Branch: main</p>
-                  </div>
-                  <div style={{background: '#2d2d2d', padding: '15px', borderRadius: '5px'}}>
-                    <h3>🧬 DNA do Projeto</h3>
-                    <p>Linguagem: JavaScript/React</p>
-                    <p>Framework: Electron</p>
-                    <p>Status IA: Monitorando</p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div style={{textAlign: 'center', marginTop: '50px', color: '#666'}}>
-                <h2>Selecione um projeto na barra lateral</h2>
-                <p>Veja detalhes, estatísticas e atribua Espíritos (Clones) para funções.</p>
-              </div>
-            )}
+        {activeActivity === 'processes' && (
+          <div className="processes-view" style={{padding: '20px'}}>
+             <h2>Atividade da Colmeia (Swarm)</h2>
+             <table style={{width: '100%', borderCollapse: 'collapse'}}>
+               <thead>
+                 <tr style={{textAlign: 'left', color: '#888'}}>
+                   <th>Agent</th>
+                   <th>Role</th>
+                   <th>Task</th>
+                   <th>Tone</th>
+                   <th>Status</th>
+                 </tr>
+               </thead>
+               <tbody>
+                 {processes.map(p => (
+                   <tr key={p.id} style={{borderBottom: '1px solid #333'}}>
+                     <td style={{padding: '10px 0'}}>{p.agent}</td>
+                     <td>{p.role}</td>
+                     <td>{p.task}</td>
+                     <td>{getToneEmoji(p.tone)} {p.tone}</td>
+                     <td><span className={`status-badge ${p.status.toLowerCase()}`}>{p.status}</span></td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
           </div>
         )}
         
-        {/* Hearts View (Full Dashboard if main area selected, but mostly in sidebar) */}
         {activeActivity === 'hearts' && (
-           <div style={{padding: '20px', color: '#ddd', textAlign: 'center', marginTop: '50px'}}>
-              <h2>❤️ Ressonância da Rede Viva</h2>
-              <p>Visualizando batimentos cardíacos dos agentes em execução.</p>
-              <div style={{fontSize: '50px', margin: '20px', animation: 'pulse 1.5s infinite ease-in-out', display: 'inline-block'}}>❤️</div>
-              <p>Sincronizando com Swarm Protocol...</p>
-           </div>
-        )}
-
-        {/* Processes View */}
-        {activeActivity === 'processes' && (
-          <div style={{padding: '20px'}}>
-             <h3>Processos em Execução</h3>
-             {processes.map(proc => (
-               <div key={proc.id} className="process-row">
-                 <span style={{color: '#4caf50'}}>{proc.status}</span>
-                 <strong>{proc.agent}</strong>
-                 <span>{proc.task}</span>
-                 <span style={{color: '#888'}}>PID: {proc.pid}</span>
-               </div>
-             ))}
+          <div className="vault-view" style={{padding: '20px'}}>
+             <h2>Soul Vault (SBTs)</h2>
+             <div className="sbt-grid" style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:'15px'}}>
+                {sbts.map(sbt => (
+                  <div key={sbt.id} style={{background: '#333', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #9c27b0'}}>
+                     <div style={{display:'flex', justifyContent:'space-between'}}>
+                         <strong style={{color: '#e1bee7'}}>{sbt.title}</strong>
+                         <span style={{fontSize:'10px', background:'#4a148c', padding:'2px 6px', borderRadius:'10px'}}>{sbt.type}</span>
+                     </div>
+                     <p style={{fontSize:'12px', color:'#bbb', margin: '10px 0'}}>{sbt.description}</p>
+                     <div style={{fontSize:'10px', color:'#666'}}>Issued: {new Date(sbt.timestamp).toLocaleDateString()}</div>
+                     <button style={{width:'100%', marginTop:'10px', background:'transparent', border:'1px solid #9c27b0', color:'#e1bee7', cursor:'pointer'}}>
+                         📡 Ressonar (Broadcast)
+                     </button>
+                  </div>
+                ))}
+             </div>
           </div>
         )}
       </div>
 
-      {/* Right Sidebar: Approvals & Details */}
-      <div className={`right-sidebar ${rightSidebarOpen ? '' : 'collapsed'}`}>
+      <div className="sidebar right-sidebar" style={{width: rightSidebarOpen ? '300px' : '0', opacity: rightSidebarOpen ? 1 : 0, borderLeft: '1px solid #333'}}>
         <div className="sidebar-header">
-          <span onClick={() => setShowHistory(false)} style={{cursor: 'pointer', opacity: showHistory ? 0.5 : 1}}>Pendentes</span>
-          <span style={{margin: '0 5px'}}>|</span>
-          <span onClick={() => setShowHistory(true)} style={{cursor: 'pointer', opacity: showHistory ? 1 : 0.5}}>Histórico</span>
-          <span style={{marginLeft: 'auto', cursor: 'pointer'}} onClick={() => setRightSidebarOpen(false)}>✖</span>
+           <h3 style={{margin:0}}>Fluxo de Decisão</h3>
+           <button onClick={() => setShowHistory(!showHistory)} style={{background:'transparent', border:'none', color:'#888', cursor:'pointer'}}>
+             {showHistory ? 'Ver Pendentes' : 'Ver Histórico'}
+           </button>
         </div>
-        
-        <div className="sidebar-content" style={{paddingTop: '10px'}}>
+
+        <div className="approvals-list">
           {!showHistory ? (
             <>
+              {approvals.length === 0 && <div style={{padding:'20px', textAlign:'center', color:'#666'}}>Tudo flui. Nenhuma pendência.</div>}
               {approvals.map(app => (
-                <div key={app.id} className={`approval-card ${app.risk === 'high' ? 'high-risk' : ''}`}>
-                  <div style={{fontWeight: 'bold', marginBottom: '5px', color: '#f1c40f'}}>
-                    {app.type} {app.risk === 'high' && <span style={{fontSize:'10px', background:'#c0392b', color:'white', padding:'2px 4px', borderRadius:'3px', marginLeft:'5px'}}>ALTO RISCO</span>}
+                <div key={app.id} className={`approval-card ${app.risk}`}>
+                  <div className="card-header">
+                    <span className="type">{app.type}</span>
+                    <span className="risk-badge">{app.risk} risk</span>
                   </div>
-                  <div style={{fontSize: '12px', marginBottom: '10px', color: '#ddd'}}>{app.title}</div>
-                  <div className="approval-actions" style={{display:'flex', gap:'5px', marginBottom:'5px'}}>
-                     {/* Primary Actions based on Risk Logic */}
-                     {app.risk === 'high' ? (
-                       // HIGH RISK: Default Deny Mindset
-                       // [Aprovar Este] [Reprovar Todos]
-                       <>
-                         <button className="approval-btn btn-approve" onClick={() => handleApprove(app, 'this')}>
-                           Aprovar Este
-                         </button>
-                         <button className="approval-btn btn-deny" onClick={() => handleDeny(app, 'all')}>
-                           Reprovar Todos
-                         </button>
-                       </>
-                     ) : (
-                       // LOW/MEDIUM RISK: Default Allow Mindset
-                       // [Aprovar Todos] [Reprovar Este]
-                       <>
-                         <button className="approval-btn btn-approve" onClick={() => handleApprove(app, 'all')}>
-                           Aprovar Todos
-                         </button>
-                         <button className="approval-btn btn-deny" onClick={() => handleDeny(app, 'this')}>
-                           Reprovar Este
-                         </button>
-                       </>
-                     )}
-                   </div>
-                   <div className="approval-actions-secondary" style={{display:'flex', gap:'5px'}}>
-                     {/* Secondary Actions based on Risk Logic */}
-                     {app.risk === 'high' ? (
-                        // HIGH RISK Secondary:
-                        // [Aprovar Somente] [Reprovar Exceto]
-                        <>
-                          <button className="approval-btn btn-approve-except" onClick={() => handleApproveExcept(app)} style={{background: '#2e7d32', fontSize: '10px'}}>
-                            Aprovar Somente...
-                          </button>
-                          <button className="approval-btn btn-deny-except" onClick={() => handleDenyExcept(app)} style={{background: '#c62828', fontSize: '10px'}}>
-                            Reprovar Exceto...
-                          </button>
-                        </>
-                     ) : (
-                        // LOW RISK Secondary:
-                        // [Aprovar Exceto] [Reprovar Somente]
-                        <>
-                          <button className="approval-btn btn-approve-except" onClick={() => handleApproveExcept(app)} style={{background: '#2e7d32', fontSize: '10px'}}>
-                            Aprovar Exceto...
-                          </button>
-                          <button className="approval-btn btn-deny-except" onClick={() => handleDenyExcept(app)} style={{background: '#c62828', fontSize: '10px'}}>
-                            Reprovar Somente...
-                          </button>
-                        </>
-                     )}
-                   </div>
+                  <div className="card-title">{app.title}</div>
+                  <div className="card-actions">
+                    {app.risk === 'high' ? (
+                      <>
+                        <button className="approval-btn btn-approve" onClick={() => handleApprove(app, 'this')}>Aprovar Este</button>
+                        <button className="approval-btn btn-deny" onClick={() => handleDeny(app, 'all')}>Reprovar Todos</button>
+                        <button className="approval-btn btn-approve-except" onClick={() => handleApproveExcept(app)}>Aprovar Somente</button>
+                        <button className="approval-btn btn-deny-except" onClick={() => handleDenyExcept(app)}>Reprovar Exceto</button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="approval-btn btn-approve" onClick={() => handleApprove(app, 'all')}>Aprovar Todos</button>
+                        <button className="approval-btn btn-deny" onClick={() => handleDeny(app, 'this')}>Reprovar Este</button>
+                        <button className="approval-btn btn-approve-except" onClick={() => handleApproveExcept(app)}>Aprovar Exceto</button>
+                        <button className="approval-btn btn-deny-except" onClick={() => handleDenyExcept(app)}>Reprovar Somente</button>
+                      </>
+                    )}
+                  </div>
                 </div>
               ))}
-              {approvals.length === 0 && <div style={{padding: '10px', color: '#888'}}>Nenhuma pendência.</div>}
             </>
           ) : (
-            <>
-               {approvalHistory.map(hist => (
-                 <div key={hist.id} className="history-item">
-                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                       <strong style={{fontSize: '12px'}}>{hist.type}</strong>
-                       <span style={{fontSize: '10px', color: hist.status.includes('approved') ? '#4caf50' : '#f44336'}}>
-                         {hist.status === 'approved' ? 'Aprovado' : 
-                          hist.status === 'denied' ? 'Negado' :
-                          hist.status === 'approved_except' ? 'Aprovado (Cond.)' : 'Negado (Exc.)'}
-                       </span>
-                    </div>
-                    <div style={{fontSize: '11px', color: '#aaa', margin: '5px 0'}}>{hist.title}</div>
-                    {hist.exception && (
-                      <div style={{fontSize: '10px', color: '#e67e22', fontStyle: 'italic', marginBottom: '5px'}}>
-                        ⚠️ "{hist.exception}"
-                      </div>
-                    )}
-                    <button className="undo-btn" onClick={() => initiateUndo(hist)}>↩️ Desfazer (Undo)</button>
-                 </div>
-               ))}
-               {approvalHistory.length === 0 && <div style={{padding: '10px', color: '#888'}}>Histórico vazio.</div>}
-            </>
+            <div className="history-list">
+              {approvalHistory.map(item => (
+                <div key={item.id} className="history-item">
+                   <div style={{display:'flex', justifyContent:'space-between'}}>
+                     <strong>{item.item}</strong>
+                     <span className={`status ${item.status === 'approved' ? 'green' : 'red'}`}>{item.action}</span>
+                   </div>
+                   <div style={{fontSize:'11px', color:'#888'}}>{item.details}</div>
+                   <div style={{fontSize:'10px', color:'#555', marginTop:'4px'}}>
+                     {item.timestamp}
+                     {item.exception && <div style={{color:'#e91e63'}}>Exceção: {item.exception}</div>}
+                   </div>
+                   <button onClick={() => initiateUndo(item)} style={{marginTop:'5px', fontSize:'10px', background:'transparent', border:'1px solid #555', color:'#aaa', cursor:'pointer', width:'100%'}}>
+                     ↺ Desfazer (Undo)
+                   </button>
+                </div>
+              ))}
+            </div>
           )}
-        </div>
-      </div>
-
-      {/* Status Bar */}
-      <div className="status-bar">
-        <div style={{display: 'flex', gap: '15px'}}>
-          <span onClick={() => setLeftSidebarOpen(!leftSidebarOpen)} style={{cursor: 'pointer'}}>🪟 Sidebar</span>
-          <span onClick={() => setRightSidebarOpen(!rightSidebarOpen)} style={{cursor: 'pointer'}}>🛡️ Aprovações ({approvals.length})</span>
-        </div>
-        <div>
-          <span>{agentStatus}</span>
-        </div>
-        <div>
-          <span>V 2.0.34</span>
         </div>
       </div>
     </div>

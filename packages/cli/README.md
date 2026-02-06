@@ -39,6 +39,9 @@ We believe that developers shouldn't waste time manually updating `.cursorrules`
 
 - **🔄 Universal Sync**: Automatically generates configuration files for Cursor, Windsurf, Trae, Copilot, Claude, and Gemini.
 - **🧠 Persistent Memory**: Maintains a "Soul" for your project—learning from your interactions and preserving context across sessions.
+- **💎 Soulbound Tokens (SBTs)**: Track agent achievements, skills, and identity with immutable tokens in a local vault.
+- **🐝 Swarm Intelligence**: Delegate tasks between multiple agents with security interception and trust scoring.
+- **🎭 Adaptive Tone**: Agents adapt their communication style (Neutral, Focused, Creative, Urgent, Cautious) based on context.
 - **🧬 Stack Agnostic**: Intelligent heuristics for Laravel, Vue, React, Node.js, and extensible for others.
 - **🤝 Community Driven**: Open source, transparent, and built to empower the developer community.
 
@@ -74,6 +77,8 @@ Now, your `.cursorrules`, `.windsurfrules`, and other agent configs are perfectl
 | `ai-doc soul export` | Export knowledge base |
 | `ai-doc soul import` | Import knowledge base |
 | `ai-doc identity create` | Create a new agent persona |
+| `ai-doc tone` | Show current adaptive tone state (JSON) |
+| `ai-doc swarm delegate` | Delegate task to another agent |
 | `ai-doc workflows` | List available automation workflows (supports --json) |
 
 ## ❤️ Community & Solidarity

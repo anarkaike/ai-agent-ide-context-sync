@@ -39,16 +39,16 @@ class SmartCache {
     /**
      * Gera chave de cache para uma query de prompt
      */
-    generateKey(query, contextFiles) {
-        const payload = JSON.stringify({ query, files: contextFiles.sort() });
+    generateKey(query, contextFiles, extra = {}) {
+        const payload = JSON.stringify({ query, files: contextFiles.sort(), extra });
         return crypto.createHash('md5').update(payload).digest('hex');
     }
 
     /**
      * Tenta recuperar prompt do cache
      */
-    getCachedPrompt(query, contextFiles) {
-        const key = this.generateKey(query, contextFiles);
+    getCachedPrompt(query, contextFiles, extra = {}) {
+        const key = this.generateKey(query, contextFiles, extra);
         const entry = this.cache.prompts[key];
 
         if (!entry) return null;
@@ -73,8 +73,8 @@ class SmartCache {
     /**
      * Salva prompt no cache
      */
-    setCachedPrompt(query, contextFiles, promptContent) {
-        const key = this.generateKey(query, contextFiles);
+    setCachedPrompt(query, contextFiles, promptContent, extra = {}) {
+        const key = this.generateKey(query, contextFiles, extra);
 
         const fileSnapshots = {};
         contextFiles.forEach(f => {

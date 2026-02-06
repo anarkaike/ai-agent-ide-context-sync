@@ -168,7 +168,7 @@ Esta tarefa foi recebida de um agente externo com nível de confiança insuficie
   const filePath = path.join(activeDir, filename);
 
   // 📔 Start Operation Journal
-  const journal = new ExecutionJournal(wsPath);
+  const journal = new ExecutionJournal(path.dirname(wsPath));
   const opId = journal.startOperation('TASK_EXECUTION', `Task: ${title}`, {
       taskId: id,
       persona,
@@ -300,7 +300,7 @@ const complete = async (args, wsPath) => {
   // 📔 Journal Completion
   const opIdMatch = content.match(/operation_id:\s*(OP-[^\s]+)/);
   if (opIdMatch) {
-      const journal = new ExecutionJournal(wsPath);
+      const journal = new ExecutionJournal(path.dirname(wsPath));
       journal.completeOperation(opIdMatch[1], {
           file: targetFile,
           action: 'COMPLETED'
