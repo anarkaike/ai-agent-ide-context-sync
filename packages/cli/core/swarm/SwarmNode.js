@@ -2,12 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const SwarmRegistry = require('./Registry');
 const TaskManager = require('./TaskManager');
-const PatternLibrary = require('../memory/PatternLibrary');
+const SwarmMemory = require('../memory/SwarmMemory');
+const SwarmNetwork = require('./SwarmNetwork');
 
 /**
  * 🛰️ Swarm Node
  * Represents a running agent instance that participates in the Swarm.
- * Handles heartbeat, task polling, and pattern learning.
+ * Handles heartbeat, task polling, pattern learning, and P2P communication.
  */
 class SwarmNode {
     constructor(config) {
@@ -23,7 +24,8 @@ class SwarmNode {
 
         this.registry = new SwarmRegistry();
         this.taskManager = new TaskManager();
-        this.patternLibrary = new PatternLibrary();
+        this.memory = new SwarmMemory(this.config.path);
+        this.network = SwarmNetwork;
         
         this.status = 'IDLE';
         this.currentTask = null;
@@ -33,11 +35,14 @@ class SwarmNode {
     }
 
     /**
-     * Start the node: Begin heartbeat and task polling
+     * Start the node: Begin heartbeat, task polling, and connect to network
      */
     start() {
         console.log(`🚀 Starting Swarm Node: ${this.config.name} (${this.config.id}) [L${this.config.security_level}]`);
         
+        // Connect to Network
+        this.network.connect(this);
+
         // Initial registration
         this.pulse();
 
@@ -56,7 +61,27 @@ class SwarmNode {
     stop() {
         if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
         if (this.taskPollInterval) clearInterval(this.taskPollInterval);
+        this.network.disconnect(this.config.id);
         console.log(`🛑 Stopping Swarm Node: ${this.config.name}`);
+    }
+
+    /**
+     * Send a secure message to another agent
+     */
+    async sendMessage(targetId, type, payload) {
+        return await this.network.send(this.config.id, targetId, type, payload);
+    }
+
+    /**
+     * Receive a message from the network
+     */
+    receiveMessage(msg) {
+        console.log(`📨 [${this.config.name}] Received ${msg.type} from ${msg.from}:`, msg.payload);
+        // React to messages (e.g., requests, alerts)
+        if (msg.type === 'ALERT') {
+            this.trajectory.push(`⚠️ ALERT: ${msg.payload}`);
+            this.pulse();
+        }
     }
 
     /**
@@ -124,12 +149,14 @@ class SwarmNode {
     }
 
     async simulateWork(task) {
-        // 1. Consult Pattern Library
+        // 1. Consult Swarm Memory
         const role = this.config.roles[0] || 'Generalist';
-        const patterns = this.patternLibrary.recall(role, { query: task.title });
+        const teams = this.config.teams;
         
-        if (patterns.length > 0) {
-            console.log(`🧠 [${this.config.name}] Recalled pattern: ${patterns[0].title}`);
+        const context = this.memory.recall(role, teams, task.title);
+        
+        if (context.patterns.length > 0) {
+            console.log(`🧠 [${this.config.name}] Recalled pattern: ${context.patterns[0].title}`);
         }
 
         // 2. Mock Execution Steps
@@ -151,6 +178,28 @@ class SwarmNode {
         console.log(`✅ [${this.config.name}] Completed task: ${this.currentTask.title}`);
         this.taskManager.updateStatus(this.currentTask.id, 'COMPLETED');
         
+        // 🧠 Memory Persistence: Learn from the task
+        const role = this.config.roles[0] || 'Generalist';
+        const team = this.config.teams[0] || 'Freelancers';
+        
+        try {
+            const solution = `Executed ${this.currentTask.title} using security protocol L${this.config.security_level}.`;
+            
+            this.memory.learnPattern(role, {
+                title: `Auto-Pattern: ${this.currentTask.title}`,
+                description: this.currentTask.description,
+                result: solution,
+                tags: [role, 'simulation', `sec-${this.config.security_level}`],
+                assignee: this.config.name
+            });
+
+            this.memory.recordTeamEvent(team, `Agent ${this.config.name} completed task: ${this.currentTask.title}`, this.config.name);
+            
+            // console.log(`🧠 [${this.config.name}] Learned new pattern for ${role}`);
+        } catch (e) {
+            console.error(`❌ Memory Error: ${e.message}`);
+        }
+
         this.currentTask = null;
         this.trajectory = [];
         this.pulse();

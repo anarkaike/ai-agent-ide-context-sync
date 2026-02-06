@@ -362,8 +362,11 @@ module.exports = async (args) => {
         } else {
             console.log('Usage: ai-doc swarm patterns <learn|recall>');
         }
+    } else if (subcommand === 'map-web') {
+        const startServer = require('../../core/swarm/WebMap');
+        startServer();
     } else {
-        console.log('Usage: ai-doc swarm <delegate|list|map|task|patterns>');
+        console.log('Usage: ai-doc swarm <delegate|list|map|map-web|task|patterns>');
     }
 };
 

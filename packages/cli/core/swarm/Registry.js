@@ -36,7 +36,8 @@ class SwarmRegistry {
      */
     registerAgent(agentInfo) {
         const registry = this.listAgents();
-        const existingIndex = registry.findIndex(a => a.path === agentInfo.path);
+        // Uniqueness by ID, not path (to allow multiple agents in same project/machine)
+        const existingIndex = registry.findIndex(a => a.id === agentInfo.id);
         
         const netInfo = this.network.getNetworkInfo();
 

@@ -79,6 +79,68 @@ class SecurityKernel {
         return { valid: true, agentId: session.agent_id, level: session.level };
     }
 
+    /**
+     * Valida se a origem da requisição é confiável (Tailscale ou Localhost).
+     * @param {string} ip - Endereço IP da requisição.
+     */
+    validateNetworkOrigin(ip) {
+        // Normaliza IP (remove prefixo IPv6 ::ffff:)
+        const normalizedIp = ip.replace(/^::ffff:/, '');
+        
+        // 1. Localhost é sempre confiável
+        if (['127.0.0.1', '::1', 'localhost'].includes(normalizedIp)) {
+            return { trusted: true, network: 'LOCAL' };
+        }
+
+        // 2. Verifica Range Tailscale (100.64.0.0/10)
+        // Range: 100.64.0.0 - 100.127.255.255
+        // Simplificação: verificar se começa com "100." seguido de número no range
+        if (normalizedIp.startsWith('100.')) {
+            const parts = normalizedIp.split('.');
+            const secondOctet = parseInt(parts[1], 10);
+            if (secondOctet >= 64 && secondOctet <= 127) {
+                return { trusted: true, network: 'TAILSCALE' };
+            }
+        }
+
+        return { trusted: false, network: 'UNKNOWN' };
+    }
+
+    /**
+     * Valida comunicação entre dois agentes.
+     * Regras:
+     * 1. Agentes do mesmo time podem se comunicar.
+     * 2. Agentes de nível superior podem contactar nível inferior (Comando).
+     * 3. Nível inferior para superior requer permissão (Solicitação) - Por enquanto liberado se mesmo time.
+     */
+    validateCommunication(sourceAgent, targetAgent) {
+        // Se um deles não existe ou dados inválidos
+        if (!sourceAgent || !targetAgent) return { allowed: false, reason: 'INVALID_AGENTS' };
+
+        // 1. Check Teams intersection
+        const commonTeams = sourceAgent.teams.filter(t => targetAgent.teams.includes(t));
+        if (commonTeams.length > 0) {
+            return { allowed: true, reason: `SAME_TEAM:${commonTeams[0]}` };
+        }
+
+        // 2. Network Security Policy (Tailscale/Localhost Enforcement)
+        // Agentes Críticos (Level >= 8) só aceitam comandos de redes seguras
+        if (targetAgent.security_level >= 8) {
+            const isSecure = sourceAgent.network?.secure || false;
+            if (!isSecure) {
+                return { allowed: false, reason: 'UNSECURE_NETWORK_ORIGIN' };
+            }
+        }
+
+        // 3. Hierarquia (Superior -> Inferior)
+        if (sourceAgent.security_level >= targetAgent.security_level) {
+            return { allowed: true, reason: 'HIERARCHY_COMMAND' };
+        }
+
+        // 4. Bloqueio Default (Zero Trust)
+        return { allowed: false, reason: 'NO_TRUST_RELATIONSHIP' };
+    }
+
     loadTokens() {
         try {
             return JSON.parse(fs.readFileSync(this.tokensFile, 'utf8'));

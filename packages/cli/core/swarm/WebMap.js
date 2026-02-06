@@ -3,14 +3,26 @@ const http = require('http');
 const path = require('path');
 const SwarmRegistry = require('../../core/swarm/Registry');
 const TaskManager = require('./TaskManager');
+const SecurityKernel = require('./SecurityKernel');
+const SwarmNetwork = require('./SwarmNetwork');
 
 const PORT = 3456; // Swarm Map Port
 
 const startServer = () => {
     const registry = new SwarmRegistry();
     const taskManager = new TaskManager();
+    const securityKernel = new SecurityKernel();
 
     const server = http.createServer((req, res) => {
+        // Security Check
+        const ip = req.socket.remoteAddress;
+        const securityStatus = securityKernel.validateNetworkOrigin(ip);
+        
+        // Log Access (Audit)
+        if (!securityStatus.trusted) {
+            console.warn(`⚠️ [Security] Untrusted access attempt from ${ip}`);
+        }
+
         // Set CORS headers
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -22,7 +34,10 @@ const startServer = () => {
             return;
         }
 
-        if (req.url === '/') {
+        const url = new URL(req.url, `http://${req.headers.host}`);
+        const pathname = url.pathname;
+
+        if (pathname === '/' || pathname === '/index.html') {
             // Serve HTML
             const html = `
             <!DOCTYPE html>
@@ -78,7 +93,7 @@ const startServer = () => {
 
                     .container {
                         display: grid;
-                        grid-template-columns: 2fr 1fr;
+                        grid-template-columns: 2fr 1.2fr 1.2fr;
                         gap: 1px;
                         flex: 1;
                         overflow: hidden;
@@ -88,7 +103,7 @@ const startServer = () => {
                     .panel {
                         background: var(--bg);
                         overflow-y: auto;
-                        padding: 30px;
+                        padding: 20px;
                     }
 
                     .panel-header {
@@ -101,7 +116,7 @@ const startServer = () => {
                     }
 
                     .panel-title {
-                        font-size: 0.9rem;
+                        font-size: 0.8rem;
                         text-transform: uppercase;
                         letter-spacing: 1px;
                         color: var(--text-secondary);
@@ -177,10 +192,10 @@ const startServer = () => {
                     
                     .task-card:hover { border-color: var(--accent); }
                     
-                    .task-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
-                    .task-meta { font-size: 0.75rem; color: var(--text-secondary); display: flex; justify-content: space-between; }
+                    .task-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; }
+                    .task-meta { font-size: 0.7rem; color: var(--text-secondary); display: flex; justify-content: space-between; }
                     .task-status { 
-                        font-size: 0.7rem; 
+                        font-size: 0.65rem; 
                         padding: 2px 6px; 
                         border-radius: 10px; 
                         background: var(--border);
@@ -190,6 +205,23 @@ const startServer = () => {
                     .status-IN_PROGRESS { color: var(--accent); background: rgba(88, 166, 255, 0.1); }
                     .status-COMPLETED { color: var(--success); background: rgba(35, 134, 54, 0.1); }
 
+                    /* Network Log Styles */
+                    .log-entry {
+                        font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+                        font-size: 0.75rem;
+                        padding: 8px 0;
+                        border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+                        display: grid;
+                        grid-template-columns: 60px 1fr;
+                        gap: 10px;
+                    }
+                    .log-time { color: var(--text-secondary); }
+                    .log-content { overflow: hidden; text-overflow: ellipsis; }
+                    .log-status-BLOCKED { color: var(--danger); }
+                    .log-status-DELIVERED { color: var(--success); }
+                    .log-status-DROPPED { color: var(--warning); }
+                    .log-arrow { color: var(--text-secondary); margin: 0 4px; }
+
                     /* Animation */
                     @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
                     .updating { animation: pulse 1s infinite; }
@@ -198,7 +230,12 @@ const startServer = () => {
             <body>
                 <header>
                     <h1>🌌 Swarm Existential Map</h1>
-                    <div id="connection-status" class="tag">Online</div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <div id="connection-status" class="tag">Online</div>
+                        <div class="tag" style="border: 1px solid ${securityStatus.trusted ? 'var(--success)' : 'var(--danger)'}">
+                            🛡️ ${securityStatus.network}
+                        </div>
+                    </div>
                 </header>
                 
                 <div class="container">
@@ -209,6 +246,15 @@ const startServer = () => {
                             <span class="tag" id="agent-count">0 Agents</span>
                         </div>
                         <div id="map-content">Detecting agents...</div>
+                    </div>
+
+                    <!-- Center: Network Logs -->
+                    <div class="panel" id="network-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">P2P Secure Network</span>
+                            <span class="tag" id="net-status">Active</span>
+                        </div>
+                        <div id="network-content">Listening for packets...</div>
                     </div>
 
                     <!-- Right: Global Tasks -->
@@ -268,6 +314,22 @@ const startServer = () => {
                         \`;
                     }
 
+                    function renderLog(log) {
+                        const date = new Date(log.timestamp);
+                        const time = date.toLocaleTimeString().split(' ')[0];
+                        return \`
+                            <div class="log-entry">
+                                <span class="log-time">\${time}</span>
+                                <div class="log-content">
+                                    <span class="log-status-\${log.status}">[\${log.status}]</span>
+                                    \${log.from.substring(0,8)} <span class="log-arrow">→</span> \${log.to.substring(0,8)}
+                                    <br>
+                                    <span style="color:var(--text-secondary)">\${log.type}: \${log.reason || 'OK'}</span>
+                                </div>
+                            </div>
+                        \`;
+                    }
+
                     async function updateData() {
                         try {
                             // Fetch Map
@@ -278,8 +340,13 @@ const startServer = () => {
                             const taskRes = await fetch('/api/tasks');
                             const tasks = await taskRes.json();
 
+                            // Fetch Network Logs
+                            const netRes = await fetch('/api/network');
+                            const logs = await netRes.json();
+
                             renderMap(teams);
                             renderTasks(tasks);
+                            renderNetwork(logs);
                             
                             document.getElementById('connection-status').innerText = 'Live';
                             document.getElementById('connection-status').style.color = 'var(--success)';
@@ -329,6 +396,21 @@ const startServer = () => {
                         document.getElementById('task-count').innerText = tasks.length + ' Tasks';
                     }
 
+                    function renderNetwork(logs) {
+                        const container = document.getElementById('network-content');
+                        let html = '';
+                        
+                        if (logs.length === 0) {
+                            html = '<div style="color:var(--text-secondary); text-align:center; padding:20px;">Silence on the wire...</div>';
+                        } else {
+                            logs.slice(0, 20).forEach(log => {
+                                html += renderLog(log);
+                            });
+                        }
+
+                        if (container.innerHTML !== html) container.innerHTML = html;
+                    }
+
                     // Initial load
                     updateData();
                     // Poll
@@ -339,19 +421,10 @@ const startServer = () => {
             `;
             res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
             res.end(html);
-        } else if (req.url === '/api/map') {
+        } else if (pathname === '/api/map') {
             const agents = registry.listAgents();
             const teams = {};
-            const identityPath = path.join(process.cwd(), '.ai-workspace', 'identity.json');
-            let localTeams = ['Freelancers'];
             
-            try {
-                if (fs.existsSync(identityPath)) {
-                    const id = JSON.parse(fs.readFileSync(identityPath, 'utf-8'));
-                    if (id.teams) localTeams = id.teams;
-                }
-            } catch (e) {}
-
             agents.forEach(agent => {
                 let team = 'Freelancers';
                 const teamCap = (agent.capabilities || []).find(c => c.startsWith('TEAM:'));
@@ -364,10 +437,14 @@ const startServer = () => {
             
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
             res.end(JSON.stringify(teams));
-        } else if (req.url === '/api/tasks') {
+        } else if (pathname === '/api/tasks') {
             const tasks = taskManager.listTasks();
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
             res.end(JSON.stringify(tasks));
+        } else if (pathname === '/api/network') {
+            const logs = SwarmNetwork.getLogs();
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify(logs));
         } else {
             res.writeHead(404);
             res.end('Not Found');
