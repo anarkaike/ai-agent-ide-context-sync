@@ -134,6 +134,43 @@ function assignRandomTask() {
             taskManager.assignTask(subTask.id, agent.config.id);
         }
         return; // Done for this cycle
+    } else if (taskDef.title.startsWith('Chain:')) {
+        // 🔗 Chain Reaction: Create one task now, and schedule another dependent one
+        const step1 = taskManager.createTask(
+            `${taskDef.title} - Step 1`,
+            'Initial investigation phase',
+            'high',
+            { origin: 'Simulation', type: 'CHAIN_START' },
+            taskDef.level,
+            sentinel.config.id
+        );
+        console.log(`🔗 [Chain] Started: "${step1.title}"`);
+        
+        // Assign Step 1
+        const suitableAgents = agents.filter(a => a.config.security_level >= step1.required_security_level && a.status === 'IDLE');
+        if (suitableAgents.length > 0) {
+            taskManager.assignTask(step1.id, suitableAgents[0].config.id);
+        }
+
+        // Schedule Step 2 (simulated by creating it immediately but linked)
+        setTimeout(() => {
+            const step2 = taskManager.createTask(
+                `${taskDef.title} - Step 2`,
+                'Remediation phase',
+                'high',
+                { origin: 'Simulation', type: 'CHAIN_END' },
+                taskDef.level,
+                sentinel.config.id, // Creator
+                step1.id // Parent/Predecessor link
+            );
+            console.log(`  ↳ 🔗 [Chain] Follow-up: "${step2.title}" (Linked to Step 1)`);
+             const agentsForStep2 = agents.filter(a => a.config.security_level >= step2.required_security_level && a.status === 'IDLE');
+            if (agentsForStep2.length > 0) {
+                taskManager.assignTask(step2.id, agentsForStep2[0].config.id);
+            }
+        }, 4000); // 4 seconds later
+
+        return;
     }
 
     // Normal Task Creation

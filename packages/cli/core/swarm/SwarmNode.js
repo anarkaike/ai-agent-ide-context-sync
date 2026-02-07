@@ -114,10 +114,13 @@ class SwarmNode {
         if (this.currentTask) return;
 
         // 2. Get my tasks (assigned directly to me)
-        const myTasks = this.taskManager.listTasks({ assignee: this.config.id, status: 'PENDING' });
+        const myTasks = this.taskManager.listTasks({ assignee: this.config.id });
+        const pendingOrInProgress = myTasks.filter(t => t.status === 'PENDING' || t.status === 'IN_PROGRESS');
         
-        if (myTasks.length > 0) {
-            await this.acceptTask(myTasks[0]);
+        if (pendingOrInProgress.length > 0) {
+            // Prioritize IN_PROGRESS (maybe I crashed and restarting?)
+            const next = pendingOrInProgress.find(t => t.status === 'IN_PROGRESS') || pendingOrInProgress[0];
+            await this.acceptTask(next);
             return;
         }
 

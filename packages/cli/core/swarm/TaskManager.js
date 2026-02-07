@@ -88,7 +88,7 @@ class TaskManager {
     }
 
     updateTaskFields(taskId, fields = {}) {
-        const allowed = new Set(['status', 'assignee', 'priority']);
+        const allowed = new Set(['status', 'assignee', 'priority', 'parent_id', 'trace_id']);
         const tasks = this._loadTasks();
         const taskIndex = tasks.findIndex(t => t.id === taskId);
         if (taskIndex === -1) throw new Error(`Task ${taskId} not found`);

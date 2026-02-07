@@ -65,42 +65,54 @@ const startServer = () => {
                         --danger: #da3633;
                         --warning: #d29922;
                         --info: #3fb950;
+                        --hover: #21262d;
                     }
                     
                     body { 
                         background: var(--bg); 
                         color: var(--text-primary); 
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
                         padding: 0; 
                         margin: 0;
                         line-height: 1.5;
                         height: 100vh;
                         display: flex;
                         flex-direction: column;
+                        overflow: hidden;
                     }
 
+                    /* Scrollbar */
+                    ::-webkit-scrollbar { width: 8px; height: 8px; }
+                    ::-webkit-scrollbar-track { background: var(--bg); }
+                    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+                    ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
                     header {
-                        padding: 20px 40px;
+                        padding: 15px 25px;
                         border-bottom: 1px solid var(--border);
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        background: rgba(15, 17, 21, 0.9);
+                        background: rgba(22, 27, 34, 0.95);
+                        backdrop-filter: blur(10px);
+                        z-index: 100;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
                     }
 
                     h1 {
-                        font-weight: 200;
-                        letter-spacing: -1px;
+                        font-weight: 300;
+                        letter-spacing: -0.5px;
                         margin: 0;
-                        font-size: 1.5rem;
+                        font-size: 1.4rem;
                         display: flex;
                         align-items: center;
-                        gap: 10px;
+                        gap: 12px;
+                        color: var(--text-primary);
                     }
 
                     .container {
                         display: grid;
-                        grid-template-columns: 2fr 1.2fr 1.2fr;
+                        grid-template-columns: 35% 30% 35%; /* Adjusted layout */
                         gap: 1px;
                         flex: 1;
                         overflow: hidden;
@@ -109,601 +121,812 @@ const startServer = () => {
 
                     .panel {
                         background: var(--bg);
-                        overflow-y: auto;
-                        padding: 20px;
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
+                        min-width: 0; /* Fix flex child overflow */
                     }
 
                     .panel-header {
-                        margin-bottom: 20px;
-                        padding-bottom: 10px;
+                        padding: 15px;
                         border-bottom: 1px solid var(--border);
+                        background: var(--card-bg);
+                    }
+
+                    .panel-title-row {
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
+                        margin-bottom: 10px;
                     }
 
                     .panel-title {
-                        font-size: 0.8rem;
+                        font-size: 0.85rem;
                         text-transform: uppercase;
-                        letter-spacing: 1px;
+                        letter-spacing: 1.2px;
+                        color: var(--accent);
+                        font-weight: 700;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+
+                    /* Filters */
+                    .filter-bar {
+                        display: flex;
+                        gap: 8px;
+                        flex-wrap: wrap;
+                    }
+
+                    .filter-input {
+                        background: var(--bg);
+                        border: 1px solid var(--border);
+                        color: var(--text-primary);
+                        padding: 6px 10px;
+                        border-radius: 4px;
+                        font-size: 0.75rem;
+                        flex: 1;
+                        min-width: 80px;
+                        outline: none;
+                        transition: border-color 0.2s;
+                    }
+                    .filter-input:focus { border-color: var(--accent); }
+                    
+                    select.filter-input { cursor: pointer; }
+
+                    .panel-content {
+                        flex: 1;
+                        overflow-y: auto;
+                        overflow-x: auto;
+                        padding: 0;
+                    }
+
+                    /* Data Tables */
+                    .data-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 0.8rem;
+                        white-space: nowrap;
+                    }
+
+                    .data-table th {
+                        position: sticky;
+                        top: 0;
+                        background: var(--card-bg);
+                        text-align: left;
+                        padding: 10px 12px;
                         color: var(--text-secondary);
                         font-weight: 600;
+                        border-bottom: 1px solid var(--border);
+                        cursor: pointer;
+                        user-select: none;
+                        z-index: 10;
+                    }
+                    .data-table th:hover { color: var(--text-primary); background: var(--hover); }
+
+                    .data-table td {
+                        padding: 8px 12px;
+                        border-bottom: 1px solid rgba(48, 54, 61, 0.4);
+                        color: var(--text-primary);
                     }
 
-                    /* Map Styles */
-                    .holon { 
-                        background: var(--card-bg);
-                        border: 1px solid var(--border);
-                        border-radius: 8px;
-                        margin-bottom: 24px;
-                        overflow: hidden;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                    }
+                    .data-table tr:hover { background: rgba(88, 166, 255, 0.05); }
+                    .data-table tr:last-child td { border-bottom: none; }
+
+                    /* Specific Columns */
+                    .col-id { font-family: monospace; color: var(--text-secondary); width: 60px; }
+                    .col-status { width: 80px; }
+                    .col-pri { width: 60px; }
                     
-                    .holon-header {
-                        background: rgba(255,255,255,0.03);
-                        padding: 10px 16px;
-                        border-bottom: 1px solid var(--border);
-                    }
-
-                    .holon h2 { 
-                        margin: 0; 
-                        font-size: 0.9rem;
-                        color: var(--accent);
-                        font-weight: 600;
-                    }
-
-                    .agent { 
-                        display: grid; 
-                        grid-template-columns: 2fr 1fr 1.5fr;
-                        gap: 10px;
-                        padding: 12px 16px;
-                        border-bottom: 1px solid var(--border);
-                        align-items: center;
-                        font-size: 0.85rem;
-                    }
-                    .agent:last-child { border-bottom: none; }
-
-                    .agent-id { font-weight: 600; color: var(--text-primary); }
-                    .agent-role { font-size: 0.8em; color: var(--text-secondary); display: block; }
-
+                    /* Tags & Badges */
                     .tag {
                         display: inline-flex;
                         align-items: center;
+                        padding: 2px 8px;
+                        border-radius: 12px;
+                        font-size: 0.7em;
+                        font-weight: 600;
+                        background: rgba(255,255,255,0.05);
+                        color: var(--text-primary);
+                        border: 1px solid transparent;
+                    }
+                    .tag.sec-10 { background: rgba(218, 54, 51, 0.15); color: #ff7b72; border-color: rgba(218, 54, 51, 0.3); }
+                    .tag.sec-8, .tag.sec-9 { background: rgba(210, 153, 34, 0.15); color: #d29922; }
+                    .tag.sec-1 { background: rgba(35, 134, 54, 0.15); color: #7ee787; border-color: rgba(35, 134, 54, 0.3); }
+                    
+                    .badge {
                         padding: 2px 6px;
                         border-radius: 4px;
                         font-size: 0.7em;
                         font-weight: 600;
-                        background: rgba(255,255,255,0.1);
-                        color: var(--text-primary);
-                        margin-right: 4px;
-                    }
-                    .tag.sec-10 { background: rgba(218, 54, 51, 0.2); color: #ff7b72; }
-                    .tag.sec-5 { background: rgba(210, 153, 34, 0.2); color: #d29922; }
-                    .tag.sec-1 { background: rgba(35, 134, 54, 0.2); color: #7ee787; }
-                    
-                    .status-indicator { display: flex; align-items: center; gap: 6px; }
-                    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-secondary); }
-                    .status-BUSY .dot { background: var(--warning); box-shadow: 0 0 8px rgba(210, 153, 34, 0.4); }
-                    .status-IDLE .dot { background: var(--success); }
-
-                    /* Task Styles */
-                    .task-card {
-                        background: var(--card-bg);
-                        border: 1px solid var(--border);
-                        border-radius: 6px;
-                        padding: 12px;
-                        margin-bottom: 12px;
-                        position: relative;
-                    }
-                    
-                    .task-card:hover { border-color: var(--accent); }
-                    
-                    .task-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; }
-                    .task-meta { font-size: 0.7rem; color: var(--text-secondary); display: flex; justify-content: space-between; }
-                    .task-status { 
-                        font-size: 0.65rem; 
-                        padding: 2px 6px; 
-                        border-radius: 10px; 
-                        background: var(--border);
                         text-transform: uppercase;
                     }
-                    .status-PENDING { color: var(--text-secondary); }
-                    .status-IN_PROGRESS { color: var(--accent); background: rgba(88, 166, 255, 0.1); }
-                    .status-COMPLETED { color: var(--success); background: rgba(35, 134, 54, 0.1); }
+                    .badge-PENDING { background: rgba(139, 148, 158, 0.2); color: #8b949e; }
+                    .badge-IN_PROGRESS { background: rgba(88, 166, 255, 0.2); color: #58a6ff; }
+                    .badge-COMPLETED { background: rgba(35, 134, 54, 0.2); color: #3fb950; }
+                    .badge-BLOCKED { background: rgba(218, 54, 51, 0.2); color: #da3633; }
+                    
+                    .badge-high { color: #da3633; }
+                    .badge-medium { color: #d29922; }
+                    .badge-low { color: #3fb950; }
 
-                    /* Metrics Styles */
-                    .metrics-grid {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 10px;
-                        margin-bottom: 15px;
-                        padding-bottom: 15px;
-                        border-bottom: 1px solid var(--border);
-                    }
-                    .metric-card {
-                        background: rgba(255,255,255,0.03);
-                        padding: 10px;
-                        border-radius: 6px;
-                        text-align: center;
-                    }
-                    .metric-val { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); }
-                    .metric-label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; }
-                    .metric-danger { color: var(--danger); }
-                    .metric-success { color: var(--success); }
-
-                    /* Network Log Styles */
-                    .log-entry {
-                        font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
-                        font-size: 0.75rem;
-                        padding: 8px 0;
-                        border-bottom: 1px solid rgba(48, 54, 61, 0.5);
-                        display: grid;
-                        grid-template-columns: 60px 1fr;
-                        gap: 10px;
-                    }
-                    .log-time { color: var(--text-secondary); }
-                    .log-content { overflow: hidden; text-overflow: ellipsis; }
-                    .log-status-BLOCKED { color: var(--danger); }
+                    /* Network Logs specific */
+                    .log-status-BLOCKED { color: var(--danger); font-weight: bold; }
                     .log-status-DELIVERED { color: var(--success); }
                     .log-status-DROPPED { color: var(--warning); }
-                    .log-arrow { color: var(--text-secondary); margin: 0 4px; }
+                    
+                    /* Metrics */
+                    .metrics-bar {
+                        display: grid;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 10px;
+                        margin-bottom: 10px;
+                    }
+                    .metric-box {
+                        background: rgba(255,255,255,0.03);
+                        padding: 8px;
+                        border-radius: 4px;
+                        text-align: center;
+                        border: 1px solid rgba(255,255,255,0.05);
+                    }
+                    .metric-val { font-size: 1.1rem; font-weight: 700; }
+                    .metric-lbl { font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); margin-top: 2px; }
 
-                    /* Modal Styles */
+                    /* Modal */
                     .modal-overlay {
                         position: fixed;
                         top: 0; left: 0; right: 0; bottom: 0;
-                        background: rgba(0,0,0,0.7);
+                        background: rgba(0,0,0,0.8);
+                        backdrop-filter: blur(4px);
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         z-index: 1000;
                         opacity: 0;
                         pointer-events: none;
-                        transition: opacity 0.2s;
+                        transition: all 0.2s ease;
                     }
                     .modal-overlay.active { opacity: 1; pointer-events: all; }
                     
                     .modal {
-                        background: var(--card-bg);
+                        background: #1c2128;
                         border: 1px solid var(--border);
-                        border-radius: 8px;
-                        width: 600px;
-                        max-width: 90vw;
-                        max-height: 80vh;
+                        border-radius: 12px;
+                        width: 700px;
+                        max-width: 95vw;
+                        max-height: 85vh;
                         display: flex;
                         flex-direction: column;
-                        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                        box-shadow: 0 30px 60px rgba(0,0,0,0.6);
                     }
                     
-                    .modal-header {
-                        padding: 20px;
-                        border-bottom: 1px solid var(--border);
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                    }
-                    
-                    .modal-body { padding: 20px; overflow-y: auto; }
-                    
-                    .modal-footer {
-                        padding: 15px 20px;
-                        border-top: 1px solid var(--border);
-                        background: rgba(0,0,0,0.2);
-                        text-align: right;
-                    }
+                    .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+                    .modal-body { padding: 24px; overflow-y: auto; }
+                    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); text-align: right; }
 
-                    .close-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem; }
-                    .close-btn:hover { color: var(--text-primary); }
-
-                    /* Tooltip */
-                    .tooltip { position: relative; cursor: help; }
-                    .tooltip:hover::after {
-                        content: attr(data-tip);
-                        position: absolute;
-                        bottom: 100%;
-                        left: 50%;
-                        transform: translateX(-50%);
-                        background: #000;
-                        border: 1px solid var(--border);
-                        padding: 5px 10px;
-                        border-radius: 4px;
-                        font-size: 0.75rem;
-                        white-space: nowrap;
-                        z-index: 10;
-                        pointer-events: none;
-                        margin-bottom: 5px;
-                    }
-
-                    /* Command Center */
-                    .command-bar {
-                        padding: 10px 20px;
+                    /* Command Bar */
+                    .command-container {
+                        padding: 12px 20px;
                         background: var(--card-bg);
                         border-top: 1px solid var(--border);
                         display: flex;
-                        gap: 10px;
+                        gap: 12px;
+                        align-items: center;
                     }
-                    .cmd-input {
+                    .cmd-input-lg {
                         flex: 1;
                         background: var(--bg);
                         border: 1px solid var(--border);
-                        color: var(--text-primary);
-                        padding: 8px 12px;
-                        border-radius: 4px;
-                        font-family: monospace;
+                        color: var(--accent);
+                        padding: 10px 16px;
+                        border-radius: 6px;
+                        font-family: 'SF Mono', monospace;
+                        font-size: 0.9rem;
                     }
-                    .cmd-btn {
+                    .cmd-btn-lg {
                         background: var(--accent);
                         color: #fff;
                         border: none;
-                        padding: 8px 16px;
-                        border-radius: 4px;
+                        padding: 10px 20px;
+                        border-radius: 6px;
                         cursor: pointer;
                         font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        transition: filter 0.2s;
                     }
-                    .cmd-btn:hover { opacity: 0.9; }
+                    .cmd-btn-lg:hover { filter: brightness(1.1); }
+
+                    /* Tooltip */
+                    .tooltip { position: relative; cursor: help; border-bottom: 1px dotted var(--text-secondary); }
+                    .tooltip:hover::after {
+                        content: attr(data-tip);
+                        position: absolute;
+                        bottom: 100%; left: 50%; transform: translateX(-50%);
+                        background: #000;
+                        border: 1px solid var(--border);
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        font-size: 0.75rem;
+                        white-space: nowrap;
+                        z-index: 100;
+                        pointer-events: none;
+                        margin-bottom: 8px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                    }
                 </style>
             </head>
             <body>
                 <header>
-                    <h1>🌌 Swarm Existential Map</h1>
-                    <div style="display:flex; gap:10px; align-items:center;">
+                    <h1>
+                        <span style="font-size: 1.8rem;">🌌</span> 
+                        <div>
+                            Swarm Existential Map
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 400; letter-spacing: 1px;">REAL-TIME OBSERVABILITY & CONTROL</div>
+                        </div>
+                    </h1>
+                    <div style="display:flex; gap:12px; align-items:center;">
                         <div id="connection-status" class="tag">Online</div>
                         <div class="tag" style="border: 1px solid ${securityStatus.trusted ? 'var(--success)' : 'var(--danger)'}">
                             🛡️ ${securityStatus.network}
-                        </div>
-                        <div class="tag" style="border: 1px solid var(--info)">
-                            💾 Mem: Persisted
                         </div>
                     </div>
                 </header>
                 
                 <div class="container">
-                    <!-- Left: Agents Map -->
+                    <!-- 1. Agents Panel -->
                     <div class="panel" id="agents-panel">
                         <div class="panel-header">
-                            <span class="panel-title">Active Holons & Agents</span>
-                            <span class="tag" id="agent-count">0 Agents</span>
+                            <div class="panel-title-row">
+                                <span class="panel-title">👥 Active Agents</span>
+                                <span class="tag" id="agent-count">0</span>
+                            </div>
+                            <div class="filter-bar">
+                                <input type="text" id="filter-agent-text" class="filter-input" placeholder="Search ID/Role...">
+                                <select id="filter-agent-team" class="filter-input">
+                                    <option value="">All Teams</option>
+                                    <option value="Core-System">Core-System</option>
+                                    <option value="Freelancers">Freelancers</option>
+                                </select>
+                                <select id="filter-agent-sec" class="filter-input" style="width: 70px;">
+                                    <option value="">Lvl</option>
+                                    <option value="10">L10</option>
+                                    <option value="5">L5</option>
+                                    <option value="1">L1</option>
+                                </select>
+                            </div>
                         </div>
-                        <div id="map-content">Detecting agents...</div>
+                        <div class="panel-content" id="map-content">
+                            <!-- Table inserted by JS -->
+                        </div>
                     </div>
 
-                    <!-- Center: Network Logs -->
+                    <!-- 2. Network Logs -->
                     <div class="panel" id="network-panel">
                         <div class="panel-header">
-                            <span class="panel-title">P2P Secure Network</span>
-                            <span class="tag" id="net-status">Active</span>
+                            <div class="panel-title-row">
+                                <span class="panel-title">📡 Network Grid</span>
+                                <div style="display:flex; gap:5px;">
+                                    <button id="btn-view-traffic" class="tag" style="cursor:pointer; background:var(--accent); color:#fff; border:none;" onclick="toggleNetView('TRAFFIC')">TRAFFIC</button>
+                                    <button id="btn-view-security" class="tag" style="cursor:pointer; opacity:0.5; border:1px solid var(--accent); color:var(--accent);" onclick="toggleNetView('SECURITY')">ALERTS</button>
+                                </div>
+                            </div>
+                            <div class="metrics-bar" id="net-metrics">
+                                <!-- Metrics -->
+                            </div>
+                            <div class="filter-bar">
+                                <input type="text" id="filter-net-text" class="filter-input" placeholder="Search Source/Target...">
+                                <select id="filter-net-status" class="filter-input">
+                                    <option value="">All Status</option>
+                                    <option value="DELIVERED">Delivered</option>
+                                    <option value="BLOCKED">Blocked</option>
+                                    <option value="DROPPED">Dropped</option>
+                                </select>
+                            </div>
                         </div>
-                        <div id="network-content">Listening for packets...</div>
+                        <div class="panel-content" id="network-content">
+                            <!-- Table inserted by JS -->
+                        </div>
                     </div>
 
-                    <!-- Right: Global Tasks -->
+                    <!-- 3. Global Tasks -->
                     <div class="panel" id="tasks-panel">
                         <div class="panel-header">
-                            <span class="panel-title">Global Task Queue</span>
-                            <span class="tag" id="task-count">0 Tasks</span>
+                            <div class="panel-title-row">
+                                <span class="panel-title">📋 Task Matrix</span>
+                                <span class="tag" id="task-count">0</span>
+                            </div>
+                            <div class="filter-bar">
+                                <input type="text" id="filter-task-text" class="filter-input" placeholder="Search Tasks...">
+                                <select id="filter-task-status" class="filter-input">
+                                    <option value="">All Status</option>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="IN_PROGRESS">In Progress</option>
+                                    <option value="COMPLETED">Completed</option>
+                                    <option value="BLOCKED">Blocked</option>
+                                </select>
+                                <select id="filter-task-pri" class="filter-input" style="width: 80px;">
+                                    <option value="">Priority</option>
+                                    <option value="high">High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
                         </div>
-                        <div id="tasks-content">Loading tasks...</div>
+                        <div class="panel-content" id="tasks-content">
+                            <!-- Table inserted by JS -->
+                        </div>
                     </div>
                 </div>
 
                 <!-- Divine Intervention -->
-                <div class="command-bar">
-                    <input type="text" id="cmd-input" class="cmd-input" placeholder="⚡ Divine Intervention: Inject Command (e.g., /create title:Refactor priority:high)">
-                    <button class="cmd-btn" onclick="sendCommand()">INJECT</button>
+                <div class="command-container">
+                    <div style="color: var(--accent); font-size: 1.2rem;">⚡</div>
+                    <input type="text" id="cmd-input" class="cmd-input-lg" placeholder="Divine Intervention: Inject Command (e.g., /create title:Refactor priority:high)">
+                    <button class="cmd-btn-lg" onclick="sendCommand()">EXECUTE</button>
                 </div>
 
                 <!-- Task Modal -->
                 <div id="task-modal" class="modal-overlay">
                     <div class="modal">
                         <div class="modal-header">
-                            <h3 style="margin:0" id="modal-title">Task Details</h3>
-                            <button class="close-btn" onclick="closeModal()">×</button>
+                            <h3 style="margin:0; font-weight: 400;" id="modal-title">Task Details</h3>
+                            <button onclick="closeModal()" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; font-size:1.5rem;">&times;</button>
                         </div>
-                        <div class="modal-body" id="modal-body">
-                            <!-- Content -->
-                        </div>
+                        <div class="modal-body" id="modal-body"></div>
                         <div class="modal-footer">
-                            <span style="font-size:0.8rem; color:var(--text-secondary)">Task Traceability System v1.0</span>
+                            <span style="font-size:0.75rem; color:var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Task Traceability System v2.0</span>
                         </div>
                     </div>
                 </div>
 
                 <script>
-                    function renderTag(cls, text) {
-                        return '<span class="tag ' + cls + '">' + text + '</span>';
+                    // State
+                    let state = {
+                        agents: [],
+                        tasks: [],
+                        logs: [],
+                        securityLogs: [],
+                        view: { net: 'TRAFFIC' },
+                        filters: {
+                            agent: { text: '', team: '', sec: '' },
+                            task: { text: '', status: '', pri: '' },
+                            net: { text: '', status: '' }
+                        },
+                        sort: {
+                            agent: { col: 'id', asc: true },
+                            task: { col: 'updated_at', asc: false },
+                            net: { col: 'timestamp', asc: false }
+                        }
+                    };
+
+                    function toggleNetView(view) {
+                        state.view.net = view;
+                        document.getElementById('btn-view-traffic').style.opacity = view === 'TRAFFIC' ? '1' : '0.5';
+                        document.getElementById('btn-view-security').style.opacity = view === 'SECURITY' ? '1' : '0.5';
+                        renderNetworkTable();
                     }
 
-                    function renderAgent(agent) {
-                        const roles = (agent.capabilities || [])
-                            .filter(c => c.startsWith('ROLE:'))
-                            .map(c => c.replace('ROLE:', ''))
-                            .join(', ') || 'Generalist';
-                        
-                        const isBusy = agent.current_task && agent.current_task !== 'IDLE';
-                        const statusClass = isBusy ? 'status-BUSY' : 'status-IDLE';
-                        const statusText = isBusy ? agent.current_task.substring(0, 30) : 'Idle';
+                    // Setup Listeners
+                    ['filter-agent-text', 'filter-agent-team', 'filter-agent-sec'].forEach(id => {
+                        document.getElementById(id).addEventListener('input', e => {
+                            state.filters.agent[id.split('-')[2]] = e.target.value;
+                            renderMapTable();
+                        });
+                    });
 
-                        return \`
-                            <div class="agent-id">
-                                <span>\${agent.id.substring(0, 20)}</span>
-                                <span class="agent-role">\${roles}</span>
-                            </div>
-                            <div>
-                                \${renderTag('sec-' + agent.security_level, 'L' + agent.security_level)}
-                                \${renderTag('net-' + (agent.network?.provider || 'LOCAL'), agent.network?.provider || 'LOCAL')}
-                            </div>
-                            <div class="status-indicator \${statusClass}">
-                                <div class="dot"></div>
-                                <span>\${statusText}</span>
-                            </div>
-                        \`;
+                    ['filter-task-text', 'filter-task-status', 'filter-task-pri'].forEach(id => {
+                        document.getElementById(id).addEventListener('input', e => {
+                            state.filters.task[id.split('-')[2]] = e.target.value;
+                            renderTasksTable();
+                        });
+                    });
+
+                    ['filter-net-text', 'filter-net-status'].forEach(id => {
+                        document.getElementById(id).addEventListener('input', e => {
+                            state.filters.net[id.split('-')[2]] = e.target.value;
+                            renderNetworkTable();
+                        });
+                    });
+
+                    document.getElementById('cmd-input').addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') sendCommand();
+                    });
+
+                    // Helper: Sort
+                    function sortData(data, key, asc) {
+                        return [...data].sort((a, b) => {
+                            let valA = key.split('.').reduce((o, i) => o?.[i], a);
+                            let valB = key.split('.').reduce((o, i) => o?.[i], b);
+                            if (typeof valA === 'string') valA = valA.toLowerCase();
+                            if (typeof valB === 'string') valB = valB.toLowerCase();
+                            if (valA < valB) return asc ? -1 : 1;
+                            if (valA > valB) return asc ? 1 : -1;
+                            return 0;
+                        });
                     }
 
-                    function renderTask(task) {
-                        const secLevel = task.required_security_level || 1;
-                        return \`
-                            <div class="task-card" onclick="openTask('\${task.id}')">
-                                <div class="task-title">
-                                    \${task.title}
-                                    <span class="tag sec-\${secLevel}" style="font-size:0.7em; margin-left:8px;">L\${secLevel}</span>
-                                </div>
-                                <div class="task-meta">
-                                    <span>\${task.assignee ? '👤 ' + task.assignee.substring(0,10) : 'Unassigned'}</span>
-                                    <span class="task-status status-\${task.status}">\${task.status}</span>
-                                </div>
-                            </div>
-                        \`;
-                    }
-
-                    function getStatusTip(status) {
-                        if (status === 'DELIVERED') return 'Pacote permitido: políticas satisfeitas (origem confiável, nível adequado, guardas OK)';
-                        if (status === 'BLOCKED') return 'Pacote bloqueado: violação de política (fora da Tailscale, nível insuficiente ou fronteira de confiança)';
-                        if (status === 'DROPPED') return 'Pacote descartado: destino indisponível ou timeout';
-                        return 'Estado desconhecido';
-                    }
-
-                    function renderLog(log) {
-                        const date = new Date(log.timestamp);
-                        const time = date.toLocaleTimeString().split(' ')[0];
-                        return \`
-                            <div class="log-entry">
-                                <span class="log-time">\${time}</span>
-                                <div class="log-content">
-                                    <span class="log-status-\${log.status} tooltip" data-tip="\${getStatusTip(log.status)}">[\${log.status}]</span>
-                                    \${log.from.substring(0,8)} <span class="log-arrow">→</span> \${log.to.substring(0,8)} <span class="tooltip" data-tip="Tipo de mensagem">\${log.type}</span>
-                                    <br>
-                                    <span style="color:var(--text-secondary)">Motivo: \${log.reason || 'OK'}</span>
-                                </div>
-                            </div>
-                        \`;
+                    // Helper: Highlight
+                    function highlight(text) {
+                        return text; // Placeholder for search highlight
                     }
 
                     async function updateData() {
                         try {
-                            // Fetch Map
-                            const mapRes = await fetch('/api/map');
+                            const [mapRes, taskRes, netRes, secRes] = await Promise.all([
+                                fetch('/api/map'),
+                                fetch('/api/tasks'),
+                                fetch('/api/network'),
+                                fetch('/api/security/logs')
+                            ]);
+                            
+                            // Map returns object by teams, flatten it for table
                             const teams = await mapRes.json();
-                            
-                            // Fetch Tasks
-                            const taskRes = await fetch('/api/tasks');
-                            const tasks = await taskRes.json();
+                            let flatAgents = [];
+                            for (const [team, agents] of Object.entries(teams)) {
+                                agents.forEach(a => {
+                                    a.team = team;
+                                    flatAgents.push(a);
+                                });
+                            }
+                            state.agents = flatAgents;
+                            state.tasks = await taskRes.json();
+                            state.logs = await netRes.json();
+                            state.securityLogs = await secRes.json();
 
-                            // Fetch Network Logs
-                            const netRes = await fetch('/api/network');
-                            const logs = await netRes.json();
-
-                            renderMap(teams);
-                            renderTasks(tasks);
-                            renderNetwork(logs);
+                            // Render
+                            renderMapTable();
+                            renderTasksTable();
+                            renderNetworkTable();
                             
-                            document.getElementById('connection-status').innerText = 'Live';
+                            document.getElementById('connection-status').innerText = 'Online';
                             document.getElementById('connection-status').style.color = 'var(--success)';
                         } catch (e) {
-                            console.error('Connection lost', e);
-                            document.getElementById('connection-status').innerText = 'Disconnected';
+                            console.error('Update failed', e);
+                            document.getElementById('connection-status').innerText = 'Offline';
                             document.getElementById('connection-status').style.color = 'var(--danger)';
                         }
                     }
 
-                    function renderMap(teams) {
+                    // --- RENDERERS ---
+
+                    function renderMapTable() {
                         const container = document.getElementById('map-content');
-                        let html = '';
-                        let count = 0;
-                        
-                        for (const [team, agents] of Object.entries(teams)) {
-                            count += agents.length;
-                            html += \`
-                                <div class="holon">
-                                    <div class="holon-header">
-                                        <h2>🔷 \${team}</h2>
-                                    </div>
-                            \`;
-                            agents.forEach(agent => {
-                                html += '<div class="agent">' + renderAgent(agent) + '</div>';
-                            });
-                            html += '</div>';
-                        }
-                        
-                        if (container.innerHTML !== html) container.innerHTML = html;
-                        document.getElementById('agent-count').innerText = count + ' Agents';
-                    }
+                        let data = state.agents.filter(a => {
+                            const f = state.filters.agent;
+                            return (f.text === '' || a.id.includes(f.text) || JSON.stringify(a.capabilities).includes(f.text)) &&
+                                   (f.team === '' || a.team === f.team) &&
+                                   (f.sec === '' || a.security_level == f.sec);
+                        });
 
-                    function renderTasks(tasks) {
-                        const container = document.getElementById('tasks-content');
-                        let html = '';
-                        
-                        if (tasks.length === 0) {
-                            html = '<div style="color:var(--text-secondary); text-align:center; padding:20px;">No active tasks</div>';
-                        } else {
-                            tasks.forEach(task => {
-                                html += renderTask(task);
-                            });
-                        }
+                        data = sortData(data, state.sort.agent.col, state.sort.agent.asc);
+                        document.getElementById('agent-count').innerText = data.length;
 
-                        if (container.innerHTML !== html) container.innerHTML = html;
-                        document.getElementById('task-count').innerText = tasks.length + ' Tasks';
-                    }
-
-                    function renderNetwork(logs) {
-                        const container = document.getElementById('network-content');
-                        let html = '';
-                        
-                        // Calculate Metrics
-                        const total = logs.length;
-                        const blocked = logs.filter(l => l.status === 'BLOCKED').length;
-                        const delivered = logs.filter(l => l.status === 'DELIVERED').length;
-                        const blockedRate = total > 0 ? Math.round((blocked / total) * 100) : 0;
-                        
-                        html += \`
-                            <div class="metrics-grid">
-                                <div class="metric-card">
-                                    <div class="metric-val metric-success">\${delivered}</div>
-                                    <div class="metric-label">Allowed Packets</div>
-                                </div>
-                                <div class="metric-card">
-                                    <div class="metric-val metric-danger">\${blocked} <span style="font-size:0.8em">(\${blockedRate}%)</span></div>
-                                    <div class="metric-label">Blocked Attempts</div>
-                                </div>
-                            </div>
+                        let html = \`
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th onclick="setSort('agent','id')">ID/Name</th>
+                                        <th onclick="setSort('agent','team')">Team</th>
+                                        <th onclick="setSort('agent','security_level')">Lvl</th>
+                                        <th onclick="setSort('agent','network.ip')">Net IP</th>
+                                        <th onclick="setSort('agent','current_task')">Activity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                         \`;
 
-                        if (logs.length === 0) {
-                            html += '<div style="color:var(--text-secondary); text-align:center; padding:20px;">Silence on the wire...</div>';
+                        data.forEach(a => {
+                            const isBusy = a.current_task && a.current_task !== 'IDLE';
+                            const statusColor = isBusy ? 'var(--warning)' : 'var(--success)';
+                            
+                            html += \`
+                                <tr>
+                                    <td>
+                                        <div style="font-weight:600; color:var(--text-primary)">\${a.name || a.id.substring(0,12)}</div>
+                                        <div style="font-size:0.7em; color:var(--text-secondary); font-family:monospace">\${a.id.substring(0,20)}</div>
+                                    </td>
+                                    <td>\${a.team}</td>
+                                    <td><span class="tag sec-\${a.security_level}">L\${a.security_level}</span></td>
+                                    <td style="font-family:monospace">\${a.network?.ip || '-'}</td>
+                                    <td>
+                                        <div style="display:flex; align-items:center; gap:6px;">
+                                            <div style="width:6px; height:6px; border-radius:50%; background:\${statusColor}"></div>
+                                            <span style="font-size:0.75em">\${isBusy ? a.current_task.substring(0,20)+'...' : 'Idle'}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            \`;
+                        });
+                        html += '</tbody></table>';
+                        container.innerHTML = html;
+                    }
+
+                    function renderTasksTable() {
+                        const container = document.getElementById('tasks-content');
+                        let data = state.tasks.filter(t => {
+                            const f = state.filters.task;
+                            return (f.text === '' || t.title.toLowerCase().includes(f.text.toLowerCase()) || t.id.includes(f.text)) &&
+                                   (f.status === '' || t.status === f.status) &&
+                                   (f.pri === '' || t.priority === f.pri);
+                        });
+
+                        data = sortData(data, state.sort.task.col, state.sort.task.asc);
+                        document.getElementById('task-count').innerText = data.length;
+
+                        let html = \`
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th onclick="setSort('task','title')">Task</th>
+                                        <th onclick="setSort('task','priority')">Pri</th>
+                                        <th onclick="setSort('task','status')">Status</th>
+                                        <th onclick="setSort('task','assignee')">Assignee</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        \`;
+
+                        data.forEach(t => {
+                            const secLevel = t.required_security_level || 1;
+                            html += \`
+                                <tr draggable="true" ondragstart="drag(event, '\${t.id}')" ondrop="drop(event, '\${t.id}')" ondragover="allowDrop(event)" onclick="openTask('\${t.id}')" style="cursor:pointer">
+                                    <td>
+                                        <div style="font-weight:600;">\${t.title}</div>
+                                        <div style="font-size:0.7em; color:var(--text-secondary)">ID: \${t.id.substring(0,8)} • L\${secLevel}</div>
+                                    </td>
+                                    <td><span class="badge badge-\${t.priority}">\${t.priority}</span></td>
+                                    <td><span class="badge badge-\${t.status}">\${t.status}</span></td>
+                                    <td style="font-family:monospace; font-size:0.75em">\${t.assignee ? t.assignee.substring(0,12) : '<span style="opacity:0.3">--</span>'}</td>
+                                </tr>
+                            \`;
+                        });
+                        html += '</tbody></table>';
+                        container.innerHTML = html;
+                    }
+
+                    function renderNetworkTable() {
+                        const container = document.getElementById('network-content');
+                        const isSecurity = state.view.net === 'SECURITY';
+                        
+                        let data = isSecurity ? state.securityLogs : state.logs;
+                        
+                        // Apply Filters
+                        data = data.filter(l => {
+                            const f = state.filters.net;
+                            if (isSecurity) {
+                                return (f.text === '' || l.action.includes(f.text) || l.resource.includes(f.text)) &&
+                                       (f.status === '' || l.severity === f.status); // Map status filter to severity for security
+                            } else {
+                                return (f.text === '' || l.from.includes(f.text) || l.to.includes(f.text) || l.type.includes(f.text)) &&
+                                       (f.status === '' || l.status === f.status);
+                            }
+                        });
+
+                        // Metrics update
+                        if (isSecurity) {
+                            const high = data.filter(l => l.severity === 'HIGH' || l.severity === 'CRITICAL').length;
+                            const total = data.length;
+                            document.getElementById('net-metrics').innerHTML = \`
+                                <div class="metric-box"><div class="metric-val" style="color:var(--text-primary)">\${total}</div><div class="metric-lbl">Total Alerts</div></div>
+                                <div class="metric-box"><div class="metric-val" style="color:var(--danger)">\${high}</div><div class="metric-lbl">Critical/High</div></div>
+                            \`;
                         } else {
-                            html += '<div style="max-height: 400px; overflow-y: auto;">';
-                            logs.slice(0, 50).forEach(log => {
-                                html += renderLog(log);
-                            });
-                            html += '</div>';
+                            const blocked = data.filter(l => l.status === 'BLOCKED').length;
+                            const delivered = data.filter(l => l.status === 'DELIVERED').length;
+                            document.getElementById('net-metrics').innerHTML = \`
+                                <div class="metric-box"><div class="metric-val" style="color:var(--success)">\${delivered}</div><div class="metric-lbl">Allowed</div></div>
+                                <div class="metric-box"><div class="metric-val" style="color:var(--danger)">\${blocked}</div><div class="metric-lbl">Blocked</div></div>
+                            \`;
                         }
 
-                        if (container.innerHTML !== html) container.innerHTML = html;
+                        data = sortData(data, state.sort.net.col, state.sort.net.asc);
+                        
+                        let html = '<table class="data-table"><thead><tr>';
+                        
+                        if (isSecurity) {
+                            html += \`
+                                <th onclick="setSort('net','timestamp')">Time</th>
+                                <th onclick="setSort('net','severity')">Severity</th>
+                                <th onclick="setSort('net','action')">Action</th>
+                                <th onclick="setSort('net','resource')">Resource</th>
+                            </tr></thead><tbody>\`;
+                            
+                            data.slice(0, 100).forEach(l => {
+                                const time = new Date(l.timestamp).toLocaleTimeString().split(' ')[0];
+                                html += \`
+                                    <tr>
+                                        <td style="color:var(--text-secondary); font-family:monospace">\${time}</td>
+                                        <td><span class="tag" style="color: \${l.severity==='CRITICAL'||l.severity==='HIGH'?'var(--danger)':'var(--warning)'}">\${l.severity}</span></td>
+                                        <td style="font-weight:600">\${l.action}</td>
+                                        <td style="font-family:monospace; font-size:0.75em; color:var(--text-secondary)">\${l.resource}</td>
+                                    </tr>
+                                \`;
+                            });
+                        } else {
+                            html += \`
+                                <th onclick="setSort('net','timestamp')">Time</th>
+                                <th onclick="setSort('net','status')">Status</th>
+                                <th onclick="setSort('net','from')">Flow</th>
+                                <th onclick="setSort('net','type')">Type</th>
+                            </tr></thead><tbody>\`;
+                            
+                            data.slice(0, 100).forEach(l => {
+                                const time = new Date(l.timestamp).toLocaleTimeString().split(' ')[0];
+                                const tip = getStatusTip(l.status);
+                                html += \`
+                                    <tr>
+                                        <td style="color:var(--text-secondary; font-family:monospace">\${time}</td>
+                                        <td><span class="log-status-\${l.status} tooltip" data-tip="\${tip}">\${l.status}</span></td>
+                                        <td style="font-family:monospace; font-size:0.75em">
+                                            <span style="color:var(--accent)">\${l.from.substring(0,8)}</span> 
+                                            <span style="color:var(--text-secondary)">→</span> 
+                                            <span style="color:var(--accent)">\${l.to.substring(0,8)}</span>
+                                        </td>
+                                        <td>\${l.type} <span style="font-size:0.7em; color:var(--text-secondary)">\${l.reason || ''}</span></td>
+                                    </tr>
+                                \`;
+                            });
+                        }
+                        
+                        html += '</tbody></table>';
+                        container.innerHTML = html;
+                    }
+
+                    function setSort(type, col) {
+                        if (state.sort[type].col === col) {
+                            state.sort[type].asc = !state.sort[type].asc;
+                        } else {
+                            state.sort[type].col = col;
+                            state.sort[type].asc = true;
+                        }
+                        if (type === 'agent') renderMapTable();
+                        if (type === 'task') renderTasksTable();
+                        if (type === 'net') renderNetworkTable();
+                    }
+
+                    function getStatusTip(status) {
+                        if (status === 'DELIVERED') return 'Authorized: Trusted Origin & Level OK';
+                        if (status === 'BLOCKED') return 'Violation: Untrusted IP or Low Clearance';
+                        if (status === 'DROPPED') return 'Network Error: Timeout or Unreachable';
+                        return 'Unknown';
+                    }
+
+                    // Drag & Drop & Modal logic from previous version
+                    function allowDrop(ev) { ev.preventDefault(); }
+                    function drag(ev, taskId) { ev.dataTransfer.setData("taskId", taskId); }
+                    function drop(ev, targetTaskId) {
+                        ev.preventDefault();
+                        const sourceTaskId = ev.dataTransfer.getData("taskId");
+                        if (sourceTaskId === targetTaskId) return;
+                        
+                        // API Call to update parent_id
+                        fetch('/api/task/update', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: sourceTaskId, fields: { parent_id: targetTaskId } })
+                        }).then(() => {
+                            // Visual toast
+                        alert(\`Linked Task \${sourceTaskId} -> \${targetTaskId}\`);
+                        updateData();
+                        });
                     }
 
                     async function openTask(id) {
-                        try {
-                            const res = await fetch('/api/task?id=' + encodeURIComponent(id));
-                            const data = await res.json();
-                            const t = data.task;
-                            const sub = data.subTasks || [];
-                            const rel = (data.relatedTasks || []).filter(r => r.id !== t.id);
-                            
-                            if (!t) return;
-
-                            document.getElementById('modal-title').innerText = t.title;
-                            const body = document.getElementById('modal-body');
-                            body.innerHTML = \`
-                                <div style="margin-bottom:10px">
-                                    <div style="color:var(--text-secondary); font-size:0.8rem">ID: \${t.id}</div>
-                                    <div style="color:var(--text-secondary); font-size:0.8rem">Trace ID: \${t.trace_id || '-'}</div>
-                                </div>
-                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px">
-                                    <div>
-                                        <div style="color:var(--text-secondary); font-size:0.8rem">Criado por</div>
-                                        <div>\${t.creator_id || '-'}</div>
+                        const res = await fetch('/api/task?id=' + encodeURIComponent(id));
+                        const data = await res.json();
+                        const t = data.task;
+                        if (!t) return;
+                        
+                        document.getElementById('modal-title').innerText = t.title;
+                        const body = document.getElementById('modal-body');
+                        
+                        // Enhanced Modal Content
+                        body.innerHTML = \`
+                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px;">
+                                <div>
+                                    <div style="font-size:0.75em; color:var(--text-secondary); margin-bottom:4px;">DESCRIPTION / CONTEXT</div>
+                                    <div style="background:var(--bg); padding:10px; border-radius:6px; border:1px solid var(--border); margin-bottom:15px;">
+                                        \${t.description || 'No description provided.'}
                                     </div>
-                                    <div>
-                                        <div style="color:var(--text-secondary); font-size:0.8rem">Tarefa Pai</div>
-                                        <div onclick="openTask('\${t.parent_id}')" style="cursor:pointer; text-decoration:underline; color:var(--accent)">\${t.parent_id || '-'}</div>
+                                    
+                                    <div style="font-size:0.75em; color:var(--text-secondary); margin-bottom:4px;">SUB-TASKS</div>
+                                    <div style="background:var(--bg); border:1px solid var(--border); border-radius:6px; overflow:hidden;">
+                                        \${(data.subTasks||[]).map(s => \`
+                                            <div style="padding:8px 12px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                                                <span>\${s.title}</span>
+                                                <span class="badge badge-\${s.status}" style="font-size:0.6em">\${s.status}</span>
+                                            </div>
+                                        \`).join('') || '<div style="padding:10px; color:var(--text-secondary); font-size:0.8em">No sub-tasks</div>'}
+                                        <div style="padding:8px; display:flex; gap:5px; background:rgba(255,255,255,0.02);">
+                                            <input id="new-subtask" class="filter-input" placeholder="New sub-task..." style="flex:1">
+                                            <button class="cmd-btn-lg" style="padding:4px 10px; font-size:0.8em;" onclick="createSubTask('\${t.id}', '\${t.trace_id}')">+</button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin: 10px 0;">
-                                    <div>
-                                        <div style="color:var(--text-secondary); font-size:0.8rem">Status</div>
-                                        <select id="task-status" class="cmd-input">
+                                <div>
+                                    <div style="margin-bottom:15px;">
+                                        <label style="display:block; font-size:0.75em; color:var(--text-secondary); margin-bottom:4px;">STATUS</label>
+                                        <select id="edit-status" class="cmd-input-lg" style="width:100%; padding:8px;">
                                             <option \${t.status==='PENDING'?'selected':''}>PENDING</option>
                                             <option \${t.status==='IN_PROGRESS'?'selected':''}>IN_PROGRESS</option>
                                             <option \${t.status==='COMPLETED'?'selected':''}>COMPLETED</option>
                                             <option \${t.status==='BLOCKED'?'selected':''}>BLOCKED</option>
                                         </select>
                                     </div>
-                                    <div>
-                                        <div style="color:var(--text-secondary); font-size:0.8rem">Prioridade</div>
-                                        <select id="task-priority" class="cmd-input">
-                                            <option \${t.priority==='low'?'selected':''}>low</option>
-                                            <option \${t.priority==='medium'?'selected':''}>medium</option>
+                                    <div style="margin-bottom:15px;">
+                                        <label style="display:block; font-size:0.75em; color:var(--text-secondary); margin-bottom:4px;">PRIORITY</label>
+                                        <select id="edit-pri" class="cmd-input-lg" style="width:100%; padding:8px;">
                                             <option \${t.priority==='high'?'selected':''}>high</option>
+                                            <option \${t.priority==='medium'?'selected':''}>medium</option>
+                                            <option \${t.priority==='low'?'selected':''}>low</option>
                                         </select>
                                     </div>
-                                </div>
-                                <div style="margin:10px 0;">
-                                    <div style="color:var(--text-secondary); font-size:0.8rem">Responsável</div>
-                                    <input id="task-assignee" class="cmd-input" value="\${t.assignee || ''}" placeholder="agent-id">
-                                </div>
-                                
-                                <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
-                                    <div style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:6px;">Sub-tarefas</div>
-                                    \${sub.length ? sub.map(s => \`<div class="task-card" onclick="openTask('\${s.id}')" style="cursor:pointer; margin-bottom:5px;">\${s.title} <span style="font-size:0.7em; opacity:0.7">(\${s.status})</span></div>\`).join('') : '<div style="color:var(--text-secondary); margin-bottom:5px;">Nenhuma</div>'}
-                                    
-                                    <div style="margin-top:8px; display:flex; gap:5px;">
-                                        <input id="new-subtask-title" class="cmd-input" placeholder="Nova sub-tarefa..." style="flex:1">
-                                        <button class="cmd-btn" onclick="createSubTask('\${t.id}', '\${t.trace_id}')">+</button>
+                                    <div style="margin-bottom:15px;">
+                                        <label style="display:block; font-size:0.75em; color:var(--text-secondary); margin-bottom:4px;">ASSIGNEE</label>
+                                        <input id="edit-assignee" class="cmd-input-lg" style="width:100%; box-sizing:border-box; padding:8px;" value="\${t.assignee||''}">
                                     </div>
+                                    <button class="cmd-btn-lg" style="width:100%; margin-top:10px;" onclick="saveTask('\${t.id}')">SAVE CHANGES</button>
                                 </div>
-
-                                <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
-                                    <div style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:6px;">Relacionadas (Mesmo Trace)</div>
-                                    \${rel.length ? rel.map(r => \`<div class="task-card" onclick="openTask('\${r.id}')" style="cursor:pointer; margin-bottom:5px;">\${r.title}</div>\`).join('') : '<div style="color:var(--text-secondary)">Nenhuma</div>'}
-                                </div>
-
-                                <div style="text-align:right; margin-top:12px;">
-                                    <button class="cmd-btn" onclick="saveTask('\${t.id}')">Salvar Alterações</button>
-                                </div>
-                            \`;
-                            document.getElementById('task-modal').classList.add('active');
-                        } catch (e) {
-                            console.error('Failed to open task', e);
-                        }
-                    }
-
-                    async function createSubTask(parentId, traceId) {
-                        const titleInput = document.getElementById('new-subtask-title');
-                        const title = titleInput.value;
-                        if (!title) return;
-
-                        try {
-                            await fetch('/api/task/create', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    title,
-                                    parentId,
-                                    traceId,
-                                    priority: 'medium'
-                                })
-                            });
-                            // Refresh modal
-                            openTask(parentId);
-                        } catch (e) {
-                            console.error('Failed to create subtask', e);
-                        }
+                            </div>
+                            <div style="margin-top:20px; padding-top:15px; border-top:1px solid var(--border); font-size:0.75em; color:var(--text-secondary); font-family:monospace;">
+                                TRACE_ID: \${t.trace_id} <br>
+                                PARENT_ID: \${t.parent_id || 'ROOT'} <br>
+                                CREATOR: \${t.creator_id}
+                            </div>
+                        \`;
+                        document.getElementById('task-modal').classList.add('active');
                     }
 
                     function closeModal() {
                         document.getElementById('task-modal').classList.remove('active');
                     }
 
+                    async function createSubTask(parentId, traceId) {
+                        const title = document.getElementById('new-subtask').value;
+                        if (!title) return;
+                        await fetch('/api/task/create', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ title, parentId, traceId, priority: 'medium' })
+                        });
+                        openTask(parentId); // Reload
+                    }
+
                     async function saveTask(id) {
-                        const status = document.getElementById('task-status').value;
-                        const priority = document.getElementById('task-priority').value;
-                        const assignee = document.getElementById('task-assignee').value;
+                        const status = document.getElementById('edit-status').value;
+                        const priority = document.getElementById('edit-pri').value;
+                        const assignee = document.getElementById('edit-assignee').value;
+                        await fetch('/api/task/update', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id, fields: { status, priority, assignee } })
+                        });
+                        closeModal();
+                        updateData();
+                    }
+
+                    async function sendCommand() {
+                        const input = document.getElementById('cmd-input');
+                        const text = input.value;
+                        if (!text) return;
+                        
                         try {
-                            await fetch('/api/task/update', {
+                            const res = await fetch('/api/command', {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ id, fields: { status, priority, assignee } })
+                                body: JSON.stringify({ text })
                             });
-                            closeModal();
+                            const data = await res.json();
+                            alert(data.message);
+                            input.value = '';
                             updateData();
                         } catch (e) {
-                            console.error('Failed to update task', e);
+                            alert('Command failed');
                         }
                     }
 
-                    // Initial load
+                    // Start
                     updateData();
-                    // Poll
                     setInterval(updateData, 2000);
                 </script>
             </body>
@@ -809,6 +1032,15 @@ const startServer = () => {
             req.on('end', () => {
                 try {
                     const payload = JSON.parse(body);
+                    
+                    // Logic for parent/trace inheritance
+                    if (payload.fields && payload.fields.parent_id) {
+                        const parent = taskManager.getTask(payload.fields.parent_id);
+                        if (parent) {
+                            payload.fields.trace_id = parent.trace_id;
+                        }
+                    }
+
                     const updated = taskManager.updateTaskFields(payload.id, payload.fields || {});
                     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
                     res.end(JSON.stringify(updated));
@@ -820,6 +1052,10 @@ const startServer = () => {
             return;
         } else if (pathname === '/api/network') {
             const logs = SwarmNetwork.getLogs();
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify(logs));
+        } else if (pathname === '/api/security/logs') {
+            const logs = securityKernel.getSecurityLogs(100);
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
             res.end(JSON.stringify(logs));
         } else {
