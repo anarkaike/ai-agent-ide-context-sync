@@ -15,6 +15,28 @@ const App = () => {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
   
+  // Theme State
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('theme') || 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  useEffect(() => {
+    document.body.className = theme === 'light' ? 'light-theme' : '';
+    try {
+      localStorage.setItem('theme', theme);
+    } catch (e) {
+      console.error('Failed to save theme preference', e);
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+  
   // Modal State
   const [undoModal, setUndoModal] = useState(null); // { id, title }
   const [exceptionModal, setExceptionModal] = useState(null); // { item, type } // type: 'approve_except' | 'deny_except'
@@ -85,13 +107,17 @@ const App = () => {
           if (data.projects) {
             setProjects(data.projects);
           }
+        } else {
+          // Default to Nanobot if registry missing
+          setProjects([
+            { name: 'Nanobot', path: 'C:\\Users\\Jorge\\Documents\\projects\\nanobot', type: 'agent', status: 'active' }
+          ]);
         }
       } catch (e) {
         console.warn("Could not load local registry (not in Electron?)", e);
         // Fallback for browser dev mode
         setProjects([
-          { name: 'demo-project-1', path: '/tmp/demo1' },
-          { name: 'demo-project-2', path: '/tmp/demo2' }
+          { name: 'Nanobot', path: 'C:\\Users\\Jorge\\Documents\\projects\\nanobot', type: 'agent', status: 'active' }
         ]);
       }
     };
@@ -313,7 +339,7 @@ const App = () => {
   };
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${theme === 'light' ? 'light-theme' : ''}`}>
       {/* Exception Modal */}
       {exceptionModal && (
         <div className="modal-overlay">
@@ -374,22 +400,17 @@ const App = () => {
         </div>
       )}
 
-      {/* Main Layout */}
-      <div className="sidebar left-sidebar" style={{width: leftSidebarOpen ? '250px' : '0', opacity: leftSidebarOpen ? 1 : 0}}>
-        <div className="sidebar-header">
-           <h3 style={{margin:0}}>🧬 Nexus</h3>
-           <div className="status-dot" style={{background: agentStatus.includes('Harmonia') ? '#4caf50' : '#ff9800'}} title={agentStatus}></div>
+      {/* Activity Bar */}
+      <div className="activity-bar">
+        <div className={`activity-icon ${activeActivity === 'chat' ? 'active' : ''}`} onClick={() => setActiveActivity('chat')} title="Chat">💬</div>
+        <div className={`activity-icon ${activeActivity === 'projects' ? 'active' : ''}`} onClick={() => setActiveActivity('projects')} title="Projects">📂</div>
+        <div className={`activity-icon ${activeActivity === 'processes' ? 'active' : ''}`} onClick={() => setActiveActivity('processes')} title="Processes">⚙️</div>
+        <div className={`activity-icon ${activeActivity === 'hearts' ? 'active' : ''}`} onClick={() => setActiveActivity('hearts')} title="Vault">❤️</div>
+        <div style={{flex: 1}}></div>
+        <div className="activity-icon" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
+          {theme === 'dark' ? '☀️' : '🌙'}
         </div>
-        
-        <div className="menu-item" onClick={() => setActiveActivity('chat')}>💬 Consciência (Chat)</div>
-        <div className="menu-item" onClick={() => setActiveActivity('projects')}>📂 Projetos (Registry)</div>
-        <div className="menu-item" onClick={() => setActiveActivity('processes')}>⚙️ Processos (Swarm)</div>
-        <div className="menu-item" onClick={() => setActiveActivity('hearts')}>❤️ Vault (Souls)</div>
-        
-        <div style={{marginTop: 'auto', padding: '10px', fontSize: '10px', color: '#666'}}>
-          Tone: {globalTone.toUpperCase()} <br/>
-          Status: {agentStatus}
-        </div>
+        <div className="activity-icon" title="Settings">⚙️</div>
       </div>
 
       <div className="main-content">
