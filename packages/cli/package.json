@@ -23,7 +23,9 @@
     "mcp"
   ],
   "scripts": {
-    "test": "npx jest"
+    "test": "npx jest",
+    "dashboard": "node cli/core/security/dashboard.js",
+    "cron-agent-check": "node cli/scripts/cron-agent-check.js"
   },
   "dependencies": {
     "@xenova/transformers": "^2.17.2",

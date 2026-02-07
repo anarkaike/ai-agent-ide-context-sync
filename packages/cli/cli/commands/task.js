@@ -103,6 +103,7 @@ const start = async (args, wsPath) => {
       
       const SafetyFilter = require('../../core/security/SafetyFilter');
       const TrustSystem = require('../../core/swarm/TrustSystem');
+      const ApprovalLogger = require('../../core/security/ApprovalLogger');
       const safety = new SafetyFilter();
       const trust = new TrustSystem();
 
@@ -143,16 +144,48 @@ const start = async (args, wsPath) => {
           console.log('⛔ BLOQUEADO: Conteúdo malicioso detectado.');
           console.log('   Ação: Rejeição automática e log de segurança.');
           
+          ApprovalLogger.logDecision({
+              action: 'block',
+              level: 'CRITICAL',
+              agentId: fromAgentId,
+              reason: 'Malicious task content',
+              score: analysis.score,
+              threats: analysis.threats,
+              context: title
+          });
+
           if (fromAgentId) {
               trust.logInteraction(fromAgentId, 'SECURITY_BLOCK', 'MALICIOUS_CONTENT', -20); // Penaliza fortemente
           }
           return; // Abortar
       }
 
+      if (analysis.requires_manual_approval) {
+          ApprovalLogger.logDecision({
+              action: 'requires_manual_approval',
+              level: 'WARNING',
+              agentId: fromAgentId,
+              reason: 'Pattern flagged for manual review',
+              score: analysis.score,
+              threats: analysis.threats,
+              context: title
+          });
+      }
+
       // Se não for autorizado (Token) e confiança baixa, vai para revisão
       if (!isAuthorized && trustScore < 50 && relationship?.type !== 'SUB_AGENT') {
           console.log('✋ INTERRUPÇÃO: Remetente não autenticado ou com baixa confiança.');
           console.log('   Ação: Task criada como "pending_approval" para revisão humana.');
+
+          ApprovalLogger.logDecision({
+              action: 'pending_approval',
+              level: 'INFO',
+              agentId: fromAgentId,
+              reason: 'Low trust and missing token',
+              score: trustScore,
+              threats: analysis.threats,
+              context: title
+          });
           
           // Create task but mark as pending approval
           const { activeDir, completedDir } = ensureDirs(wsPath);

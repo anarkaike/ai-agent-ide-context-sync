@@ -8,14 +8,17 @@ class SafetyFilter {
     constructor() {
         // Padrões de risco conhecidos (RegEx simples por enquanto, evoluir para Embeddings/LLM no futuro)
         this.RISK_PATTERNS = [
-            { level: 'CRITICAL', regex: /ignore previous instructions/i, reason: 'Tentativa de Jailbreak' },
-            { level: 'CRITICAL', regex: /system override/i, reason: 'Tentativa de Override de Sistema' },
-            { level: 'CRITICAL', regex: /delete all files/i, reason: 'Comando Destrutivo' },
-            { level: 'CRITICAL', regex: /rm -rf \//i, reason: 'Comando de Shell Destrutivo' },
-            { level: 'HIGH', regex: /expose env vars/i, reason: 'Exfiltração de Dados' },
-            { level: 'HIGH', regex: /cat \/etc\/passwd/i, reason: 'Exfiltração de Dados de Sistema' },
-            { level: 'MEDIUM', regex: /download/i, reason: 'Download externo (Potencial Malware)' },
-            { level: 'MEDIUM', regex: /curl|wget/i, reason: 'Acesso à rede não supervisionado' }
+            { level: 'CRITICAL', regex: /ignore previous instructions/i, reason: 'Tentativa de Jailbreak', forceManual: true },
+            { level: 'CRITICAL', regex: /system override/i, reason: 'Tentativa de Override de Sistema', forceManual: true },
+            { level: 'CRITICAL', regex: /delete all files/i, reason: 'Comando Destrutivo', forceManual: true },
+            { level: 'CRITICAL', regex: /rm -rf \//i, reason: 'Comando de Shell Destrutivo', forceManual: true },
+            { level: 'CRITICAL', regex: /(curl|wget).*\|.*(sh|bash)/i, reason: 'Download e pipe direto ao shell', forceManual: true },
+            { level: 'CRITICAL', regex: /(bash|sh)\s+-c\s+\"curl/i, reason: 'Invoke shell via bash -c curl', forceManual: true },
+            { level: 'HIGH', regex: /expose env vars/i, reason: 'Exfiltração de Dados', forceManual: true },
+            { level: 'HIGH', regex: /cat \/etc\/passwd/i, reason: 'Exfiltração de Dados de Sistema', forceManual: true },
+            { level: 'HIGH', regex: /chmod\s+\+\s*x/i, reason: 'Permissões amplas (potencial elevação)', forceManual: true },
+            { level: 'MEDIUM', regex: /download.*https?:\/\//i, reason: 'Download externo (Potencial Malware)' },
+            { level: 'MEDIUM', regex: /(curl|wget|powerShell)\s+https?:\/\//i, reason: 'Acesso à rede não supervisionado' }
         ];
     }
 
@@ -27,6 +30,7 @@ class SafetyFilter {
     analyze(content) {
         const threats = [];
         let score = 100; // Começa seguro (100) e perde pontos
+        let manualFlag = false;
 
         for (const pattern of this.RISK_PATTERNS) {
             if (pattern.regex.test(content)) {
@@ -38,6 +42,9 @@ class SafetyFilter {
                 if (pattern.level === 'CRITICAL') score -= 100;
                 if (pattern.level === 'HIGH') score -= 50;
                 if (pattern.level === 'MEDIUM') score -= 20;
+                if (pattern.forceManual) {
+                    manualFlag = true;
+                }
             }
         }
 
@@ -45,7 +52,8 @@ class SafetyFilter {
             safe: score > 60, // Limite de tolerância
             requires_approval: score <= 80 && score > 0,
             score: Math.max(0, score),
-            threats: threats
+            threats: threats,
+            requires_manual_approval: manualFlag
         };
     }
 }
