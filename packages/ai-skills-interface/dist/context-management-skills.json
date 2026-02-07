@@ -1,0 +1,14 @@
+[
+  {
+    "name": "context-management",
+    "description": "Capacidade avançada de gerenciamento de contexto de projetos para IAs",
+    "capabilities": [
+      "context-extraction",
+      "context-optimization",
+      "context-synchronization",
+      "context-filtering",
+      "context-persistence",
+      "context-retrieval"
+    ]
+  }
+]
