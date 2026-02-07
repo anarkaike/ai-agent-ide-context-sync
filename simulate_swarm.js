@@ -63,7 +63,10 @@ const tasks = [
     { title: 'Archive Old Backups', level: 1, role: 'Janitor' },
     { title: 'Review PR #42', level: 5, role: 'Developer' },
     { title: 'Monitor Security Logs', level: 9, role: 'Security Sentinel' },
-    { title: 'Deploy to Production', level: 10, role: 'Architect' }
+    { title: 'Deploy to Production', level: 10, role: 'Architect' },
+    { title: 'Complex: Disaster Recovery Plan', level: 10, role: 'Architect' },
+    { title: 'Chain: Trace Intrusion Vector', level: 9, role: 'Security Sentinel' },
+    { title: 'Complex: Refactor Legacy Core', level: 5, role: 'Refactorer' }
 ];
 
 const agents = [prime, sentinel, dev, nano];

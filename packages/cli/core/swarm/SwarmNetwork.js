@@ -1,4 +1,7 @@
 const SecurityKernel = require('./SecurityKernel');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 /**
  * 📡 SwarmNetwork (Virtual P2P Router)
@@ -9,7 +12,18 @@ class SwarmNetwork {
     constructor() {
         this.nodes = new Map(); // ID -> SwarmNode instance
         this.security = new SecurityKernel();
-        this.logs = []; // Traffic logs for observability
+        this.logFile = path.join(os.homedir(), '.ai-doc', 'swarm', 'network_logs.json');
+        this.init();
+    }
+
+    init() {
+        const dir = path.dirname(this.logFile);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        if (!fs.existsSync(this.logFile)) {
+            fs.writeFileSync(this.logFile, JSON.stringify([], null, 2));
+        }
     }
 
     /**
@@ -73,12 +87,31 @@ class SwarmNetwork {
             status,
             reason
         };
-        this.logs.unshift(log);
-        if (this.logs.length > 100) this.logs.pop(); // Keep last 100
+        
+        // Load existing logs
+        let logs = [];
+        try {
+            logs = JSON.parse(fs.readFileSync(this.logFile, 'utf8'));
+        } catch (e) {
+            logs = [];
+        }
+
+        logs.unshift(log);
+        if (logs.length > 100) logs = logs.slice(0, 100); // Keep last 100
+
+        try {
+            fs.writeFileSync(this.logFile, JSON.stringify(logs, null, 2));
+        } catch (e) {
+            console.error('Failed to write network logs', e);
+        }
     }
 
     getLogs() {
-        return this.logs;
+        try {
+            return JSON.parse(fs.readFileSync(this.logFile, 'utf8'));
+        } catch (e) {
+            return [];
+        }
     }
 }
 

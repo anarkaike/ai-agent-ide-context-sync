@@ -159,11 +159,27 @@ class SwarmNode {
             console.log(`🧠 [${this.config.name}] Recalled pattern: ${context.patterns[0].title}`);
         }
 
-        // 2. Mock Execution Steps
-        const steps = ['Analyzing...', 'Working...', 'Finalizing...'];
+        // 2. Mock Execution Steps based on complexity
+        let steps = ['Analyzing...', 'Working...', 'Finalizing...'];
         
+        if (task.title.includes('Complex') || task.title.includes('Chain') || (task.required_security_level || 0) >= 9) {
+            steps = ['Hypothesizing Strategy...', 'Simulating Outcomes...', 'Refining Solution...', 'Executing Core Logic...', 'Verifying Integrity...'];
+        }
+
+        this.trajectory = [...steps];
+        this.pulse();
+
         for (const step of steps) {
             await new Promise(resolve => setTimeout(resolve, 2000)); // 2s per step
+            
+            // Broadcast progress (Report to Prime)
+            if (this.network && this.config.id !== 'prime-orchestrator-001') {
+                // Occasionally report progress
+                if (Math.random() > 0.5) {
+                    this.sendMessage('prime-orchestrator-001', 'REPORT', `${step} [${task.title.substring(0, 15)}...]`);
+                }
+            }
+
             this.trajectory.shift(); // Remove current step
             this.pulse();
         }

@@ -205,6 +205,26 @@ const startServer = () => {
                     .status-IN_PROGRESS { color: var(--accent); background: rgba(88, 166, 255, 0.1); }
                     .status-COMPLETED { color: var(--success); background: rgba(35, 134, 54, 0.1); }
 
+                    /* Metrics Styles */
+                    .metrics-grid {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 10px;
+                        margin-bottom: 15px;
+                        padding-bottom: 15px;
+                        border-bottom: 1px solid var(--border);
+                    }
+                    .metric-card {
+                        background: rgba(255,255,255,0.03);
+                        padding: 10px;
+                        border-radius: 6px;
+                        text-align: center;
+                    }
+                    .metric-val { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); }
+                    .metric-label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; }
+                    .metric-danger { color: var(--danger); }
+                    .metric-success { color: var(--success); }
+
                     /* Network Log Styles */
                     .log-entry {
                         font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
@@ -400,12 +420,33 @@ const startServer = () => {
                         const container = document.getElementById('network-content');
                         let html = '';
                         
+                        // Calculate Metrics
+                        const total = logs.length;
+                        const blocked = logs.filter(l => l.status === 'BLOCKED').length;
+                        const delivered = logs.filter(l => l.status === 'DELIVERED').length;
+                        const blockedRate = total > 0 ? Math.round((blocked / total) * 100) : 0;
+                        
+                        html += \`
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-val metric-success">\${delivered}</div>
+                                    <div class="metric-label">Allowed Packets</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-val metric-danger">\${blocked} <span style="font-size:0.8em">(\${blockedRate}%)</span></div>
+                                    <div class="metric-label">Blocked Attempts</div>
+                                </div>
+                            </div>
+                        \`;
+
                         if (logs.length === 0) {
-                            html = '<div style="color:var(--text-secondary); text-align:center; padding:20px;">Silence on the wire...</div>';
+                            html += '<div style="color:var(--text-secondary); text-align:center; padding:20px;">Silence on the wire...</div>';
                         } else {
-                            logs.slice(0, 20).forEach(log => {
+                            html += '<div style="max-height: 400px; overflow-y: auto;">';
+                            logs.slice(0, 50).forEach(log => {
                                 html += renderLog(log);
                             });
+                            html += '</div>';
                         }
 
                         if (container.innerHTML !== html) container.innerHTML = html;
@@ -455,5 +496,9 @@ const startServer = () => {
         console.log(`🌌 Swarm Map Web Interface running at http://localhost:${PORT}`);
     });
 };
+
+if (require.main === module) {
+    startServer();
+}
 
 module.exports = startServer;
