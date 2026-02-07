@@ -36,7 +36,7 @@ class TaskManager {
         fs.writeFileSync(this.tasksFile, JSON.stringify(tasks, null, 2));
     }
 
-    createTask(title, description, priority = 'medium', context = {}, requiredSecurityLevel = 1) {
+    createTask(title, description, priority = 'medium', context = {}, requiredSecurityLevel = 1, creatorId = 'system', parentId = null) {
         const tasks = this._loadTasks();
         const newTask = {
             id: this._generateId(),
@@ -48,11 +48,18 @@ class TaskManager {
             assignee: null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            context
+            context,
+            creator_id: creatorId,
+            parent_id: parentId,
+            trace_id: context.traceId || this._generateId()
         };
         tasks.push(newTask);
         this._saveTasks(tasks);
         return newTask;
+    }
+
+    deleteAllTasks() {
+        this._saveTasks([]);
     }
 
     assignTask(taskId, agentId) {
