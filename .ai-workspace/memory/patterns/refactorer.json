@@ -1,0 +1,14 @@
+{
+  "patterns": [
+    {
+      "id": "pattern-refactor-001",
+      "timestamp": "2026-02-07T10:00:00.000Z",
+      "title": "Legacy Code Modernization",
+      "problem": "Monolithic functions with high cyclomatic complexity and no tests.",
+      "solution": "1. Write characterization tests. 2. Apply 'Extract Method' to break down large functions. 3. Introduce strict typing (TypeScript). 4. Refactor control flow. 5. Verify with tests.",
+      "tags": ["refactoring", "clean-code", "legacy", "testing"],
+      "author": "Senior Dev",
+      "usageCount": 1
+    }
+  ]
+}

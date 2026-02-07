@@ -242,9 +242,99 @@ const startServer = () => {
                     .log-status-DROPPED { color: var(--warning); }
                     .log-arrow { color: var(--text-secondary); margin: 0 4px; }
 
-                    /* Animation */
-                    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-                    .updating { animation: pulse 1s infinite; }
+                    /* Modal Styles */
+                    .modal-overlay {
+                        position: fixed;
+                        top: 0; left: 0; right: 0; bottom: 0;
+                        background: rgba(0,0,0,0.7);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 1000;
+                        opacity: 0;
+                        pointer-events: none;
+                        transition: opacity 0.2s;
+                    }
+                    .modal-overlay.active { opacity: 1; pointer-events: all; }
+                    
+                    .modal {
+                        background: var(--card-bg);
+                        border: 1px solid var(--border);
+                        border-radius: 8px;
+                        width: 600px;
+                        max-width: 90vw;
+                        max-height: 80vh;
+                        display: flex;
+                        flex-direction: column;
+                        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                    }
+                    
+                    .modal-header {
+                        padding: 20px;
+                        border-bottom: 1px solid var(--border);
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+                    
+                    .modal-body { padding: 20px; overflow-y: auto; }
+                    
+                    .modal-footer {
+                        padding: 15px 20px;
+                        border-top: 1px solid var(--border);
+                        background: rgba(0,0,0,0.2);
+                        text-align: right;
+                    }
+
+                    .close-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem; }
+                    .close-btn:hover { color: var(--text-primary); }
+
+                    /* Tooltip */
+                    .tooltip { position: relative; cursor: help; }
+                    .tooltip:hover::after {
+                        content: attr(data-tip);
+                        position: absolute;
+                        bottom: 100%;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background: #000;
+                        border: 1px solid var(--border);
+                        padding: 5px 10px;
+                        border-radius: 4px;
+                        font-size: 0.75rem;
+                        white-space: nowrap;
+                        z-index: 10;
+                        pointer-events: none;
+                        margin-bottom: 5px;
+                    }
+
+                    /* Command Center */
+                    .command-bar {
+                        padding: 10px 20px;
+                        background: var(--card-bg);
+                        border-top: 1px solid var(--border);
+                        display: flex;
+                        gap: 10px;
+                    }
+                    .cmd-input {
+                        flex: 1;
+                        background: var(--bg);
+                        border: 1px solid var(--border);
+                        color: var(--text-primary);
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        font-family: monospace;
+                    }
+                    .cmd-btn {
+                        background: var(--accent);
+                        color: #fff;
+                        border: none;
+                        padding: 8px 16px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-weight: 600;
+                    }
+                    .cmd-btn:hover { opacity: 0.9; }
                 </style>
             </head>
             <body>
@@ -284,6 +374,28 @@ const startServer = () => {
                             <span class="tag" id="task-count">0 Tasks</span>
                         </div>
                         <div id="tasks-content">Loading tasks...</div>
+                    </div>
+                </div>
+
+                <!-- Divine Intervention -->
+                <div class="command-bar">
+                    <input type="text" id="cmd-input" class="cmd-input" placeholder="⚡ Divine Intervention: Inject Command (e.g., /create title:Refactor priority:high)">
+                    <button class="cmd-btn" onclick="sendCommand()">INJECT</button>
+                </div>
+
+                <!-- Task Modal -->
+                <div id="task-modal" class="modal-overlay">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 style="margin:0" id="modal-title">Task Details</h3>
+                            <button class="close-btn" onclick="closeModal()">×</button>
+                        </div>
+                        <div class="modal-body" id="modal-body">
+                            <!-- Content -->
+                        </div>
+                        <div class="modal-footer">
+                            <span style="font-size:0.8rem; color:var(--text-secondary)">Task Traceability System v1.0</span>
+                        </div>
                     </div>
                 </div>
 
@@ -462,6 +574,46 @@ const startServer = () => {
             `;
             res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
             res.end(html);
+        } else if (pathname === '/api/command') {
+            let body = '';
+            req.on('data', chunk => body += chunk.toString());
+            req.on('end', () => {
+                try {
+                    const cmd = JSON.parse(body);
+                    console.log('⚡ [Divine Intervention] Received:', cmd);
+                    
+                    let result = { status: 'ok', message: 'Command received' };
+                    
+                    // Process Command
+                    if (cmd.text.startsWith('/create')) {
+                        // Ex: /create title:MyTask priority:high
+                        const parts = cmd.text.replace('/create ', '').split(' ');
+                        let title = 'Manual Task';
+                        let priority = 'medium';
+                        
+                        parts.forEach(p => {
+                            if (p.startsWith('title:')) title = p.split(':')[1].replace(/_/g, ' ');
+                            if (p.startsWith('priority:')) priority = p.split(':')[1];
+                        });
+                        
+                        taskManager.createTask(title, 'Created via Divine Intervention', priority, { origin: 'WebMap' }, 10, 'human-admin');
+                        result.message = `Task "${title}" created.`;
+                    } else if (cmd.text === '/clear') {
+                        taskManager.deleteAllTasks();
+                        result.message = 'All tasks cleared.';
+                    } else {
+                        result.status = 'error';
+                        result.message = 'Unknown command. Try /create or /clear';
+                    }
+
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(result));
+                } catch (e) {
+                    res.writeHead(400);
+                    res.end(JSON.stringify({ error: 'Invalid JSON' }));
+                }
+            });
+            return;
         } else if (pathname === '/api/map') {
             const agents = registry.listAgents();
             const teams = {};

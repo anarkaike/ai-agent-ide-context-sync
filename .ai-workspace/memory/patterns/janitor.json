@@ -1,0 +1,14 @@
+{
+  "patterns": [
+    {
+      "id": "pattern-log-001",
+      "timestamp": "2026-02-07T10:05:00.000Z",
+      "title": "Anomaly Detection in Access Logs",
+      "problem": "High volume of access logs obscures attack vectors and system errors.",
+      "solution": "1. Ingest logs into centralized stream. 2. Filter by HTTP 4xx/5xx status codes. 3. Group by IP address and User-Agent. 4. Detect spikes in request rate (DoS). 5. Cross-reference with threat feeds.",
+      "tags": ["logs", "security", "monitoring", "analysis"],
+      "author": "Nanobot",
+      "usageCount": 1
+    }
+  ]
+}
