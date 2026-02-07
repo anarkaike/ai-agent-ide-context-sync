@@ -87,6 +87,21 @@ class TaskManager {
         return tasks[taskIndex];
     }
 
+    updateTaskFields(taskId, fields = {}) {
+        const allowed = new Set(['status', 'assignee', 'priority']);
+        const tasks = this._loadTasks();
+        const taskIndex = tasks.findIndex(t => t.id === taskId);
+        if (taskIndex === -1) throw new Error(`Task ${taskId} not found`);
+        const task = tasks[taskIndex];
+        Object.entries(fields).forEach(([k, v]) => {
+            if (allowed.has(k)) task[k] = v;
+        });
+        task.updated_at = new Date().toISOString();
+        tasks[taskIndex] = task;
+        this._saveTasks(tasks);
+        return task;
+    }
+
     listTasks(filter = {}) {
         let tasks = this._loadTasks();
         if (filter.status) {
@@ -95,12 +110,26 @@ class TaskManager {
         if (filter.assignee) {
             tasks = tasks.filter(t => t.assignee === filter.assignee);
         }
+        if (filter.parent_id) {
+            tasks = tasks.filter(t => t.parent_id === filter.parent_id);
+        }
+        if (filter.trace_id) {
+            tasks = tasks.filter(t => t.trace_id === filter.trace_id);
+        }
         return tasks;
     }
 
     getTask(taskId) {
         const tasks = this._loadTasks();
         return tasks.find(t => t.id === taskId);
+    }
+
+    listSubTasks(parentId) {
+        return this.listTasks({ parent_id: parentId });
+    }
+
+    listRelatedByTrace(traceId) {
+        return this.listTasks({ trace_id: traceId });
     }
 }
 

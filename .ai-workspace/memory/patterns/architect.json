@@ -25,6 +25,20 @@
       ],
       "author": "Human",
       "usageCount": 0
+    },
+    {
+      "id": "mlbc8refact01",
+      "timestamp": "2026-02-07T00:00:00.000Z",
+      "title": "Refatoração de Código Segura",
+      "problem": "Refatorar módulos legados sem quebrar comportamento",
+      "solution": "Isolar mudanças com testes de caracterização, aplicar pequenos passos (Boy Scout), extrair funções puras, medir impacto com cobertura, e usar feature flags quando necessário.",
+      "tags": [
+        "refatoracao",
+        "tests",
+        "feature-flags"
+      ],
+      "author": "AI-Architect",
+      "usageCount": 0
     }
   ]
 }

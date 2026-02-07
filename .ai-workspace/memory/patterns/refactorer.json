@@ -9,6 +9,16 @@
       "tags": ["refactoring", "clean-code", "legacy", "testing"],
       "author": "Senior Dev",
       "usageCount": 1
+    },
+    {
+      "id": "pattern-refactor-002",
+      "timestamp": "2026-02-07T11:00:00.000Z",
+      "title": "Refatoração para Micro-módulos (Holonic)",
+      "problem": "Código acoplado que dificulta a reutilização por agentes/holons específicos.",
+      "solution": "1. Identificar responsabilidades isoladas (Single Responsibility Principle). 2. Extrair lógica para módulos independentes em `packages/cli/modules`. 3. Definir interfaces claras de entrada/saída. 4. Documentar com AI-DOC para ingestão automática. 5. Publicar como ferramenta MCP se aplicável.",
+      "tags": ["refactoring", "modularization", "holonic", "architecture"],
+      "author": "Architect Agent",
+      "usageCount": 0
     }
   ]
 }

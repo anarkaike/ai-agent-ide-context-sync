@@ -12,6 +12,30 @@
       ],
       "author": "CLI-User",
       "usageCount": 0
+    },
+    {
+      "id": "mlbc8logs01",
+      "timestamp": "2026-02-07T00:00:00.000Z",
+      "title": "Análise de Logs de Segurança",
+      "problem": "Detectar padrões de intrusão em logs distribuídos",
+      "solution": "Coletar logs via agentes, normalizar (JSON), aplicar regras de correlação (falhas sucessivas, origem fora da Tailscale, nível de agente abaixo do exigido), alertar via kernel de segurança e registrar evidências.",
+      "tags": [
+        "logs",
+        "correlacao",
+        "intrusao"
+      ],
+      "author": "Security Sentinel",
+      "usageCount": 0
+    },
+    {
+      "id": "pattern-sec-003",
+      "timestamp": "2026-02-07T11:05:00.000Z",
+      "title": "Tailscale Network Enforcement",
+      "problem": "Agentes comunicando fora da rede segura (100.64.0.0/10).",
+      "solution": "1. Validar origem do IP em cada requisição (middleware). 2. Se !trusted, bloquear e logar tentativa. 3. Para agentes Nível 10 (OpenClaw), exigir autenticação mútua (mTLS) ou Token assinado. 4. Atualizar WebMap com alerta visual.",
+      "tags": ["security", "tailscale", "network", "enforcement"],
+      "author": "Security Sentinel",
+      "usageCount": 0
     }
   ]
 }

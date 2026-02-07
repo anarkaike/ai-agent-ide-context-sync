@@ -26,7 +26,7 @@ const startServer = () => {
         // Set CORS headers
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Swarm-Token');
 
         if (req.method === 'OPTIONS') {
             res.writeHead(204);
@@ -36,6 +36,13 @@ const startServer = () => {
 
         const url = new URL(req.url, `http://${req.headers.host}`);
         const pathname = url.pathname;
+
+        // 🛡️ ENFORCE SECURITY ON API ROUTES
+        if (pathname.startsWith('/api/') && !securityStatus.trusted) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'ACCESS_DENIED', reason: 'UNTRUSTED_NETWORK_ORIGIN' }));
+            return;
+        }
 
         if (pathname === '/' || pathname === '/index.html') {
             // Serve HTML
@@ -345,6 +352,9 @@ const startServer = () => {
                         <div class="tag" style="border: 1px solid ${securityStatus.trusted ? 'var(--success)' : 'var(--danger)'}">
                             🛡️ ${securityStatus.network}
                         </div>
+                        <div class="tag" style="border: 1px solid var(--info)">
+                            💾 Mem: Persisted
+                        </div>
                     </div>
                 </header>
                 
@@ -433,7 +443,7 @@ const startServer = () => {
                     function renderTask(task) {
                         const secLevel = task.required_security_level || 1;
                         return \`
-                            <div class="task-card">
+                            <div class="task-card" onclick="openTask('\${task.id}')">
                                 <div class="task-title">
                                     \${task.title}
                                     <span class="tag sec-\${secLevel}" style="font-size:0.7em; margin-left:8px;">L\${secLevel}</span>
@@ -446,6 +456,13 @@ const startServer = () => {
                         \`;
                     }
 
+                    function getStatusTip(status) {
+                        if (status === 'DELIVERED') return 'Pacote permitido: políticas satisfeitas (origem confiável, nível adequado, guardas OK)';
+                        if (status === 'BLOCKED') return 'Pacote bloqueado: violação de política (fora da Tailscale, nível insuficiente ou fronteira de confiança)';
+                        if (status === 'DROPPED') return 'Pacote descartado: destino indisponível ou timeout';
+                        return 'Estado desconhecido';
+                    }
+
                     function renderLog(log) {
                         const date = new Date(log.timestamp);
                         const time = date.toLocaleTimeString().split(' ')[0];
@@ -453,10 +470,10 @@ const startServer = () => {
                             <div class="log-entry">
                                 <span class="log-time">\${time}</span>
                                 <div class="log-content">
-                                    <span class="log-status-\${log.status}">[\${log.status}]</span>
-                                    \${log.from.substring(0,8)} <span class="log-arrow">→</span> \${log.to.substring(0,8)}
+                                    <span class="log-status-\${log.status} tooltip" data-tip="\${getStatusTip(log.status)}">[\${log.status}]</span>
+                                    \${log.from.substring(0,8)} <span class="log-arrow">→</span> \${log.to.substring(0,8)} <span class="tooltip" data-tip="Tipo de mensagem">\${log.type}</span>
                                     <br>
-                                    <span style="color:var(--text-secondary)">\${log.type}: \${log.reason || 'OK'}</span>
+                                    <span style="color:var(--text-secondary)">Motivo: \${log.reason || 'OK'}</span>
                                 </div>
                             </div>
                         \`;
@@ -564,6 +581,126 @@ const startServer = () => {
                         if (container.innerHTML !== html) container.innerHTML = html;
                     }
 
+                    async function openTask(id) {
+                        try {
+                            const res = await fetch('/api/task?id=' + encodeURIComponent(id));
+                            const data = await res.json();
+                            const t = data.task;
+                            const sub = data.subTasks || [];
+                            const rel = (data.relatedTasks || []).filter(r => r.id !== t.id);
+                            
+                            if (!t) return;
+
+                            document.getElementById('modal-title').innerText = t.title;
+                            const body = document.getElementById('modal-body');
+                            body.innerHTML = \`
+                                <div style="margin-bottom:10px">
+                                    <div style="color:var(--text-secondary); font-size:0.8rem">ID: \${t.id}</div>
+                                    <div style="color:var(--text-secondary); font-size:0.8rem">Trace ID: \${t.trace_id || '-'}</div>
+                                </div>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px">
+                                    <div>
+                                        <div style="color:var(--text-secondary); font-size:0.8rem">Criado por</div>
+                                        <div>\${t.creator_id || '-'}</div>
+                                    </div>
+                                    <div>
+                                        <div style="color:var(--text-secondary); font-size:0.8rem">Tarefa Pai</div>
+                                        <div onclick="openTask('\${t.parent_id}')" style="cursor:pointer; text-decoration:underline; color:var(--accent)">\${t.parent_id || '-'}</div>
+                                    </div>
+                                </div>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin: 10px 0;">
+                                    <div>
+                                        <div style="color:var(--text-secondary); font-size:0.8rem">Status</div>
+                                        <select id="task-status" class="cmd-input">
+                                            <option \${t.status==='PENDING'?'selected':''}>PENDING</option>
+                                            <option \${t.status==='IN_PROGRESS'?'selected':''}>IN_PROGRESS</option>
+                                            <option \${t.status==='COMPLETED'?'selected':''}>COMPLETED</option>
+                                            <option \${t.status==='BLOCKED'?'selected':''}>BLOCKED</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <div style="color:var(--text-secondary); font-size:0.8rem">Prioridade</div>
+                                        <select id="task-priority" class="cmd-input">
+                                            <option \${t.priority==='low'?'selected':''}>low</option>
+                                            <option \${t.priority==='medium'?'selected':''}>medium</option>
+                                            <option \${t.priority==='high'?'selected':''}>high</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="margin:10px 0;">
+                                    <div style="color:var(--text-secondary); font-size:0.8rem">Responsável</div>
+                                    <input id="task-assignee" class="cmd-input" value="\${t.assignee || ''}" placeholder="agent-id">
+                                </div>
+                                
+                                <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
+                                    <div style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:6px;">Sub-tarefas</div>
+                                    \${sub.length ? sub.map(s => \`<div class="task-card" onclick="openTask('\${s.id}')" style="cursor:pointer; margin-bottom:5px;">\${s.title} <span style="font-size:0.7em; opacity:0.7">(\${s.status})</span></div>\`).join('') : '<div style="color:var(--text-secondary); margin-bottom:5px;">Nenhuma</div>'}
+                                    
+                                    <div style="margin-top:8px; display:flex; gap:5px;">
+                                        <input id="new-subtask-title" class="cmd-input" placeholder="Nova sub-tarefa..." style="flex:1">
+                                        <button class="cmd-btn" onclick="createSubTask('\${t.id}', '\${t.trace_id}')">+</button>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
+                                    <div style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:6px;">Relacionadas (Mesmo Trace)</div>
+                                    \${rel.length ? rel.map(r => \`<div class="task-card" onclick="openTask('\${r.id}')" style="cursor:pointer; margin-bottom:5px;">\${r.title}</div>\`).join('') : '<div style="color:var(--text-secondary)">Nenhuma</div>'}
+                                </div>
+
+                                <div style="text-align:right; margin-top:12px;">
+                                    <button class="cmd-btn" onclick="saveTask('\${t.id}')">Salvar Alterações</button>
+                                </div>
+                            \`;
+                            document.getElementById('task-modal').classList.add('active');
+                        } catch (e) {
+                            console.error('Failed to open task', e);
+                        }
+                    }
+
+                    async function createSubTask(parentId, traceId) {
+                        const titleInput = document.getElementById('new-subtask-title');
+                        const title = titleInput.value;
+                        if (!title) return;
+
+                        try {
+                            await fetch('/api/task/create', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    title,
+                                    parentId,
+                                    traceId,
+                                    priority: 'medium'
+                                })
+                            });
+                            // Refresh modal
+                            openTask(parentId);
+                        } catch (e) {
+                            console.error('Failed to create subtask', e);
+                        }
+                    }
+
+                    function closeModal() {
+                        document.getElementById('task-modal').classList.remove('active');
+                    }
+
+                    async function saveTask(id) {
+                        const status = document.getElementById('task-status').value;
+                        const priority = document.getElementById('task-priority').value;
+                        const assignee = document.getElementById('task-assignee').value;
+                        try {
+                            await fetch('/api/task/update', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id, fields: { status, priority, assignee } })
+                            });
+                            closeModal();
+                            updateData();
+                        } catch (e) {
+                            console.error('Failed to update task', e);
+                        }
+                    }
+
                     // Initial load
                     updateData();
                     // Poll
@@ -634,6 +771,53 @@ const startServer = () => {
             const tasks = taskManager.listTasks();
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
             res.end(JSON.stringify(tasks));
+        } else if (pathname === '/api/task') {
+            const id = url.searchParams.get('id');
+            const task = taskManager.getTask(id);
+            const subTasks = task ? taskManager.listSubTasks(task.id) : [];
+            const relatedTasks = task && task.trace_id ? taskManager.listRelatedByTrace(task.trace_id) : [];
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ task, subTasks, relatedTasks }));
+        } else if (pathname === '/api/task/create') {
+            let body = '';
+            req.on('data', chunk => body += chunk.toString());
+            req.on('end', () => {
+                try {
+                    const { title, parentId, traceId, priority, assignee } = JSON.parse(body);
+                    const task = taskManager.createTask(
+                        title, 
+                        'Created via WebMap', 
+                        priority || 'medium', 
+                        { parent_id: parentId, trace_id: traceId, origin: 'WebMap' }, 
+                        1, 
+                        'human-admin',
+                        parentId
+                    );
+                    if (assignee) {
+                        taskManager.updateTaskFields(task.id, { assignee });
+                    }
+                    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify(task));
+                } catch (e) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Invalid payload' }));
+                }
+            });
+        } else if (pathname === '/api/task/update') {
+            let body = '';
+            req.on('data', chunk => body += chunk.toString());
+            req.on('end', () => {
+                try {
+                    const payload = JSON.parse(body);
+                    const updated = taskManager.updateTaskFields(payload.id, payload.fields || {});
+                    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify(updated));
+                } catch (e) {
+                    res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ error: 'Invalid payload' }));
+                }
+            });
+            return;
         } else if (pathname === '/api/network') {
             const logs = SwarmNetwork.getLogs();
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });

@@ -126,9 +126,11 @@ class SecurityKernel {
         // 2. Network Security Policy (Tailscale/Localhost Enforcement)
         // Agentes Críticos (Level >= 8) só aceitam comandos de redes seguras
         if (targetAgent.security_level >= 8) {
-            const isSecure = sourceAgent.network?.secure || false;
-            if (!isSecure) {
-                return { allowed: false, reason: 'UNSECURE_NETWORK_ORIGIN' };
+            const sourceIP = sourceAgent.network?.ip || '0.0.0.0';
+            const originCheck = this.validateNetworkOrigin(sourceIP);
+            
+            if (!originCheck.trusted) {
+                return { allowed: false, reason: `UNSECURE_NETWORK_ORIGIN:${sourceIP}` };
             }
         }
 
@@ -156,6 +158,43 @@ class SecurityKernel {
      */
     resolveProfile(agentType) {
         return this.PROFILES[agentType?.toLowerCase()] || this.PROFILES['standard'];
+    }
+
+    /**
+     * Express Middleware to enforce Security Levels on API Routes
+     */
+    middleware(requiredLevel = 1) {
+        return (req, res, next) => {
+            // 1. Identify Agent/User (via Header or IP)
+            const token = req.headers['x-swarm-token'];
+            const ip = req.ip || req.connection.remoteAddress;
+
+            // 2. Validate Origin (Tailscale/Localhost)
+            const originCheck = this.validateNetworkOrigin(ip);
+            
+            // Critical Operations require Trusted Network
+            if (requiredLevel >= 8 && !originCheck.trusted) {
+                console.warn(`🛑 [Security] Blocked untrusted origin: ${ip}`);
+                return res.status(403).json({ error: 'ACCESS_DENIED', reason: 'UNTRUSTED_NETWORK' });
+            }
+
+            // 3. Validate Token (if present)
+            if (token) {
+                const session = this.validateToken(token);
+                if (!session.valid) {
+                    return res.status(401).json({ error: 'INVALID_TOKEN', reason: session.reason });
+                }
+                if (session.level < requiredLevel) {
+                    return res.status(403).json({ error: 'INSUFFICIENT_PERMISSIONS', required: requiredLevel, current: session.level });
+                }
+                req.agent = { id: session.agentId, level: session.level };
+            } else if (requiredLevel > 5) {
+                // High security requires token
+                return res.status(401).json({ error: 'MISSING_TOKEN' });
+            }
+
+            next();
+        };
     }
 }
 
