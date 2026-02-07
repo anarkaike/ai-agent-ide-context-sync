@@ -92,7 +92,7 @@ class PromptGenerator {
             finalContextFiles = finalContextFiles.slice(0, budget.maxContextFiles);
         }
 
-        const limitedHistory = budget.maxHistoryItems ? history.slice(0, budget.maxHistoryItems) : history;
+        const limitedHistory = budget.maxHistoryItems ? history.slice(-budget.maxHistoryItems) : history;
 
         // 0.5 Get Tone Config (Moved up for cache key)
         const toneConfig = this.toneManager.getConfig();

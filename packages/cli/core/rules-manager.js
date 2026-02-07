@@ -103,7 +103,13 @@ class RulesManager {
             try {
                 const frontmatter = yaml.load(frontmatterMatch[1]);
                 rule.description = frontmatter.description || '';
-                rule.globs = frontmatter.globs || [];
+                if (Array.isArray(frontmatter.globs)) {
+                    rule.globs = frontmatter.globs;
+                } else if (typeof frontmatter.globs === 'string' && frontmatter.globs.trim()) {
+                    rule.globs = [frontmatter.globs.trim()];
+                } else {
+                    rule.globs = [];
+                }
                 rule.alwaysApply = frontmatter.alwaysApply || false;
                 rule.content = frontmatterMatch[2].trim();
 
@@ -167,7 +173,9 @@ class RulesManager {
             normA += vecA[i] * vecA[i];
             normB += vecB[i] * vecB[i];
         }
-        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+        const denom = Math.sqrt(normA) * Math.sqrt(normB);
+        if (!denom) return 0;
+        return dotProduct / denom;
     }
 
     /**
