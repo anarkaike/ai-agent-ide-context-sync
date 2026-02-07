@@ -1,6 +1,6 @@
 # AI Instructions - ai-agent-ide-context-sync
 # Gerado automaticamente pelo AI-DOC Kernel v2.0
-# Data: 2026-02-06T20:56:52.808Z
+# Data: 2026-02-07T05:20:39.077Z
 # Variante: CORE
 # ⚠️ NÃO EDITE MANUALMENTE - Use 'ai-doc build' para regenerar
 
