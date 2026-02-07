@@ -1,135 +1,102 @@
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const DatabaseManager = require('./DatabaseManager');
 
 class TaskManager {
     constructor() {
-        this.homeDir = os.homedir();
-        this.baseDir = path.join(this.homeDir, '.ai-doc', 'swarm');
-        this.tasksFile = process.env.AI_DOC_SWARM_TASKS || path.join(this.baseDir, 'tasks.json');
-        this.init();
+        this.dbManager = new DatabaseManager();
+        // Initialize implicitly, but methods should wait for it if strictly necessary.
+        // For simplicity in this architecture, we assume the DB is fast enough or handled.
+        // Ideally, we should await this.init() in the consumer.
+        this.initPromise = this.dbManager.init();
     }
 
     _generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     }
 
-    init() {
-        const dir = path.dirname(this.tasksFile);
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
-        if (!fs.existsSync(this.tasksFile)) {
-            fs.writeFileSync(this.tasksFile, JSON.stringify([], null, 2));
-        }
+    async init() {
+        return this.initPromise;
     }
 
-    _loadTasks() {
-        try {
-            return JSON.parse(fs.readFileSync(this.tasksFile, 'utf8'));
-        } catch (e) {
-            return [];
-        }
-    }
-
-    _saveTasks(tasks) {
-        fs.writeFileSync(this.tasksFile, JSON.stringify(tasks, null, 2));
-    }
-
-    createTask(title, description, priority = 'medium', context = {}, requiredSecurityLevel = 1, creatorId = 'system', parentId = null) {
-        const tasks = this._loadTasks();
+    async createTask(title, description, priority = 'medium', context = {}, requiredSecurityLevel = 1, creatorId = 'system', parentId = null) {
+        await this.initPromise;
+        
         const newTask = {
             id: this._generateId(),
             title,
             description,
             priority,
             required_security_level: requiredSecurityLevel,
-            status: 'PENDING', // PENDING, IN_PROGRESS, COMPLETED, BLOCKED
+            status: 'PENDING',
             assignee: null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            context,
+            metadata: context, // mapped to metadata in DB
             creator_id: creatorId,
             parent_id: parentId,
             trace_id: context.traceId || this._generateId()
         };
-        tasks.push(newTask);
-        this._saveTasks(tasks);
+
+        await this.dbManager.saveTask(newTask);
         return newTask;
     }
 
-    deleteAllTasks() {
-        this._saveTasks([]);
+    async listTasks(filter = {}) {
+        await this.initPromise;
+        return this.dbManager.getTasks(filter);
     }
 
-    assignTask(taskId, agentId) {
-        const tasks = this._loadTasks();
-        const taskIndex = tasks.findIndex(t => t.id === taskId);
-        if (taskIndex === -1) throw new Error(`Task ${taskId} not found`);
-
-        tasks[taskIndex].assignee = agentId;
-        tasks[taskIndex].status = 'IN_PROGRESS';
-        tasks[taskIndex].updated_at = new Date().toISOString();
-        
-        this._saveTasks(tasks);
-        return tasks[taskIndex];
+    async getTask(id) {
+        await this.initPromise;
+        return this.dbManager.getTask(id);
     }
 
-    updateStatus(taskId, status) {
-        const tasks = this._loadTasks();
-        const taskIndex = tasks.findIndex(t => t.id === taskId);
-        if (taskIndex === -1) throw new Error(`Task ${taskId} not found`);
-
-        tasks[taskIndex].status = status;
-        tasks[taskIndex].updated_at = new Date().toISOString();
-        
-        this._saveTasks(tasks);
-        return tasks[taskIndex];
+    async deleteAllTasks() {
+        await this.initPromise;
+        return this.dbManager.deleteAllTasks();
     }
 
-    updateTaskFields(taskId, fields = {}) {
-        const allowed = new Set(['status', 'assignee', 'priority', 'parent_id', 'trace_id']);
-        const tasks = this._loadTasks();
-        const taskIndex = tasks.findIndex(t => t.id === taskId);
-        if (taskIndex === -1) throw new Error(`Task ${taskId} not found`);
-        const task = tasks[taskIndex];
-        Object.entries(fields).forEach(([k, v]) => {
-            if (allowed.has(k)) task[k] = v;
-        });
+    async assignTask(taskId, agentId) {
+        await this.initPromise;
+        const task = await this.dbManager.getTask(taskId);
+        if (!task) throw new Error(`Task ${taskId} not found`);
+
+        task.assignee = agentId;
+        task.status = 'IN_PROGRESS';
         task.updated_at = new Date().toISOString();
-        tasks[taskIndex] = task;
-        this._saveTasks(tasks);
+
+        await this.dbManager.saveTask(task);
         return task;
     }
 
-    listTasks(filter = {}) {
-        let tasks = this._loadTasks();
-        if (filter.status) {
-            tasks = tasks.filter(t => t.status === filter.status);
+    async updateStatus(taskId, status) {
+        await this.initPromise;
+        const task = await this.dbManager.getTask(taskId);
+        if (!task) throw new Error(`Task ${taskId} not found`);
+
+        task.status = status;
+        task.updated_at = new Date().toISOString();
+        if (status === 'COMPLETED') {
+            task.completed_at = new Date().toISOString();
         }
-        if (filter.assignee) {
-            tasks = tasks.filter(t => t.assignee === filter.assignee);
-        }
-        if (filter.parent_id) {
-            tasks = tasks.filter(t => t.parent_id === filter.parent_id);
-        }
-        if (filter.trace_id) {
-            tasks = tasks.filter(t => t.trace_id === filter.trace_id);
-        }
-        return tasks;
+
+        await this.dbManager.saveTask(task);
+        return task;
     }
 
-    getTask(taskId) {
-        const tasks = this._loadTasks();
-        return tasks.find(t => t.id === taskId);
-    }
+    async updateTaskFields(taskId, fields = {}) {
+        await this.initPromise;
+        const allowed = new Set(['status', 'assignee', 'priority', 'parent_id', 'trace_id']);
+        const validFields = {};
+        
+        Object.entries(fields).forEach(([k, v]) => {
+            if (allowed.has(k)) validFields[k] = v;
+        });
 
-    listSubTasks(parentId) {
-        return this.listTasks({ parent_id: parentId });
-    }
-
-    listRelatedByTrace(traceId) {
-        return this.listTasks({ trace_id: traceId });
+        if (Object.keys(validFields).length > 0) {
+            await this.dbManager.updateTask(taskId, validFields);
+        }
+        
+        return this.dbManager.getTask(taskId);
     }
 }
 

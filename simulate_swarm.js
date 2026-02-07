@@ -43,20 +43,27 @@ const nano = new SwarmNode({
 
 const taskManager = new TaskManager();
 
-// 🧹 Cleanup on Start
-console.log('🧹 Cleaning up old tasks...');
-taskManager.deleteAllTasks();
+(async () => {
+    // 🧹 Cleanup on Start
+    console.log('🧹 Cleaning up old tasks...');
+    await taskManager.deleteAllTasks();
 
-console.log('🌌 Starting Swarm Simulation...');
-console.log('Press Ctrl+C to stop');
+    console.log('🌌 Starting Swarm Simulation...');
+    console.log('Press Ctrl+C to stop');
 
-// Start all agents
-prime.start();
-setTimeout(() => sentinel.start(), 1000);
-setTimeout(() => dev.start(), 2000);
-setTimeout(() => nano.start(), 3000);
+    // Start all agents
+    prime.start();
+    setTimeout(() => sentinel.start(), 1000);
+    setTimeout(() => dev.start(), 2000);
+    setTimeout(() => nano.start(), 3000);
 
-// Task Generator (The Architect)
+    // Generate a task every 8 seconds
+    setInterval(assignRandomTask, 8000);
+
+    // Simulate P2P Communication every 5 seconds
+    setInterval(simulateCommunication, 5000);
+})();
+
 const tasks = [
     { title: 'Update Kernel Security', level: 10, role: 'Security Sentinel' },
     { title: 'Refactor Auth Module', level: 5, role: 'Refactorer' },
@@ -75,9 +82,9 @@ const tasks = [
 
 const agents = [prime, sentinel, dev, nano];
 
-function assignRandomTask() {
+async function assignRandomTask() {
     // 🚦 Traffic Control: Don't overload the system
-    const activeTasks = taskManager.listTasks({ status: 'PENDING' });
+    const activeTasks = await taskManager.listTasks({ status: 'PENDING' });
     if (activeTasks.length > 20) {
         console.log('⏳ [Architect] Task queue full, waiting...');
         return;
@@ -92,7 +99,7 @@ function assignRandomTask() {
     // 🕸️ Scenario: Sub-task creation (Traceability)
     if (taskDef.title.startsWith('Complex:')) {
         // 1. Create Parent Task
-        parentTask = taskManager.createTask(
+        parentTask = await taskManager.createTask(
             taskDef.title, 
             `Strategic Initiative: ${taskDef.title}`, 
             'high', 
@@ -105,12 +112,12 @@ function assignRandomTask() {
         // 2. Assign Parent Task
         const architectAgents = agents.filter(a => a.config.roles.includes('Architect'));
         if (architectAgents.length > 0) {
-            taskManager.assignTask(parentTask.id, architectAgents[0].config.id);
+            await taskManager.assignTask(parentTask.id, architectAgents[0].config.id);
         }
 
         // 3. Create Sub-task immediately
         const subTaskTitle = `Impl: ${taskDef.title.replace('Complex: ', '')}`;
-        const subTask = taskManager.createTask(
+        const subTask = await taskManager.createTask(
             subTaskTitle, 
             `Implementation phase for ${parentTask.title}`, 
             'medium', 
@@ -131,12 +138,12 @@ function assignRandomTask() {
         if (suitableAgents.length > 0) {
             const agent = suitableAgents[Math.floor(Math.random() * suitableAgents.length)];
             console.log(`  ↳ 🎲 Assigning Sub-task to ${agent.config.name}`);
-            taskManager.assignTask(subTask.id, agent.config.id);
+            await taskManager.assignTask(subTask.id, agent.config.id);
         }
         return; // Done for this cycle
     } else if (taskDef.title.startsWith('Chain:')) {
         // 🔗 Chain Reaction: Create one task now, and schedule another dependent one
-        const step1 = taskManager.createTask(
+        const step1 = await taskManager.createTask(
             `${taskDef.title} - Step 1`,
             'Initial investigation phase',
             'high',
@@ -149,12 +156,12 @@ function assignRandomTask() {
         // Assign Step 1
         const suitableAgents = agents.filter(a => a.config.security_level >= step1.required_security_level && a.status === 'IDLE');
         if (suitableAgents.length > 0) {
-            taskManager.assignTask(step1.id, suitableAgents[0].config.id);
+            await taskManager.assignTask(step1.id, suitableAgents[0].config.id);
         }
 
         // Schedule Step 2 (simulated by creating it immediately but linked)
-        setTimeout(() => {
-            const step2 = taskManager.createTask(
+        setTimeout(async () => {
+            const step2 = await taskManager.createTask(
                 `${taskDef.title} - Step 2`,
                 'Remediation phase',
                 'high',
@@ -166,7 +173,7 @@ function assignRandomTask() {
             console.log(`  ↳ 🔗 [Chain] Follow-up: "${step2.title}" (Linked to Step 1)`);
              const agentsForStep2 = agents.filter(a => a.config.security_level >= step2.required_security_level && a.status === 'IDLE');
             if (agentsForStep2.length > 0) {
-                taskManager.assignTask(step2.id, agentsForStep2[0].config.id);
+                await taskManager.assignTask(step2.id, agentsForStep2[0].config.id);
             }
         }, 4000); // 4 seconds later
 
@@ -179,7 +186,7 @@ function assignRandomTask() {
         creator = sentinel;
     }
 
-    const task = taskManager.createTask(
+    const task = await taskManager.createTask(
         taskDef.title, 
         `Generated by Simulation context: ${Date.now()}`, 
         'medium', 
@@ -194,17 +201,16 @@ function assignRandomTask() {
     if (suitableAgents.length > 0) {
         const agent = suitableAgents[Math.floor(Math.random() * suitableAgents.length)];
         console.log(`🎲 [Architect] Assigning "${taskDef.title}" to ${agent.config.name} (Creator: ${creator.config.name})`);
-        taskManager.assignTask(task.id, agent.config.id);
+        await taskManager.assignTask(task.id, agent.config.id);
     } else {
         console.log(`⏳ [Architect] No suitable/idle agent for "${taskDef.title}" (L${taskDef.level})`);
     }
 }
 
-// Generate a task every 8 seconds
-setInterval(assignRandomTask, 8000);
+// End of simulation setup
 
-// Simulate P2P Communication every 5 seconds
 function simulateCommunication() {
+
     const sender = agents[Math.floor(Math.random() * agents.length)];
     const receiver = agents[Math.floor(Math.random() * agents.length)];
 

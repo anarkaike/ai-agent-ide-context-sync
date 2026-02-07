@@ -1,4 +1,5 @@
 const SecurityKernel = require('./SecurityKernel');
+const DatabaseManager = require('./DatabaseManager');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -13,16 +14,24 @@ class SwarmNetwork {
         this.nodes = new Map(); // ID -> SwarmNode instance
         this.security = new SecurityKernel();
         this.logFile = path.join(os.homedir(), '.ai-doc', 'swarm', 'network_logs.json');
+        this.dbManager = new DatabaseManager();
         this.init();
     }
 
-    init() {
+    async init() {
         const dir = path.dirname(this.logFile);
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
         if (!fs.existsSync(this.logFile)) {
             fs.writeFileSync(this.logFile, JSON.stringify([], null, 2));
+        }
+        
+        try {
+            await this.dbManager.init();
+            console.log('🔌 [Network] Connected to SQLite persistence.');
+        } catch (e) {
+            console.error('❌ [Network] Failed to connect to SQLite:', e);
         }
     }
 
@@ -62,6 +71,9 @@ class SwarmNetwork {
         // 📨 Deliver Message
         this._log(sourceId, targetId, type, 'DELIVERED', access.reason);
         
+        // Record Interaction in Topology
+        this.dbManager.recordInteraction(sourceId, targetId, type).catch(err => console.error('Topology Record Error:', err));
+
         // Async delivery simulation
         setImmediate(() => {
             if (target.receiveMessage) {
@@ -88,6 +100,9 @@ class SwarmNetwork {
             reason
         };
         
+        // Log to SQLite
+        this.dbManager.logNetworkEvent(log).catch(err => console.error('Network Log Error:', err));
+
         // Load existing logs
         let logs = [];
         try {

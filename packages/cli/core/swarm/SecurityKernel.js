@@ -9,9 +9,10 @@ const os = require('os');
  * Baseado no modelo de Níveis 1-10 (Nanobot -> OpenClaw).
  */
 class SecurityKernel {
-    constructor() {
+    constructor(dbManager = null) {
         this.baseDir = path.join(os.homedir(), '.ai-doc', 'swarm', 'security');
         this.tokensFile = path.join(this.baseDir, 'tokens.json');
+        this.dbManager = dbManager; // Optional persistence layer
         
         // Definição de Níveis de Segurança
         this.LEVELS = {
@@ -20,6 +21,23 @@ class SecurityKernel {
             CONTRIBUTOR: 5,  // Pode editar arquivos, mas requer aprovação para execução
             OPERATOR: 8,     // Pode executar scripts, acesso total ao projeto
             OPENCLAW: 10     // ROOT, Acesso total ao sistema, Blacklist apenas
+        };
+
+        // Network Policy Configuration
+        this.NETWORK_POLICY = {
+            TRUSTED_RANGES: [
+                '127.0.0.0/8',      // Localhost
+                '100.64.0.0/10'     // Tailscale CGNAT
+            ],
+            TRUSTED_IPS: [
+                '::1',
+                'localhost'
+            ],
+            // MagicDNS domains or specific hosts
+            TRUSTED_DOMAINS: [
+                '.ts.net',          // Tailscale MagicDNS
+                '.local'
+            ]
         };
 
         // Definição de Perfis (Arquétipos)
@@ -47,7 +65,7 @@ class SecurityKernel {
     /**
      * Registra um evento de segurança.
      */
-    logSecurityEvent(event) {
+    async logSecurityEvent(event) {
         const logEntry = {
             id: crypto.randomBytes(8).toString('hex'),
             timestamp: new Date().toISOString(),
@@ -57,15 +75,66 @@ class SecurityKernel {
         // Manter apenas os últimos 1000 logs
         if (this.securityLogs.length > 1000) this.securityLogs.pop();
         
-        // Opcional: Persistir em arquivo se crítico
+        // 1. Persistir no Banco de Dados (SQLite) se disponível
+        if (this.dbManager && typeof this.dbManager.logSecurityEvent === 'function') {
+            try {
+                // Mapear para schema do DB
+                const dbEvent = {
+                    id: logEntry.id,
+                    timestamp: logEntry.timestamp,
+                    severity: logEntry.severity || 'INFO',
+                    action: logEntry.type || logEntry.action || 'UNKNOWN',
+                    agent_role: logEntry.agentRole || 'system',
+                    resource: logEntry.resource || 'network',
+                    details: logEntry.details || logEntry.reason || JSON.stringify(logEntry),
+                    ip: logEntry.ip || '0.0.0.0'
+                };
+                await this.dbManager.logSecurityEvent(dbEvent);
+            } catch (e) {
+                console.error('❌ [Security] Failed to persist log:', e);
+            }
+        }
+
+        // 2. Persistir em arquivo se crítico (Fallback)
         if (event.severity === 'HIGH' || event.severity === 'CRITICAL') {
-            fs.appendFileSync(path.join(this.baseDir, 'security.log'), JSON.stringify(logEntry) + '\n');
+            try {
+                fs.appendFileSync(path.join(this.baseDir, 'security.log'), JSON.stringify(logEntry) + '\n');
+            } catch (e) { /* ignore */ }
         }
         return logEntry;
     }
 
     getSecurityLogs(limit = 50) {
         return this.securityLogs.slice(0, limit);
+    }
+
+    /**
+     * Valida se um Agente pode executar uma Tarefa.
+     * @param {Object} agentConfig 
+     * @param {Object} task 
+     */
+    validateTaskExecution(agentConfig, task) {
+        // 1. Validação de Nível de Segurança
+        const agentLevel = agentConfig.security_level || 1;
+        const requiredLevel = task.required_security_level || 1;
+
+        if (agentLevel < requiredLevel) {
+            this.logSecurityEvent({
+                type: 'TASK_REJECTED',
+                severity: 'MEDIUM',
+                agentId: agentConfig.id,
+                agentName: agentConfig.name,
+                taskTitle: task.title,
+                reason: `Insufficient Security Level (Agent: ${agentLevel} < Task: ${requiredLevel})`
+            });
+            return { allowed: false, reason: 'INSUFFICIENT_SECURITY_LEVEL' };
+        }
+
+        // 2. Validação de Role (Opcional, mas recomendado)
+        // Se a tarefa exige um Role específico (não implementado ainda no TaskManager, mas previsto)
+        // ...
+
+        return { allowed: true };
     }
 
     /**
@@ -147,15 +216,22 @@ class SecurityKernel {
      * @returns {Object} { trusted: boolean, network: string, trustLevel: number }
      */
     validateNetworkOrigin(ip) {
+        if (!ip) return { trusted: false, network: 'UNKNOWN', trustLevel: 0 };
+        
         // Normaliza IP (remove prefixo IPv6 ::ffff:)
         const normalizedIp = ip.replace(/^::ffff:/, '');
         
-        // 1. Localhost é sempre confiável (Nível 10 - Root Trust)
-        if (['127.0.0.1', '::1', 'localhost'].includes(normalizedIp)) {
+        // 1. Check Explicit IPs (Whitelist)
+        if (this.NETWORK_POLICY.TRUSTED_IPS.includes(normalizedIp)) {
+             return { trusted: true, network: 'LOCAL', trustLevel: 10 };
+        }
+
+        // 2. Check Localhost Range (127.0.0.0/8)
+        if (normalizedIp.startsWith('127.')) {
             return { trusted: true, network: 'LOCAL', trustLevel: 10 };
         }
 
-        // 2. Verifica Range Tailscale (100.64.0.0/10) (Nível 5 - Network Trust)
+        // 3. Check Tailscale Range (100.64.0.0/10)
         // Range: 100.64.0.0 - 100.127.255.255
         if (normalizedIp.startsWith('100.')) {
             const parts = normalizedIp.split('.');
@@ -165,7 +241,8 @@ class SecurityKernel {
             }
         }
 
-        // 3. Rede Externa / Desconhecida (Nível 0 - Zero Trust)
+        // 4. Rede Externa / Desconhecida (Nível 0 - Zero Trust)
+        // Log attempt? Only if verbose.
         return { trusted: false, network: 'UNKNOWN', trustLevel: 0 };
     }
 
