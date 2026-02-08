@@ -12,9 +12,9 @@ const os = require('os');
 class SwarmNetwork {
     constructor() {
         this.nodes = new Map(); // ID -> SwarmNode instance
-        this.security = new SecurityKernel();
-        this.logFile = path.join(os.homedir(), '.ai-doc', 'swarm', 'network_logs.json');
         this.dbManager = new DatabaseManager();
+        this.security = new SecurityKernel(this.dbManager); // Pass DB Manager for logging
+        this.logFile = path.join(os.homedir(), '.ai-doc', 'swarm', 'network_logs.json');
         this.init();
     }
 
@@ -60,11 +60,25 @@ class SwarmNetwork {
         }
 
         // 🛡️ Security Check
+        if (source.config.name === 'Prime Architect') {
+             console.log(`[Debug] Prime Architect Network Config:`, JSON.stringify(source.config.network));
+        }
         const access = this.security.validateCommunication(source.config, target.config);
         
         if (!access.allowed) {
             console.warn(`🛡️ [Network] BLOCKED: ${source.config.name} -> ${target.config.name} (${access.reason})`);
             this._log(sourceId, targetId, type, 'BLOCKED', access.reason);
+            
+            // Log Security Event
+            this.security.logSecurityEvent({
+                severity: 'HIGH',
+                action: 'COMMUNICATION_BLOCKED',
+                agent_role: source.config.roles[0],
+                resource: `AGENT:${target.config.name}`,
+                details: access.reason,
+                ip: source.config.network?.ip || '0.0.0.0'
+            }).catch(err => console.error('Failed to log security event:', err));
+
             return { success: false, error: 'ACCESS_DENIED', reason: access.reason };
         }
 

@@ -1,0 +1,10 @@
+{
+  "id": "req-1770537305963",
+  "timestamp": "2026-02-08T07:55:05.963Z",
+  "title": "Test Task",
+  "description": "Testing task submission",
+  "priority": "high",
+  "status": "queued",
+  "source": "WebMap User Interface",
+  "requester_ip": "::1"
+}

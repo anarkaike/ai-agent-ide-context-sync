@@ -172,7 +172,7 @@ class DatabaseManager {
         const keys = Object.keys(fields);
         if (keys.length === 0) return;
 
-        const setClause = keys.map(k => `${k} = ?`).join(', ');
+        let setClause = keys.map(k => `${k} = ?`).join(', ');
         const values = keys.map(k => {
             const v = fields[k];
             return typeof v === 'object' ? JSON.stringify(v) : v;
@@ -180,12 +180,12 @@ class DatabaseManager {
 
         // Add updated_at if not present
         if (!keys.includes('updated_at')) {
-            keys.push('updated_at');
-            values.push(new Date().toISOString());
-        }
+      setClause += ', updated_at = ?';
+      values.push(new Date().toISOString());
+    }
 
-        const sql = `UPDATE tasks SET ${setClause}, updated_at = ? WHERE id = ?`;
-        values.push(new Date().toISOString(), id); // updated_at value
+    const sql = `UPDATE tasks SET ${setClause} WHERE id = ?`;
+    values.push(id);
 
         return this.run(sql, values);
     }

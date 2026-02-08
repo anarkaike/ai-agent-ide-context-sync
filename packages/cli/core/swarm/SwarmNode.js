@@ -84,6 +84,16 @@ class SwarmNode {
         if (msg.type === 'ALERT') {
             this.trajectory.push(`⚠️ ALERT: ${msg.payload}`);
             this.pulse();
+
+            // Log Security Event
+            this.security.logSecurityEvent({
+                severity: 'HIGH',
+                action: 'THREAT_DETECTED',
+                agent_role: this.config.roles[0] || 'Unknown',
+                resource: 'MODULE_X',
+                details: msg.payload,
+                ip: '100.64.0.1' // Simulation IP
+            }).catch(err => console.error('Failed to log security event:', err));
         }
     }
 
@@ -99,8 +109,11 @@ class SwarmNode {
         const info = {
             id: this.config.id,
             name: this.config.name,
+            role: this.config.roles[0] || 'Unknown',
+            roles: this.config.roles,
             path: this.config.path,
             security_level: this.config.security_level,
+            teams: this.config.teams,
             capabilities: caps,
             current_task: this.currentTask ? this.currentTask.title : 'IDLE',
             trajectory: this.trajectory

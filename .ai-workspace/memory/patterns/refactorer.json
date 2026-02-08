@@ -19,6 +19,16 @@
       "tags": ["refactoring", "modularization", "holonic", "architecture"],
       "author": "Architect Agent",
       "usageCount": 0
+    },
+    {
+      "id": "pattern-refactor-003",
+      "timestamp": "2026-02-07T12:00:00.000Z",
+      "title": "Callback to Async/Await Migration",
+      "problem": "Deeply nested callbacks (callback hell) making code unreadable and hard to debug.",
+      "solution": "1. Identify callback-based functions. 2. Wrap them in util.promisify or rewrite to return Promises. 3. Replace .then().catch() chains with try/catch blocks using await. 4. Ensure error propagation is preserved.",
+      "tags": ["refactoring", "nodejs", "async", "modernization"],
+      "author": "Senior Dev",
+      "usageCount": 0
     }
   ]
 }

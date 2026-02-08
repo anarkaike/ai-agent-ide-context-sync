@@ -1,0 +1,10 @@
+{
+  "id": "req-1770533205171",
+  "timestamp": "2026-02-08T06:46:45.157Z",
+  "title": "Validar UI do WebMap",
+  "description": "Verificar se os cards de agentes estão renderizando corretamente e se as abas funcionam.",
+  "priority": "high",
+  "status": "queued",
+  "source": "WebMap User Interface",
+  "requester_ip": "::1"
+}

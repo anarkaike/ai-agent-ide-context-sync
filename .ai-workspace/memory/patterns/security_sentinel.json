@@ -3667,6 +3667,16 @@
       ],
       "author": "Iron Wall",
       "usageCount": 0
+    },
+    {
+      "id": "pattern-sec-004",
+      "timestamp": "2026-02-07T12:05:00.000Z",
+      "title": "Suspicious Login Velocity Analysis",
+      "problem": "Multiple failed login attempts from the same IP or User ID in a short window.",
+      "solution": "1. Aggregate login logs by source IP/User ID over 1-minute windows. 2. If failures > threshold (e.g., 5), trigger 'High Severity' alert. 3. Automatically block IP via SecurityKernel for 15 minutes. 4. Log incident to Security Logs for audit.",
+      "tags": ["security", "logs", "brute-force", "detection"],
+      "author": "Security Sentinel",
+      "usageCount": 0
     }
   ]
 }
