@@ -1,0 +1,17 @@
+[Unit]
+Description=AI Notify Worker (%i)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/ai-agent-ide-context-sync
+ExecStart=%h/projects/ai-agent-ide-context-sync/scripts/run-notify-worker.sh --backend file
+User=%i
+Environment=NOTIFY_BACKEND=file
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
