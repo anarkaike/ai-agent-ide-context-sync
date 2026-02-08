@@ -48,6 +48,13 @@ const startServer = async () => {
         const url = new URL(req.url, `http://${req.headers.host}`);
         const pathname = url.pathname;
 
+        // 🛡️ ENFORCE SECURITY ON ALL API ROUTES (placed before handlers)
+        if (pathname.startsWith('/api/') && !securityStatus.trusted) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'ACCESS_DENIED', reason: 'UNTRUSTED_NETWORK_ORIGIN' }));
+            return;
+        }
+
         if (pathname === '/api/tasks/request' && req.method === 'POST') {
             let body = '';
             req.on('data', chunk => { body += chunk.toString(); });
@@ -172,12 +179,6 @@ const startServer = async () => {
             return;
         }
 
-        // 🛡️ ENFORCE SECURITY ON API ROUTES
-        if (pathname.startsWith('/api/') && !securityStatus.trusted) {
-            res.writeHead(403, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'ACCESS_DENIED', reason: 'UNTRUSTED_NETWORK_ORIGIN' }));
-            return;
-        }
 
         if (pathname === '/' || pathname === '/index.html') {
             // Serve HTML
@@ -1077,6 +1078,8 @@ const startServer = async () => {
                             content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                             // Code (using hex for backtick to avoid template literal issues)
                             content = content.replace(/\x60(.*?)\x60/g, '<code>$1</code>');
+                            // SAFETY: Remove remaining backticks to prevent template literal breakage
+                            content = content.replace(/\x60/g, '');
                             // Newlines
                             content = content.replace(/\n/g, '<br>');
                             
