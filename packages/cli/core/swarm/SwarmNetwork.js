@@ -60,9 +60,6 @@ class SwarmNetwork {
         }
 
         // 🛡️ Security Check
-        if (source.config.name === 'Prime Architect') {
-             console.log(`[Debug] Prime Architect Network Config:`, JSON.stringify(source.config.network));
-        }
         const access = this.security.validateCommunication(source.config, target.config);
         
         if (!access.allowed) {

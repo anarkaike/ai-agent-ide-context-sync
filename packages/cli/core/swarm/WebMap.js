@@ -7,6 +7,7 @@ const SecurityKernel = require('./SecurityKernel');
 const SwarmNetwork = require('./SwarmNetwork');
 const DatabaseManager = require('./DatabaseManager');
 const SwarmAnalyst = require('./SwarmAnalyst');
+const NeuralLink = require('./NeuralLink');
 
 const PORT = 3456; // Swarm Map Port
 
@@ -18,6 +19,10 @@ const startServer = async () => {
     const taskManager = new TaskManager();
     const securityKernel = new SecurityKernel(dbManager);
     const analyst = new SwarmAnalyst(dbManager);
+    const neuralLink = new NeuralLink(dbManager);
+
+    // Initial Sync
+    await neuralLink.sync();
 
     const server = http.createServer(async (req, res) => {
         // Security Check
@@ -46,38 +51,124 @@ const startServer = async () => {
         if (pathname === '/api/tasks/request' && req.method === 'POST') {
             let body = '';
             req.on('data', chunk => { body += chunk.toString(); });
-            req.on('end', () => {
+            req.on('end', async () => {
                 try {
                     const data = JSON.parse(body);
-                    const queueDir = path.join(process.cwd(), '.ai-workspace/task-queue/requests');
-                    if (!fs.existsSync(queueDir)) {
-                        fs.mkdirSync(queueDir, { recursive: true });
-                    }
                     
-                    const timestamp = new Date().toISOString();
-                    const filename = `req-${Date.now()}.json`;
-                    const taskFile = {
-                        id: `req-${Date.now()}`,
-                        timestamp: timestamp,
-                        title: data.title,
-                        description: data.description,
-                        priority: data.priority || 'medium',
-                        status: 'queued',
-                        source: 'WebMap User Interface',
-                        requester_ip: ip
-                    };
+                    // Use TaskManager to save directly to DB (Source of Truth)
+                    const newTask = await taskManager.createTask(
+                        data.title, 
+                        data.description, 
+                        data.priority || 'medium',
+                        { source: 'WebMap User Interface', requester_ip: ip },
+                        1, // Security Level Requirement (Default)
+                        'user'
+                    );
 
-                    fs.writeFileSync(path.join(queueDir, filename), JSON.stringify(taskFile, null, 2));
-                    console.log(`[TaskQueue] Request queued: ${filename}`);
+                    console.log(`[TaskQueue] Task created: ${newTask.id}`);
 
                     res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ success: true, file: filename }));
+                    res.end(JSON.stringify({ success: true, task: newTask }));
                 } catch (e) {
                     console.error('Failed to queue task', e);
                     res.writeHead(500, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ error: e.message }));
                 }
             });
+            return;
+        }
+
+        if (pathname === '/api/agent/register' && req.method === 'POST') {
+            let body = '';
+            req.on('data', chunk => { body += chunk.toString(); });
+            req.on('end', async () => {
+                try {
+                    const data = JSON.parse(body);
+                    
+                    // Security Enrichment
+                    let ip = req.socket.remoteAddress || req.connection.remoteAddress;
+
+                    // DEV SIMULATION HOOK (Allow testing Tailscale UI locally)
+                    if ((ip === '127.0.0.1' || ip === '::1') && req.headers['x-simulate-ip']) {
+                        ip = req.headers['x-simulate-ip'];
+                        console.log(`[Dev] Simulating Remote IP: ${ip}`);
+                    }
+
+                    const netStatus = securityKernel.validateNetworkOrigin(ip);
+                    
+                    data.network = {
+                        ip: ip,
+                        type: netStatus.network, // 'TAILSCALE', 'LOCAL', 'UNKNOWN'
+                        trustLevel: netStatus.trustLevel
+                    };
+
+                    // Auto-assign "Remote" capability/tag if Tailscale
+                    if (netStatus.network === 'TAILSCALE') {
+                        if (!data.capabilities) data.capabilities = [];
+                        if (!data.capabilities.includes('remote-access')) data.capabilities.push('remote-access');
+                        // Tag for UI
+                        data.tags = data.tags || [];
+                        if (!data.tags.includes('VPS')) data.tags.push('VPS');
+                    }
+
+                    // Register external agent via Registry
+                    // Expected format: { id, name, roles: [], status, security_level }
+                    const registered = await registry.registerAgent(data);
+                    
+                    console.log(`[Swarm] External Agent Registered via HTTP: ${registered.name} (${registered.id}) from ${netStatus.network}`);
+
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: true, agent: registered }));
+                } catch (e) {
+                    console.error('Failed to register external agent', e);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: e.message }));
+                }
+            });
+            return;
+        }
+
+        if (pathname === '/api/comms/send' && req.method === 'POST') {
+            let body = '';
+            req.on('data', chunk => { body += chunk.toString(); });
+            req.on('end', async () => {
+                try {
+                    const data = JSON.parse(body);
+                    // data: { from, to, content, type }
+                    
+                    const msg = {
+                        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                        from: data.from,
+                        to: data.to || 'MOTHERSHIP',
+                        content: data.content,
+                        type: data.type || 'text',
+                        timestamp: new Date().toISOString(),
+                        read: false
+                    };
+
+                    await neuralLink.sendMessage(msg);
+                    
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: true, messageId: msg.id }));
+                } catch (e) {
+                    console.error('Failed to receive message', e);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: e.message }));
+                }
+            });
+            return;
+        }
+
+        if (pathname === '/api/comms/messages' && req.method === 'GET') {
+            try {
+                await neuralLink.sync(); // Sync before read
+                const messages = await dbManager.getMessages(100);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ messages }));
+            } catch (e) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: e.message }));
+            }
             return;
         }
 
@@ -124,6 +215,36 @@ const startServer = async () => {
                         display: flex;
                         flex-direction: column;
                         overflow: hidden;
+                    }
+
+                    /* Comms Feed */
+                    .comm-msg {
+                        padding: 12px;
+                        border-bottom: 1px solid var(--border);
+                        font-size: 0.9rem;
+                        background: rgba(255,255,255,0.01);
+                    }
+                    .comm-msg:hover { background: rgba(255,255,255,0.03); }
+                    .comm-header {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 6px;
+                        font-size: 0.75rem;
+                        color: var(--text-secondary);
+                    }
+                    .comm-sender { font-weight: 600; color: var(--accent); }
+                    .comm-body {
+                        white-space: pre-wrap; /* Preserve formatting */
+                        line-height: 1.5;
+                        color: var(--text-primary);
+                    }
+                    .comm-body strong { color: #fff; font-weight: 600; }
+                    .comm-body code {
+                        background: rgba(110,118,129,0.4);
+                        padding: 0.2em 0.4em;
+                        border-radius: 3px;
+                        font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+                        font-size: 0.85em;
                     }
 
                     /* Header */
@@ -328,6 +449,20 @@ const startServer = async () => {
                     }
                     .shield-icon { color: var(--shield); font-size: 1rem; }
                     
+                    /* Comms Feed */
+                    .comm-msg {
+                        padding: 10px 15px;
+                        border-bottom: 1px solid rgba(255,255,255,0.05);
+                        font-size: 0.8rem;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                    }
+                    .comm-header { display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 0.7rem; }
+                    .comm-sender { font-weight: bold; color: var(--accent); }
+                    .comm-body { color: var(--text-primary); white-space: pre-wrap; }
+                    .comm-time { font-family: monospace; }
+                    
                     /* Utility */
                     .tag { padding: 2px 8px; border-radius: 12px; font-size: 0.7em; font-weight: 600; border: 1px solid transparent; }
                     .tag.L10 { background: rgba(163, 113, 247, 0.15); color: #d2a8ff; border-color: rgba(163, 113, 247, 0.3); }
@@ -388,6 +523,16 @@ const startServer = async () => {
                             </div>
                             <div class="widget-content" id="global-queue">
                                 <!-- Tasks -->
+                            </div>
+                        </div>
+
+                        <!-- 3. Inter-Agent Communication (Mural) -->
+                        <div class="widget" style="flex: 1; border-top: 1px solid var(--border); background: rgba(0,0,0,0.1);">
+                            <div class="widget-header">
+                                <span>📡 Frequência Inter-Agentes</span>
+                            </div>
+                            <div class="widget-content" id="comms-feed" style="padding: 0;">
+                                <!-- Chat Messages -->
                             </div>
                         </div>
                     </div>
@@ -540,6 +685,12 @@ const startServer = async () => {
 
                             const isOnline = agent.status !== 'OFFLINE';
                             
+                            // Network/VPS Indicator
+                            let networkHTML = '';
+                            if ((agent.network && agent.network.type === 'TAILSCALE') || (agent.tags && agent.tags.includes('VPS'))) {
+                                networkHTML = '<div class="tag" style="background:rgba(255, 165, 0, 0.2); color:orange; margin-left:4px;" title="Conectado via VPS/Tailscale" onclick="openNetworkHelp(event)">☁️ VPS</div>';
+                            }
+
                             // Template Parts
                             const headerHTML = 
                                 '<div class="agent-identity">' +
@@ -551,7 +702,10 @@ const startServer = async () => {
                                         '<p>' + (agent.role || 'Unassigned') + '</p>' +
                                     '</div>' +
                                 '</div>' +
-                                '<div class="tag sec-' + agent.security_level + '" onclick="openSecurityHelp(event)" style="cursor:help;">L' + agent.security_level + '</div>';
+                                '<div style="display:flex; align-items:center;">' +
+                                    '<div class="tag sec-' + agent.security_level + '" onclick="openSecurityHelp(event)" style="cursor:help;">L' + agent.security_level + '</div>' +
+                                    networkHTML +
+                                '</div>';
 
                             const tabsHTML = 
                                 '<button class="tab-btn ' + (activeTab === 'tasks' ? 'active' : '') + '" onclick="switchTab(\\\'' + agent.id + '\\\', \\\'tasks\\\')">Tarefas (' + agentTasks.length + ')</button>' +
@@ -830,6 +984,21 @@ const startServer = async () => {
                         openInfoModal('Níveis de Segurança', html);
                     }
 
+                    function openNetworkHelp(e) {
+                        e.stopPropagation();
+                        const html = \`
+                            <p><strong>Rede de Confiança (Trust Network)</strong></p>
+                            <ul>
+                                <li><strong>Localhost (🏠):</strong> Máxima confiança (L10). Acesso direto ao Kernel.</li>
+                                <li><strong>VPS / Tailscale (☁️):</strong> Rede Privada Virtual Segura. Confiança Intermediária (L5). 
+                                    <br>Requer autenticação adicional para operações críticas.</li>
+                                <li><strong>Externa (🌐):</strong> Rede pública/desconhecida. Bloqueio padrão (Zero Trust).</li>
+                            </ul>
+                            <p>A comunicação entre VPS e Localhost é criptografada e monitorada pelo Security Kernel.</p>
+                        \`;
+                        openInfoModal('Topologia de Rede', html);
+                    }
+
                     function renderGlobalQueue() {
                         const container = document.getElementById('global-queue');
                         const queueCount = document.getElementById('queue-count');
@@ -855,11 +1024,12 @@ const startServer = async () => {
 
                     async function updateData() {
                         try {
-                            const [mapRes, taskRes, netRes, secRes] = await Promise.all([
+                            const [mapRes, taskRes, netRes, secRes, commRes] = await Promise.all([
                                 fetch('/api/map'),
                                 fetch('/api/tasks'),
                                 fetch('/api/network'),
-                                fetch('/api/security/logs')
+                                fetch('/api/security/logs'),
+                                fetch('/api/comms/messages')
                             ]);
                             
                             const teams = await mapRes.json();
@@ -874,13 +1044,52 @@ const startServer = async () => {
                             state.tasks = await taskRes.json();
                             state.logs = await netRes.json();
                             state.securityLogs = await secRes.json();
+                            const commData = await commRes.json();
+                            state.comms = commData.messages || [];
 
                             renderAgentCards();
                             renderProtectionFeed();
                             renderGlobalQueue();
+                            renderCommsFeed();
                         } catch (e) {
                             console.error('Update failed', e);
                         }
+                    }
+
+                    function renderCommsFeed() {
+                        const container = document.getElementById('comms-feed');
+                        const messages = state.comms || [];
+
+                        if (messages.length === 0) {
+                            container.innerHTML = '<div style="color:var(--text-secondary); text-align:center; padding:20px;">Silêncio na rede...</div>';
+                            return;
+                        }
+
+                        // Sort by timestamp desc (newest first)
+                        const sorted = [...messages].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                        container.innerHTML = sorted.map(msg => {
+                            // Basic Markdown parsing
+                            let content = msg.content || '';
+                            // Escape HTML first
+                            content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            // Bold
+                            content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                            // Code (using hex for backtick to avoid template literal issues)
+                            content = content.replace(/\x60(.*?)\x60/g, '<code>$1</code>');
+                            // Newlines
+                            content = content.replace(/\n/g, '<br>');
+                            
+                            return \`
+                            <div class="comm-msg">
+                                <div class="comm-header">
+                                    <span class="comm-sender">\${msg.from_agent || msg.from || 'Unknown'}</span>
+                                    <span class="comm-time">\${new Date(msg.timestamp).toLocaleTimeString()}</span>
+                                </div>
+                                <div class="comm-body">\${content}</div>
+                            </div>
+                            \`;
+                        }).join('');
                     }
 
                     // Loop

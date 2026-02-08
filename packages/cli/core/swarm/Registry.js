@@ -24,7 +24,18 @@ class SwarmRegistry {
      */
     async registerAgent(agentInfo) {
         await this.initPromise;
-        const netInfo = this.network.getNetworkInfo();
+        
+        // If network info is provided (e.g. from WebMap HTTP handler), use it.
+        // Otherwise, detect local network info.
+        let networkData = agentInfo.network;
+        if (!networkData) {
+             const netInfo = this.network.getNetworkInfo();
+             networkData = {
+                ip: netInfo.address,
+                provider: netInfo.provider,
+                secure: netInfo.is_secure
+             };
+        }
 
         const entry = {
             id: agentInfo.id,
@@ -35,13 +46,10 @@ class SwarmRegistry {
             last_heartbeat: new Date().toISOString(),
             teams: agentInfo.teams || [], // SwarmNode sends teams
             capabilities: agentInfo.capabilities || [],
-            network: {
-                ip: netInfo.address,
-                provider: netInfo.provider,
-                secure: netInfo.is_secure
-            },
+            network: networkData,
             current_task: agentInfo.current_task || 'IDLE',
-            trajectory: agentInfo.trajectory || []
+            trajectory: agentInfo.trajectory || [],
+            tags: agentInfo.tags || []
         };
 
         await this.dbManager.saveAgent(entry);

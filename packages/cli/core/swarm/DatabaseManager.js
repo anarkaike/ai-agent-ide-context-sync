@@ -101,6 +101,15 @@ class DatabaseManager {
                 content TEXT,
                 author TEXT,
                 timestamp TEXT
+            )`,
+            `CREATE TABLE IF NOT EXISTS communications (
+                id TEXT PRIMARY KEY,
+                from_agent TEXT,
+                to_agent TEXT,
+                content TEXT,
+                type TEXT,
+                timestamp TEXT,
+                read BOOLEAN DEFAULT 0
             )`
         ];
 
@@ -398,6 +407,21 @@ class DatabaseManager {
 
     async getTeamEvents(team, limit = 50) {
         return this.all('SELECT * FROM team_events WHERE team = ? ORDER BY timestamp DESC LIMIT ?', [team, limit]);
+    }
+
+    // --- Communication Methods ---
+
+    async saveMessage(msg) {
+        const sql = `INSERT INTO communications (
+            id, from_agent, to_agent, content, type, timestamp, read
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        return this.run(sql, [
+            msg.id, msg.from, msg.to, msg.content, msg.type, msg.timestamp, msg.read ? 1 : 0
+        ]);
+    }
+
+    async getMessages(limit = 100) {
+        return this.all('SELECT * FROM communications ORDER BY timestamp DESC LIMIT ?', [limit]);
     }
 }
 

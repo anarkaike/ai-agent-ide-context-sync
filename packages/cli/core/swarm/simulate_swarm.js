@@ -1,7 +1,10 @@
 
 const SwarmNode = require('./SwarmNode');
+const TaskManager = require('./TaskManager');
 
 console.log('🌌 Initializing Swarm Simulation...');
+
+const taskManager = new TaskManager();
 
 const agents = [
     new SwarmNode({
@@ -16,7 +19,7 @@ const agents = [
         id: 'agent-secops-01',
         name: 'Sentinel One',
         roles: ['Security Analyst'],
-        teams: ['SecOps'],
+        teams: ['SecOps', 'Core'],
         security_level: 10,
         network: { ip: '127.0.0.1' }
     }),
@@ -73,6 +76,28 @@ setInterval(() => {
     if (Math.random() > 0.9) {
         randomAgent.sendMessage('agent-secops-01', 'ALERT', 'Suspicious pattern detected in module X');
     }
+
+    // 🆕 REAL TASK DISPATCHER
+    // Check for PENDING tasks in DB and assign to idle agents
+    taskManager.listTasks({ status: 'PENDING' }).then(pendingTasks => {
+        if (pendingTasks.length === 0) return;
+
+        pendingTasks.forEach(task => {
+            // Find an idle agent (excluding Rogue and SecOps for now, just Dev/Architect)
+            const idleAgent = agents.find(a => 
+                a.status === 'IDLE' && 
+                a.config.security_level >= task.required_security_level &&
+                !a.config.roles.includes('Intruder') // Don't assign to rogue
+            );
+
+            if (idleAgent) {
+                console.log(`📋 [Dispatcher] Assigning task ${task.title} to ${idleAgent.config.name}`);
+                taskManager.assignTask(task.id, idleAgent.config.id).then(() => {
+                    idleAgent.acceptTask(task);
+                });
+            }
+        });
+    }).catch(err => console.error('Dispatcher error:', err));
 
 }, 2000);
 
