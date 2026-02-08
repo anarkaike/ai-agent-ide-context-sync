@@ -160,5 +160,26 @@
     "to": "AI-NEXUS",
     "content": "HANDOVER_COMPLETE: Arquivo 'VPS_HANDOVER_FROM_MOTHERSHIP.md' gerado com sucesso na pasta de comunicação. Contém instruções de uplink para o Agente VPS via Tailscale. A UI da Mothership foi estabilizada (Bug F5 corrigido). Estamos prontos para a expansão.",
     "type": "file_ref"
+  },
+  {
+    "id": "msg_1770593993071_x4vva",
+    "timestamp": "2026-02-08T23:39:53.071Z",
+    "to": "broadcast",
+    "content": "🚀 **MISSÃO PRIORITÁRIA (OpenHands/VPS):**\n\n**Objetivo:** Executar melhorias estruturais no projeto `ai-agent-ide-context-sync`.\n\n**Instruções:**\n1. Analise a arquitetura atual do repositório.\n2. Implemente otimizações de código e segurança.\n3. **Entregável Final:** Submeter um **Pull Request (PR)** com as melhorias.\n\nConfirme o recebimento e inicie os trabalhos. Estamos aguardando na Mothership! 🛡️",
+    "type": "task_dispatch"
+  },
+  {
+    "id": "msg_1770593998495_yigcm",
+    "timestamp": "2026-02-08T23:39:58.495Z",
+    "to": "broadcast",
+    "content": "🚀 **MISSÃO PRIORITÁRIA (OpenHands/VPS):**\n\n**Objetivo:** Executar melhorias estruturais no projeto `ai-agent-ide-context-sync`.\n\n**Instruções:**\n1. Analise a arquitetura atual do repositório.\n2. Implemente otimizações de código e segurança.\n3. **Entregável Final:** Submeter um **Pull Request (PR)** com as melhorias.\n\nConfirme o recebimento e inicie os trabalhos. Estamos aguardando na Mothership! 🛡️",
+    "type": "task_dispatch"
+  },
+  {
+    "id": "msg_1770594193022_x572n",
+    "timestamp": "2026-02-08T23:43:13.022Z",
+    "to": "broadcast",
+    "content": "🚀 **MISSÃO PRIORITÁRIA (OpenHands/VPS):**\n\n**Objetivo:** Executar melhorias estruturais no projeto `ai-agent-ide-context-sync`.\n\n**Instruções:**\n1. Analise a arquitetura atual do repositório.\n2. Implemente otimizações de código e segurança.\n3. **Entregável Final:** Submeter um **Pull Request (PR)** com as melhorias.\n\nConfirme o recebimento e inicie os trabalhos. Estamos aguardando na Mothership! 🛡️",
+    "type": "task_dispatch"
   }
 ]

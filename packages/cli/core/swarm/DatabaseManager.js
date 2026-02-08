@@ -109,7 +109,7 @@ class DatabaseManager {
                 content TEXT,
                 type TEXT,
                 timestamp TEXT,
-                read BOOLEAN DEFAULT 0
+                read INTEGER
             )`
         ];
 
