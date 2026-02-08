@@ -1077,11 +1077,11 @@ const startServer = async () => {
                             // Bold
                             content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                             // Code (using hex for backtick to avoid template literal issues)
-                            content = content.replace(/\x60(.*?)\x60/g, '<code>$1</code>');
+                            content = content.replace(/\\x60(.*?)\\x60/g, '<code>$1</code>');
                             // SAFETY: Remove remaining backticks to prevent template literal breakage
-                            content = content.replace(/\x60/g, '');
+                            content = content.replace(/\\x60/g, '');
                             // Newlines
-                            content = content.replace(/\n/g, '<br>');
+                            content = content.replace(/\\n/g, '<br>');
                             
                             return \`
                             <div class="comm-msg">
@@ -1161,6 +1161,48 @@ const startServer = async () => {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify([])); // Fallback
             }
+            return;
+        }
+
+        if (pathname === '/api/comms/messages') {
+            try {
+                // Sync first to get latest
+                await neuralLink.sync();
+                const messages = await dbManager.getMessages(50);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ messages }));
+            } catch (e) {
+                console.error('Failed to fetch messages', e);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: e.message }));
+            }
+            return;
+        }
+
+        if (pathname === '/api/comms/send' && req.method === 'POST') {
+            let body = '';
+            req.on('data', chunk => { body += chunk.toString(); });
+            req.on('end', async () => {
+                try {
+                    const data = JSON.parse(body);
+                    const msg = {
+                        id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                        from: 'MOTHERSHIP', // WebMap User
+                        to: data.to || 'broadcast',
+                        content: data.content,
+                        type: data.type || 'text',
+                        timestamp: new Date().toISOString(),
+                        read: true
+                    };
+                    await neuralLink.sendMessage(msg);
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: true, message: msg }));
+                } catch (e) {
+                    console.error('Failed to send message', e);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: e.message }));
+                }
+            });
             return;
         }
 
