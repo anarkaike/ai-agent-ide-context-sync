@@ -58,7 +58,7 @@ function handleMessage(msg) {
         console.log('🔄 [SwarmClient] SYSTEM UPDATE RECEIVED. INITIATING SYNC PROTOCOL...');
         
         // Execute sync script
-        const scriptPath = path.join(__dirname, '../../../../scripts/sync-swarm.sh');
+        const scriptPath = path.join(__dirname, '../../scripts/sync-swarm.sh');
         
         exec(`sh ${scriptPath}`, (error, stdout, stderr) => {
             if (error) {

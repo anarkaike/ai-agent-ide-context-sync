@@ -1312,6 +1312,37 @@ const startServer = async () => {
         console.log(`⚡ [WebSocket] New connection from ${ip}`);
         ws.send(JSON.stringify({ type: 'WELCOME', message: 'Connected to Swarm Neural Link' }));
         
+        ws.on('message', async (message) => {
+            try {
+                const msg = JSON.parse(message);
+                
+                if (msg.type === 'HEARTBEAT') {
+                    console.log(`💓 [Heartbeat] ${msg.data.id} from ${ip}`);
+                    
+                    // Enrich with network info
+                    const netStatus = securityKernel.validateNetworkOrigin(ip);
+                    msg.data.network = {
+                        ip: ip,
+                        type: netStatus.network,
+                        trustLevel: netStatus.trustLevel,
+                        secure: true
+                    };
+                    
+                    if (netStatus.network === 'TAILSCALE') {
+                         if (!msg.data.capabilities) msg.data.capabilities = [];
+                         if (!msg.data.capabilities.includes('REMOTE_WORKER')) {
+                             msg.data.capabilities.push('REMOTE_WORKER');
+                         }
+                    }
+
+                    await registry.registerAgent(msg.data);
+                    broadcast('AGENT_UPDATE', msg.data);
+                }
+            } catch (e) {
+                console.error('❌ [WS Error]', e.message);
+            }
+        });
+
         ws.on('error', console.error);
     });
 
