@@ -1216,8 +1216,9 @@ const startServer = async () => {
         res.end('Not Found');
     });
 
-    server.listen(PORT, () => {
-        console.log(`🌌 Swarm Existential Map running at http://localhost:${PORT}`);
+    server.listen(PORT, '0.0.0.0', () => {
+        console.log(`🌌 Swarm Existential Map running at http://localhost:${PORT} (Accessible via Tailscale/LAN)`);
+        console.log(`📡 [BORG LINK] Listening on 0.0.0.0:${PORT} for inter-agent neural requests.`);
     });
 };
 
