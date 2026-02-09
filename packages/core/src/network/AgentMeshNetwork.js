@@ -14,10 +14,10 @@ class AgentMeshNetwork extends EventEmitter {
         super();
 
         this.nodeId = options.nodeId || this._generateNodeId();
-        this.port = options.port || 8082;
+        this.port = options.port || 8083;
         this.peers = new Map(); // nodeId -> peer info
         this.config = {
-            port: options.port || 8082, // Mudado de 8081 para 8082
+            port: options.port || 8083, // Mudado de 8082 para 8083 (conflito Docker)
             host: options.host || '0.0.0.0',
             maxPeers: options.maxPeers || 50,
             heartbeatInterval: options.heartbeatInterval || 30000,

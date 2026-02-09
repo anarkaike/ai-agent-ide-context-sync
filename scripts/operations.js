@@ -38,7 +38,7 @@ class OperationsController {
                 autoBackup: true
             },
             network: {
-                port: 8082, // Use different port to avoid conflicts
+                port: 0, // Porta aleatória disponível
                 heartbeatInterval: 30000,
                 discoveryInterval: 10000,
                 healthCheckInterval: 30000

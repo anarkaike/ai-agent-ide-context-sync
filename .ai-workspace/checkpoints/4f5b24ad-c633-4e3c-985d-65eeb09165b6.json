@@ -1,0 +1,9 @@
+{
+  "id": "4f5b24ad-c633-4e3c-985d-65eeb09165b6",
+  "name": "shutdown",
+  "createdAt": "2026-02-09T08:33:03.842Z",
+  "journalSize": 6,
+  "metadata": {
+    "reason": "System shutdown"
+  }
+}
