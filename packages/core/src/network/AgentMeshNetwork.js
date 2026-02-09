@@ -8,6 +8,7 @@
 import crypto from 'crypto';
 import { EventEmitter } from 'events';
 import { createServer } from 'http';
+import http from 'http';
 
 class AgentMeshNetwork extends EventEmitter {
     constructor(options = {}) {
@@ -461,8 +462,6 @@ class AgentMeshNetwork extends EventEmitter {
      * Envia requisição HTTP
      */
     async _sendRequest(address, path, data) {
-        const http = require('http');
-
         return new Promise((resolve, reject) => {
             const postData = JSON.stringify(data);
 
@@ -509,15 +508,38 @@ class AgentMeshNetwork extends EventEmitter {
      * Envia heartbeat para todos os peers
      */
     async _sendHeartbeat() {
+        const now = Date.now();
+        const timeout = this.heartbeatInterval * 3;
+        const peersToRemove = [];
+
         for (const [nodeId, peer] of this.peers) {
             try {
                 await this._sendRequest(peer.address, '/heartbeat', {
                     nodeId: this.nodeId,
-                    timestamp: Date.now()
+                    timestamp: now
                 });
+
+                // Atualiza last heartbeat sucesso
+                peer.lastHeartbeat = now;
+
             } catch (error) {
                 console.warn(`Heartbeat to ${nodeId} failed:`, error.message);
+
+                // Incrementa contador de falhas
+                peer.failedHeartbeats = (peer.failedHeartbeats || 0) + 1;
+
+                // Remove peer após 3 falhas consecutivas
+                if (peer.failedHeartbeats >= 3) {
+                    console.log(`🗑️ Removing inactive peer: ${nodeId}`);
+                    peersToRemove.push(nodeId);
+                }
             }
+        }
+
+        // Remove peers inativos
+        for (const nodeId of peersToRemove) {
+            this.peers.delete(nodeId);
+            console.log(`✅ Peer ${nodeId} removed from network`);
         }
     }
 

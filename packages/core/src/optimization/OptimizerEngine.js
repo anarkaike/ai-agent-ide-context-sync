@@ -19,14 +19,14 @@ export class AutoOptimizationEngine extends EventEmitter {
             maxOptimizationDepth: options.maxOptimizationDepth || 3,
             ...options
         };
-        
+
         this.performanceHistory = [];
         this.optimizationHistory = [];
         this.learningModels = new Map();
         this.currentOptimizations = new Map();
         this.isRunning = false;
         this.optimizationTimer = null;
-        
+
         this.metrics = {
             optimizationsPerformed: 0,
             performanceImprovements: 0,
@@ -35,7 +35,7 @@ export class AutoOptimizationEngine extends EventEmitter {
             architectureEvolutions: 0,
             errors: 0
         };
-        
+
         this.loadOptimizationState();
     }
 
@@ -48,29 +48,29 @@ export class AutoOptimizationEngine extends EventEmitter {
         console.log(`   Optimization Interval: ${this.config.optimizationInterval}ms`);
         console.log(`   Learning Enabled: ${this.config.learningEnabled}`);
         console.log(`   Auto-Scaling: ${this.config.autoScaling}`);
-        
+
         try {
             // Carregar modelos de aprendizado
             await this.loadLearningModels();
-            
+
             // Analisar performance histórica
             await this.analyzeHistoricalPerformance();
-            
+
             // Iniciar ciclo de otimização
             this.startOptimizationCycle();
-            
+
             this.isRunning = true;
             this.emit('initialized', { nodeId: this.nodeId });
-            
+
             console.log('✅ Auto-Optimization Engine initialized');
-            
+
             return {
                 success: true,
                 nodeId: this.nodeId,
                 learningModels: this.learningModels.size,
                 performanceScore: this.calculateCurrentPerformanceScore()
             };
-            
+
         } catch (error) {
             console.error('❌ Failed to initialize optimization engine:', error.message);
             throw error;
@@ -82,14 +82,14 @@ export class AutoOptimizationEngine extends EventEmitter {
      */
     async forceOptimization() {
         console.log('🚀 Forcing manual optimization...');
-        
+
         try {
             const result = await this.performOptimizationCycle();
-            
+
             console.log('✅ Manual optimization completed');
-            
+
             return result;
-            
+
         } catch (error) {
             console.error('❌ Manual optimization failed:', error.message);
             throw error;
@@ -101,30 +101,30 @@ export class AutoOptimizationEngine extends EventEmitter {
      */
     async performOptimizationCycle() {
         console.log('🔄 Performing optimization cycle...');
-        
+
         try {
             const cycleStart = Date.now();
-            
+
             // 1. Coletar métricas de performance
             const currentMetrics = await this.collectPerformanceMetrics();
-            
+
             // 2. Analisar performance
             const performanceAnalysis = await this.analyzePerformance(currentMetrics);
-            
+
             // 3. Identificar oportunidades de otimização
             const opportunities = await this.identifyOptimizationOpportunities(performanceAnalysis);
-            
+
             // 4. Gerar plano de otimização
             const optimizationPlan = await this.generateOptimizationPlan(opportunities);
-            
+
             // 5. Executar otimizações
             const results = await this.executeOptimizations(optimizationPlan);
-            
+
             // 6. Aprender com os resultados
             if (this.config.learningEnabled) {
                 await this.learnFromResults(results);
             }
-            
+
             // 7. Registrar ciclo
             const cycleRecord = {
                 cycleId: this.generateCycleId(),
@@ -137,19 +137,19 @@ export class AutoOptimizationEngine extends EventEmitter {
                 improvements: results.filter(r => r.success).length,
                 timestamp: Date.now()
             };
-            
+
             this.addOptimizationHistory(cycleRecord);
             this.metrics.optimizationsPerformed++;
-            
+
             console.log(`✅ Optimization cycle completed in ${cycleRecord.duration}ms`);
             console.log(`   Opportunities: ${opportunities.length}`);
             console.log(`   Optimizations: ${results.length}`);
             console.log(`   Improvements: ${cycleRecord.improvements}`);
-            
+
             this.emit('optimizationCycleCompleted', cycleRecord);
-            
+
             return cycleRecord;
-            
+
         } catch (error) {
             console.error('❌ Optimization cycle failed:', error.message);
             this.metrics.errors++;
@@ -168,15 +168,15 @@ export class AutoOptimizationEngine extends EventEmitter {
             application: await this.collectApplicationMetrics(),
             resources: await this.collectResourceMetrics()
         };
-        
+
         // Adicionar ao histórico
         this.performanceHistory.push(metrics);
-        
+
         // Limitar histórico
         if (this.performanceHistory.length > 100) {
             this.performanceHistory = this.performanceHistory.slice(-50);
         }
-        
+
         return metrics;
     }
 
@@ -188,20 +188,20 @@ export class AutoOptimizationEngine extends EventEmitter {
             const { exec } = await import('child_process');
             const { promisify } = await import('util');
             const execAsync = promisify(exec);
-            
+
             // CPU Usage
             const cpuUsage = Math.random() * 100; // Simulado
-            
+
             // Memory Usage
             const memoryUsage = Math.random() * 100; // Simulado
-            
+
             return {
                 cpuUsage,
                 memoryUsage,
                 loadAverage: Math.random() * 2,
                 uptime: Date.now() - (this.performanceHistory[0]?.timestamp || Date.now())
             };
-            
+
         } catch (error) {
             return {
                 cpuUsage: 0,
@@ -259,15 +259,15 @@ export class AutoOptimizationEngine extends EventEmitter {
             trends: {},
             recommendations: []
         };
-        
+
         // Calcular score geral
         const systemScore = Math.max(0, 100 - metrics.system.cpuUsage - metrics.system.memoryUsage);
         const networkScore = Math.max(0, 100 - metrics.network.latency - metrics.network.packetLoss);
         const appScore = Math.max(0, 100 - metrics.application.responseTime / 2 - metrics.application.errorRate);
         const resourceScore = Math.max(0, 100 - metrics.resources.diskUsage);
-        
+
         analysis.overallScore = (systemScore + networkScore + appScore + resourceScore) / 4;
-        
+
         // Identificar bottlenecks
         if (metrics.system.cpuUsage > 80) {
             analysis.bottlenecks.push({
@@ -277,7 +277,7 @@ export class AutoOptimizationEngine extends EventEmitter {
                 description: 'High CPU usage detected'
             });
         }
-        
+
         return analysis;
     }
 
@@ -286,7 +286,7 @@ export class AutoOptimizationEngine extends EventEmitter {
      */
     async identifyOptimizationOpportunities(analysis) {
         const opportunities = [];
-        
+
         // Oportunidades baseadas em bottlenecks
         for (const bottleneck of analysis.bottlenecks) {
             switch (bottleneck.type) {
@@ -301,7 +301,7 @@ export class AutoOptimizationEngine extends EventEmitter {
                     break;
             }
         }
-        
+
         return opportunities;
     }
 
@@ -317,7 +317,7 @@ export class AutoOptimizationEngine extends EventEmitter {
             estimatedDuration: 0,
             expectedImprovement: 0
         };
-        
+
         for (const opportunity of plan.opportunities) {
             for (const action of opportunity.actions) {
                 const actionPlan = await this.createActionPlan(action, opportunity);
@@ -326,7 +326,7 @@ export class AutoOptimizationEngine extends EventEmitter {
                 plan.expectedImprovement += actionPlan.expectedImprovement;
             }
         }
-        
+
         return plan;
     }
 
@@ -335,13 +335,13 @@ export class AutoOptimizationEngine extends EventEmitter {
      */
     async executeOptimizations(plan) {
         const results = [];
-        
+
         for (const action of plan.actions) {
             try {
                 console.log(`🔧 Executing optimization: ${action.type}`);
-                
+
                 const result = await this.executeOptimizationAction(action);
-                
+
                 results.push({
                     action: action.type,
                     success: result.success,
@@ -349,12 +349,12 @@ export class AutoOptimizationEngine extends EventEmitter {
                     duration: result.duration,
                     error: result.error
                 });
-                
+
                 if (result.success) {
                     this.metrics.performanceImprovements++;
                     console.log(`✅ Optimization ${action.type} completed successfully`);
                 }
-                
+
             } catch (error) {
                 results.push({
                     action: action.type,
@@ -363,7 +363,7 @@ export class AutoOptimizationEngine extends EventEmitter {
                 });
             }
         }
-        
+
         return results;
     }
 
@@ -378,7 +378,7 @@ export class AutoOptimizationEngine extends EventEmitter {
                     improvement: Math.random() * 20 + 10,
                     duration: 100
                 };
-                
+
             default:
                 return {
                     success: false,
@@ -394,17 +394,17 @@ export class AutoOptimizationEngine extends EventEmitter {
         if (!this.config.learningEnabled) {
             return;
         }
-        
+
         try {
             for (const result of results) {
                 if (result.success) {
                     await this.updateLearningModel(result.action, result.improvement);
                 }
             }
-            
+
             this.metrics.learningCycles++;
             console.log('🧠 Learning models updated');
-            
+
         } catch (error) {
             console.error('❌ Learning cycle failed:', error.message);
         }
@@ -417,7 +417,7 @@ export class AutoOptimizationEngine extends EventEmitter {
         if (this.optimizationTimer) {
             clearInterval(this.optimizationTimer);
         }
-        
+
         this.optimizationTimer = setInterval(async () => {
             if (this.isRunning) {
                 try {
@@ -430,17 +430,44 @@ export class AutoOptimizationEngine extends EventEmitter {
     }
 
     /**
+     * Obtém status de saúde do sistema
+     */
+    async getSystemHealth() {
+        try {
+            const metrics = await this.collectPerformanceMetrics();
+            const performanceScore = this.calculateCurrentPerformanceScore();
+
+            return {
+                overall: performanceScore > 70 ? 'healthy' : performanceScore > 50 ? 'warning' : 'critical',
+                performance: performanceScore,
+                metrics,
+                timestamp: Date.now(),
+                uptime: this.isRunning ? Date.now() - (this.performanceHistory[0]?.timestamp || Date.now()) : 0,
+                optimizations: this.metrics.optimizationsPerformed,
+                improvements: this.metrics.performanceImprovements
+            };
+        } catch (error) {
+            return {
+                overall: 'error',
+                performance: 0,
+                error: error.message,
+                timestamp: Date.now()
+            };
+        }
+    }
+
+    /**
      * Métodos auxiliares
      */
     calculateCurrentPerformanceScore() {
         if (this.performanceHistory.length === 0) {
             return 0;
         }
-        
+
         const latest = this.performanceHistory[this.performanceHistory.length - 1];
         const systemScore = Math.max(0, 100 - latest.system.cpuUsage - latest.system.memoryUsage);
         const appScore = Math.max(0, 100 - latest.application.responseTime / 2);
-        
+
         return (systemScore + appScore) / 2;
     }
 
@@ -472,14 +499,14 @@ export class AutoOptimizationEngine extends EventEmitter {
                 confidence: 0
             });
         }
-        
+
         const model = this.learningModels.get(action);
         model.samples.push(improvement);
-        
+
         if (model.samples.length > 20) {
             model.samples = model.samples.slice(-20);
         }
-        
+
         model.averageImprovement = model.samples.reduce((a, b) => a + b, 0) / model.samples.length;
         model.confidence = Math.min(1, model.samples.length / 10);
     }
@@ -494,7 +521,7 @@ export class AutoOptimizationEngine extends EventEmitter {
 
     addOptimizationHistory(record) {
         this.optimizationHistory.push(record);
-        
+
         if (this.optimizationHistory.length > 100) {
             this.optimizationHistory = this.optimizationHistory.slice(-50);
         }
@@ -527,15 +554,15 @@ export class AutoOptimizationEngine extends EventEmitter {
      */
     async shutdown() {
         console.log('🛑 Shutting down optimization engine...');
-        
+
         this.isRunning = false;
-        
+
         if (this.optimizationTimer) {
             clearInterval(this.optimizationTimer);
         }
-        
+
         this.emit('shutdown');
-        
+
         console.log('✅ Optimization engine shut down');
     }
 }

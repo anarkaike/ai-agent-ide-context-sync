@@ -1,5 +1,5 @@
-import SafetyFilter from '../../../../../packages/cli/core/security/SafetyFilter.js';
-import TrustSystem from '../../swarm/TrustSystem.js';
+import SafetyFilter from '../../../../cli/core/security/SafetyFilter.js';
+import TrustSystem from '../../../cli/core/swarm/TrustSystem.js';
 import SecuritySandbox from '../../security/SecuritySandbox.js';
 
 /**

@@ -1,6 +1,6 @@
 import nanobot from 'nanobot';
 import TrustSystem from '../swarm/TrustSystem.js';
-import VaultManager from '../../../../../packages/cli/core/ethereum_bridge/VaultManager.js';
+import VaultManager from '../../../../cli/core/ethereum_bridge/VaultManager.js';
 
 /**
  * NanobotBridge - Conecta à Nanobot Trust Network e Knowledge Base
