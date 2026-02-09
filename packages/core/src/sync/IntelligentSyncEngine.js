@@ -5,14 +5,14 @@
  * compressão, resolução de conflitos e otimização de banda.
  */
 
-const crypto = require('crypto');
-const EventEmitter = require('events');
-const zlib = require('zlib');
+import crypto from 'crypto';
+import { EventEmitter } from 'events';
+import zlib from 'zlib';
 
 class IntelligentSyncEngine extends EventEmitter {
     constructor(options = {}) {
         super();
-        
+
         // Configurações
         this.compressionLevel = options.compressionLevel || 6;
         this.deltaThreshold = options.deltaThreshold || 1024; // 1KB
@@ -20,11 +20,11 @@ class IntelligentSyncEngine extends EventEmitter {
         this.syncInterval = options.syncInterval || 5000; // 5 segundos
         this.maxRetries = options.maxRetries || 3;
         this.priorityLevels = ['critical', 'high', 'normal', 'low'];
-        
+
         // Estado
         this.isRunning = false;
         this.syncTimer = null;
-        
+
         // Armazenamento
         this.dataStore = new Map(); // key -> data
         this.dataVersions = new Map(); // key -> version
@@ -32,7 +32,7 @@ class IntelligentSyncEngine extends EventEmitter {
         this.deltaCache = new Map(); // key -> [delta operations]
         this.syncQueue = []; // priority queue
         this.conflicts = new Map(); // key -> conflict info
-        
+
         // Métricas
         this.metrics = {
             syncsPerformed: 0,
@@ -43,13 +43,13 @@ class IntelligentSyncEngine extends EventEmitter {
             avgSyncTime: 0,
             lastSyncTime: null
         };
-        
+
         // Peers para sincronização
         this.peers = new Set(); // peerIds
-        
+
         console.log('[SyncEngine] Intelligent Sync Engine initialized');
     }
-    
+
     /**
      * Inicia a engine de sincronização
      */
@@ -57,45 +57,45 @@ class IntelligentSyncEngine extends EventEmitter {
         if (this.isRunning) {
             throw new Error('Sync engine is already running');
         }
-        
+
         try {
             // Inicia sincronização periódica
             this._startSyncTimer();
-            
+
             this.isRunning = true;
             console.log('[SyncEngine] Started');
             this.emit('started');
-            
+
             return true;
         } catch (error) {
             console.error('[SyncEngine] Failed to start:', error);
             throw error;
         }
     }
-    
+
     /**
      * Para a engine de sincronização
      */
     async stop() {
         if (!this.isRunning) return;
-        
+
         try {
             // Para timer
             if (this.syncTimer) {
                 clearInterval(this.syncTimer);
             }
-            
+
             this.isRunning = false;
             console.log('[SyncEngine] Stopped');
             this.emit('stopped');
-            
+
             return true;
         } catch (error) {
             console.error('[SyncEngine] Failed to stop:', error);
             throw error;
         }
     }
-    
+
     /**
      * Adiciona peer para sincronização
      */
@@ -103,7 +103,7 @@ class IntelligentSyncEngine extends EventEmitter {
         this.peers.add(peerId);
         console.log(`[SyncEngine] Added peer ${peerId}`);
     }
-    
+
     /**
      * Remove peer da sincronização
      */
@@ -111,38 +111,38 @@ class IntelligentSyncEngine extends EventEmitter {
         this.peers.delete(peerId);
         console.log(`[SyncEngine] Removed peer ${peerId}`);
     }
-    
+
     /**
      * Armazena dados com versionamento
      */
     async store(key, data, options = {}) {
         const startTime = Date.now();
-        
+
         try {
             // Gera checksum
             const checksum = this._generateChecksum(data);
-            
+
             // Verifica se já existe
             const existingChecksum = this.dataChecksums.get(key);
             const existingVersion = this.dataVersions.get(key) || 0;
-            
+
             if (existingChecksum === checksum) {
                 console.log(`[SyncEngine] Data ${key} unchanged, skipping`);
                 return { unchanged: true, version: existingVersion };
             }
-            
+
             // Calcula delta se existir dado anterior
             let delta = null;
             const existingData = this.dataStore.get(key);
             if (existingData && this._shouldUseDelta(data, existingData)) {
                 delta = this._calculateDelta(existingData, data);
             }
-            
+
             // Atualiza armazenamento
             this.dataStore.set(key, data);
             this.dataVersions.set(key, existingVersion + 1);
             this.dataChecksums.set(key, checksum);
-            
+
             // Armazena delta para sincronização
             if (delta) {
                 if (!this.deltaCache.has(key)) {
@@ -154,15 +154,15 @@ class IntelligentSyncEngine extends EventEmitter {
                     version: existingVersion + 1
                 });
             }
-            
+
             // Adiciona à fila de sincronização
             this._queueSync(key, options.priority || 'normal');
-            
+
             const duration = Date.now() - startTime;
             console.log(`[SyncEngine] Stored ${key} in ${duration}ms`);
-            
+
             this.emit('dataStored', { key, version: existingVersion + 1, delta });
-            
+
             return {
                 stored: true,
                 version: existingVersion + 1,
@@ -174,7 +174,7 @@ class IntelligentSyncEngine extends EventEmitter {
             throw error;
         }
     }
-    
+
     /**
      * Recupera dados
      */
@@ -182,11 +182,11 @@ class IntelligentSyncEngine extends EventEmitter {
         const data = this.dataStore.get(key);
         const version = this.dataVersions.get(key) || 0;
         const checksum = this.dataChecksums.get(key);
-        
+
         if (!data) {
             return null;
         }
-        
+
         return {
             data,
             version,
@@ -194,7 +194,7 @@ class IntelligentSyncEngine extends EventEmitter {
             timestamp: Date.now()
         };
     }
-    
+
     /**
      * Sincroniza com todos os peers
      */
@@ -203,14 +203,14 @@ class IntelligentSyncEngine extends EventEmitter {
             console.log('[SyncEngine] No peers to sync with');
             return [];
         }
-        
+
         const startTime = Date.now();
         const results = [];
-        
+
         try {
             // Processa fila de sincronização
             const syncItems = this._processSyncQueue();
-            
+
             for (const peerId of this.peers) {
                 try {
                     const result = await this._syncWithPeer(peerId, syncItems);
@@ -220,23 +220,23 @@ class IntelligentSyncEngine extends EventEmitter {
                     results.push({ peerId, success: false, error: error.message });
                 }
             }
-            
+
             // Atualiza métricas
             const duration = Date.now() - startTime;
             this.metrics.syncsPerformed++;
             this.metrics.avgSyncTime = (this.metrics.avgSyncTime + duration) / 2;
             this.metrics.lastSyncTime = new Date();
-            
+
             console.log(`[SyncEngine] Sync completed in ${duration}ms`);
             this.emit('syncCompleted', { results, duration });
-            
+
             return results;
         } catch (error) {
             console.error('[SyncEngine] Sync failed:', error);
             throw error;
         }
     }
-    
+
     /**
      * Sincroniza com um peer específico
      */
@@ -244,7 +244,7 @@ class IntelligentSyncEngine extends EventEmitter {
         const syncItems = this._processSyncQueue();
         return await this._syncWithPeer(peerId, syncItems);
     }
-    
+
     /**
      * Resolve conflitos
      */
@@ -253,47 +253,47 @@ class IntelligentSyncEngine extends EventEmitter {
         if (!conflict) {
             return { resolved: false, reason: 'No conflict found' };
         }
-        
+
         const resolutionStrategy = strategy || this.conflictResolution;
         let resolvedData = null;
         let resolutionReason = '';
-        
+
         switch (resolutionStrategy) {
             case 'latest-wins':
-                resolvedData = conflict.local.timestamp > conflict.remote.timestamp 
-                    ? conflict.local.data 
+                resolvedData = conflict.local.timestamp > conflict.remote.timestamp
+                    ? conflict.local.data
                     : conflict.remote.data;
                 resolutionReason = 'Latest timestamp wins';
                 break;
-                
+
             case 'local-wins':
                 resolvedData = conflict.local.data;
                 resolutionReason = 'Local data wins';
                 break;
-                
+
             case 'remote-wins':
                 resolvedData = conflict.remote.data;
                 resolutionReason = 'Remote data wins';
                 break;
-                
+
             case 'merge':
                 resolvedData = this._mergeData(conflict.local.data, conflict.remote.data);
                 resolutionReason = 'Data merged';
                 break;
-                
+
             default:
                 throw new Error(`Unknown conflict resolution strategy: ${resolutionStrategy}`);
         }
-        
+
         // Aplica resolução
         await this.store(key, resolvedData, { priority: 'high' });
         this.conflicts.delete(key);
-        
+
         this.metrics.conflictsResolved++;
-        
+
         console.log(`[SyncEngine] Conflict resolved for ${key}: ${resolutionReason}`);
         this.emit('conflictResolved', { key, strategy: resolutionStrategy, reason: resolutionReason });
-        
+
         return {
             resolved: true,
             strategy: resolutionStrategy,
@@ -301,7 +301,7 @@ class IntelligentSyncEngine extends EventEmitter {
             data: resolvedData
         };
     }
-    
+
     /**
      * Obtém métricas da engine
      */
@@ -316,7 +316,7 @@ class IntelligentSyncEngine extends EventEmitter {
             isRunning: this.isRunning
         };
     }
-    
+
     /**
      * Sincroniza com peer específico
      */
@@ -324,44 +324,44 @@ class IntelligentSyncEngine extends EventEmitter {
         const startTime = Date.now();
         let bytesTransferred = 0;
         let bytesSaved = 0;
-        
+
         // Prepara payload
         const payload = {
             nodeId: 'current-node', // viria da mesh network
             timestamp: Date.now(),
             items: []
         };
-        
+
         for (const item of syncItems) {
             const syncData = await this._prepareSyncData(item.key);
             if (syncData) {
                 payload.items.push(syncData);
                 bytesTransferred += syncData.compressedSize;
-                
+
                 if (syncData.originalSize > syncData.compressedSize) {
                     bytesSaved += syncData.originalSize - syncData.compressedSize;
                 }
             }
         }
-        
+
         // Simula envio para peer (em implementação real usaria mesh network)
         console.log(`[SyncEngine] Syncing ${payload.items.length} items with ${peerId}`);
-        
+
         // Simula resposta do peer
         const peerResponse = await this._simulatePeerResponse(peerId, payload);
-        
+
         // Processa resposta
         await this._processPeerResponse(peerId, peerResponse);
-        
+
         const duration = Date.now() - startTime;
-        
+
         // Atualiza métricas
         this.metrics.bytesTransferred += bytesTransferred;
         this.metrics.bytesSaved += bytesSaved;
         if (bytesTransferred > 0) {
             this.metrics.compressionRatio = (this.metrics.compressionRatio + (bytesSaved / bytesTransferred)) / 2;
         }
-        
+
         return {
             itemsSynced: payload.items.length,
             bytesTransferred,
@@ -370,7 +370,7 @@ class IntelligentSyncEngine extends EventEmitter {
             compressionRatio: bytesTransferred > 0 ? bytesSaved / bytesTransferred : 0
         };
     }
-    
+
     /**
      * Prepara dados para sincronização
      */
@@ -378,13 +378,13 @@ class IntelligentSyncEngine extends EventEmitter {
         const data = this.dataStore.get(key);
         const version = this.dataVersions.get(key);
         const checksum = this.dataChecksums.get(key);
-        
+
         if (!data) return null;
-        
+
         // Verifica se tem delta para enviar
         const deltas = this.deltaCache.get(key) || [];
         let payload = { data, version, checksum, type: 'full' };
-        
+
         if (deltas.length > 0) {
             // Usa delta se for menor
             const latestDelta = deltas[deltas.length - 1];
@@ -398,11 +398,11 @@ class IntelligentSyncEngine extends EventEmitter {
                 };
             }
         }
-        
+
         // Comprime payload
         const serialized = JSON.stringify(payload);
         const compressed = await this._compress(serialized);
-        
+
         return {
             key,
             payload: compressed,
@@ -412,7 +412,7 @@ class IntelligentSyncEngine extends EventEmitter {
             checksum
         };
     }
-    
+
     /**
      * Processa resposta do peer
      */
@@ -422,7 +422,7 @@ class IntelligentSyncEngine extends EventEmitter {
                 // Descomprime payload
                 const decompressed = await this._decompress(item.payload);
                 const payload = JSON.parse(decompressed);
-                
+
                 // Verifica conflitos
                 await this._handleIncomingData(item.key, payload, peerId);
             } catch (error) {
@@ -430,24 +430,24 @@ class IntelligentSyncEngine extends EventEmitter {
             }
         }
     }
-    
+
     /**
      * Manipula dados recebidos
      */
     async _handleIncomingData(key, payload, fromPeerId) {
         const localVersion = this.dataVersions.get(key) || 0;
         const localChecksum = this.dataChecksums.get(key);
-        
+
         if (payload.version <= localVersion) {
             // Dado desatualizado, ignora
             return;
         }
-        
+
         if (payload.checksum === localChecksum) {
             // Mesmo checksum, ignora
             return;
         }
-        
+
         // Verifica conflito
         if (localChecksum && localChecksum !== payload.checksum) {
             // Conflito detectado
@@ -467,12 +467,12 @@ class IntelligentSyncEngine extends EventEmitter {
                 },
                 fromPeerId
             });
-            
+
             console.warn(`[SyncEngine] Conflict detected for ${key}`);
             this.emit('conflictDetected', { key, fromPeerId });
             return;
         }
-        
+
         // Aplica dados recebidos
         if (payload.type === 'full') {
             this.dataStore.set(key, payload.data);
@@ -482,14 +482,14 @@ class IntelligentSyncEngine extends EventEmitter {
             const newData = this._applyDelta(baseData, payload.delta);
             this.dataStore.set(key, newData);
         }
-        
+
         this.dataVersions.set(key, payload.version);
         this.dataChecksums.set(key, payload.checksum);
-        
+
         console.log(`[SyncEngine] Applied remote data for ${key} from ${fromPeerId}`);
         this.emit('dataUpdated', { key, fromPeerId, version: payload.version });
     }
-    
+
     /**
      * Calcula delta entre dois dados
      */
@@ -497,16 +497,16 @@ class IntelligentSyncEngine extends EventEmitter {
         // Implementação simplificada - em produção usar algoritmo mais sofisticado
         const oldStr = JSON.stringify(oldData);
         const newStr = JSON.stringify(newData);
-        
+
         // Se for pequeno, não usa delta
         if (newStr.length < this.deltaThreshold) {
             return null;
         }
-        
+
         // Delta simplificado (diff)
         const operations = [];
         let i = 0, j = 0;
-        
+
         while (i < oldStr.length || j < newStr.length) {
             if (i < oldStr.length && j < newStr.length && oldStr[i] === newStr[j]) {
                 i++;
@@ -515,7 +515,7 @@ class IntelligentSyncEngine extends EventEmitter {
                 // Encontra próxima igualdade
                 let matchLen = 0;
                 let maxMatch = Math.min(oldStr.length - i, newStr.length - j);
-                
+
                 for (let k = 0; k < maxMatch; k++) {
                     if (oldStr[i + k] === newStr[j + k]) {
                         matchLen++;
@@ -523,7 +523,7 @@ class IntelligentSyncEngine extends EventEmitter {
                         break;
                     }
                 }
-                
+
                 if (matchLen > 3) {
                     // Operação de substituição
                     operations.push({
@@ -545,24 +545,24 @@ class IntelligentSyncEngine extends EventEmitter {
                 }
             }
         }
-        
+
         return {
             operations,
             size: JSON.stringify(operations).length
         };
     }
-    
+
     /**
      * Aplica delta a dados
      */
     _applyDelta(baseData, delta) {
         const baseStr = JSON.stringify(baseData);
         let result = baseStr;
-        
+
         // Aplica operações em ordem reversa para não afetar posições
         for (let i = delta.operations.length - 1; i >= 0; i--) {
             const op = delta.operations[i];
-            
+
             switch (op.type) {
                 case 'insert':
                     result = result.slice(0, op.position) + op.text + result.slice(op.position);
@@ -572,7 +572,7 @@ class IntelligentSyncEngine extends EventEmitter {
                     break;
             }
         }
-        
+
         try {
             return JSON.parse(result);
         } catch (error) {
@@ -580,18 +580,18 @@ class IntelligentSyncEngine extends EventEmitter {
             return baseData; // Fallback
         }
     }
-    
+
     /**
      * Verifica se deve usar delta
      */
     _shouldUseDelta(newData, oldData) {
         const newSize = JSON.stringify(newData).length;
         const oldSize = JSON.stringify(oldData).length;
-        
+
         // Usa delta se a diferença for pequena
         return Math.abs(newSize - oldSize) < (newSize * 0.3);
     }
-    
+
     /**
      * Gera checksum dos dados
      */
@@ -600,7 +600,7 @@ class IntelligentSyncEngine extends EventEmitter {
         hash.update(JSON.stringify(data));
         return hash.digest('hex');
     }
-    
+
     /**
      * Comprime dados
      */
@@ -612,7 +612,7 @@ class IntelligentSyncEngine extends EventEmitter {
             });
         });
     }
-    
+
     /**
      * Descomprime dados
      */
@@ -625,7 +625,7 @@ class IntelligentSyncEngine extends EventEmitter {
             });
         });
     }
-    
+
     /**
      * Adiciona item à fila de sincronização
      */
@@ -634,7 +634,7 @@ class IntelligentSyncEngine extends EventEmitter {
         if (priorityIndex === -1) {
             priority = 'normal';
         }
-        
+
         // Insere mantendo ordem de prioridade
         let insertIndex = this.syncQueue.length;
         for (let i = 0; i < this.syncQueue.length; i++) {
@@ -644,17 +644,17 @@ class IntelligentSyncEngine extends EventEmitter {
                 break;
             }
         }
-        
+
         this.syncQueue.splice(insertIndex, 0, { key, priority, timestamp: Date.now() });
     }
-    
+
     /**
      * Processa fila de sincronização
      */
     _processSyncQueue() {
         const items = [...this.syncQueue];
         this.syncQueue = []; // Limpa fila
-        
+
         // Remove duplicados e mantém mais recente
         const uniqueItems = new Map();
         for (const item of items.reverse()) {
@@ -662,10 +662,10 @@ class IntelligentSyncEngine extends EventEmitter {
                 uniqueItems.set(item.key, item);
             }
         }
-        
+
         return Array.from(uniqueItems.values());
     }
-    
+
     /**
      * Inicia timer de sincronização
      */
@@ -678,7 +678,7 @@ class IntelligentSyncEngine extends EventEmitter {
             }
         }, this.syncInterval);
     }
-    
+
     /**
      * Mescla dados (para resolução de conflitos)
      */
@@ -687,18 +687,18 @@ class IntelligentSyncEngine extends EventEmitter {
         if (typeof localData === 'object' && typeof remoteData === 'object') {
             return { ...localData, ...remoteData };
         }
-        
+
         // Para outros tipos, usa o mais recente
         return remoteData;
     }
-    
+
     /**
      * Simula resposta do peer
      */
     async _simulatePeerResponse(peerId, payload) {
         // Simula latência
         await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
-        
+
         // Simula dados do peer
         return {
             nodeId: peerId,
@@ -708,4 +708,4 @@ class IntelligentSyncEngine extends EventEmitter {
     }
 }
 
-module.exports = IntelligentSyncEngine;
+export { IntelligentSyncEngine };

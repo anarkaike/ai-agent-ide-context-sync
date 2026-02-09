@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "sfts": [
+    {
+      "id": "d47a70ff-74b1-471b-a685-ace6247f45f3",
+      "type": "TEST_SBT",
+      "data": {
+        "purpose": "integration test",
+        "data": "test data"
+      },
+      "createdAt": "2026-02-09T08:08:39.666Z",
+      "signature": "48cb44b593d195b77d734b608966523f9140f45d1b3387a974e82ad911582577"
+    },
+    {
+      "id": "42da452d-5e4d-49e5-be1a-d6943e5b81a3",
+      "type": "TEST_SBT",
+      "data": {
+        "purpose": "integration test",
+        "data": "test data"
+      },
+      "createdAt": "2026-02-09T08:10:00.847Z",
+      "signature": "26d9accb966cab1c36b890a27f3d403b6af0bc71fc6b990d5f89ce5671c5bee4"
+    },
+    {
+      "id": "0c9d2bbc-9eef-4dd6-a220-fbe923a4eb83",
+      "type": "TEST_SBT",
+      "data": {
+        "purpose": "integration test",
+        "data": "test data"
+      },
+      "createdAt": "2026-02-09T08:10:28.619Z",
+      "signature": "a27193de7a8e52c082264c9094996a89ac93d9a4a5f7f62cbbde351b7b9fb675"
+    }
+  ],
+  "lastUpdate": "2026-02-09T08:10:28.621Z"
+}

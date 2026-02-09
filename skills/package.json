@@ -1,0 +1,152 @@
+{
+  "name": "@ai-agent/swarm-skills",
+  "version": "1.0.0",
+  "description": "Pacote completo de skills Nanobot para gerenciamento do ecossistema AI Agent Swarm",
+  "main": "registry.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test/test-all.js",
+    "test:services": "node test/test-service-manager.js",
+    "test:health": "node test/test-health-monitor.js",
+    "test:communication": "node test/test-neural-link.js",
+    "test:orchestrator": "node test/test-orchestrator.js",
+    "demo": "node demo/demo-ecosystem.js",
+    "demo:startup": "node demo/demo-startup.js",
+    "demo:monitoring": "node demo/demo-monitoring.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "build": "npm run lint && npm run test",
+    "prepublishOnly": "npm run build",
+    "nanobot:register": "nanobot register --trust-network trust-network-ai-agent",
+    "nanobot:publish": "nanobot publish --tag latest",
+    "nanobot:verify": "nanobot verify --security-check"
+  },
+  "keywords": [
+    "ai-agent",
+    "swarm",
+    "nanobot",
+    "skills",
+    "orchestration",
+    "cross-platform",
+    "service-management",
+    "health-monitoring",
+    "neural-communication",
+    "ecosystem"
+  ],
+  "author": {
+    "name": "AI Agent Collective",
+    "email": "collective@ai-agent.org",
+    "url": "https://github.com/ai-agent-collective"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ai-agent-collective/swarm-skills.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ai-agent-collective/swarm-skills/issues"
+  },
+  "homepage": "https://github.com/ai-agent-collective/swarm-skills#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "nanobot": "^1.0.0",
+    "sqlite3": "^5.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "prettier": "^2.8.0",
+    "jest": "^29.0.0"
+  },
+  "peerDependencies": {
+    "node": ">=14.0.0"
+  },
+  "nanobot": {
+    "name": "ai-agent-swarm-skills",
+    "version": "1.0.0",
+    "description": "Complete Nanobot skills package for AI Agent Swarm ecosystem management",
+    "category": "ecosystem",
+    "trust_network": "trust-network-ai-agent",
+    "capabilities": [
+      "service_management",
+      "health_monitoring",
+      "neural_communication",
+      "orchestration",
+      "cross_platform",
+      "auto_healing"
+    ],
+    "security": {
+      "trust_level": "high",
+      "required_permissions": [
+        "process_management",
+        "network_access",
+        "file_system_access",
+        "service_installation"
+      ],
+      "sandbox_requirements": {
+        "allow_network": true,
+        "allow_file_system": true,
+        "allow_process_spawn": true,
+        "restricted_paths": [".ai-workspace"]
+      }
+    },
+    "skills": [
+      {
+        "file": "swarm-service-manager/index.js",
+        "name": "SwarmServiceManagerSkill",
+        "description": "Cross-platform service management for SwarmClient and WebMap"
+      },
+      {
+        "file": "swarm-health-monitor/index.js",
+        "name": "SwarmHealthMonitorSkill",
+        "description": "Advanced health monitoring with alerts and auto-healing"
+      },
+      {
+        "file": "neural-link-communicator/index.js",
+        "name": "NeuralLinkCommunicatorSkill",
+        "description": "Neural communication system between agents with sync"
+      },
+      {
+        "file": "swarm-orchestrator/index.js",
+        "name": "SwarmOrchestratorSkill",
+        "description": "Master orchestrator coordinating all ecosystem skills"
+      }
+    ],
+    "workflows": [
+      {
+        "file": "registry.json",
+        "name": "full_ecosystem_startup",
+        "description": "Complete ecosystem startup workflow"
+      },
+      {
+        "file": "registry.json",
+        "name": "emergency_recovery",
+        "description": "Emergency recovery workflow"
+      }
+    ]
+  },
+  "files": [
+    "registry.js",
+    "registry.json",
+    "swarm-service-manager/",
+    "swarm-health-monitor/",
+    "neural-link-communicator/",
+    "swarm-orchestrator/",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ]
+}

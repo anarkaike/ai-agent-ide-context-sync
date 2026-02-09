@@ -1,0 +1,9 @@
+{
+  "id": "ccc4e3fb-305e-4b1d-be16-9c94bf955f56",
+  "name": "integration-test",
+  "createdAt": "2026-02-09T08:10:28.613Z",
+  "journalSize": 15,
+  "metadata": {
+    "purpose": "integration testing"
+  }
+}

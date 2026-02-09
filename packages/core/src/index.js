@@ -27,7 +27,7 @@ export { ConflictResolutionEngine } from './sync/ConflictResolutionEngine.js';
 export { DeltaCompressionEngine } from './sync/DeltaCompressionEngine.js';
 
 // Optimization Components
-export { AutoOptimizationEngine } from './optimization/AutoOptimizationEngine.js';
+export { AutoOptimizationEngine } from './optimization/OptimizerEngine.js';
 export { SelfHealingSystem } from './optimization/SelfHealingSystem.js';
 export { PredictiveAnalyticsEngine } from './optimization/PredictiveAnalyticsEngine.js';
 

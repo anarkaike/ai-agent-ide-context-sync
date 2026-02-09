@@ -1,0 +1,72 @@
+{
+  "status": {
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "pending": "Pending",
+    "error": "Error",
+    "success": "Success",
+    "failed": "Failed"
+  },
+  "operations": {
+    "create": "Create",
+    "update": "Update",
+    "delete": "Delete",
+    "list": "List",
+    "show": "Show",
+    "execute": "Execute",
+    "approve": "Approve",
+    "reject": "Reject",
+    "revert": "Revert"
+  },
+  "security": {
+    "zero_trust": "Zero Trust Validation",
+    "unsafe_payload": "Unsafe payload detected",
+    "invalid_token": "Invalid token",
+    "insufficient_permissions": "Insufficient permissions",
+    "account_locked": "Account locked",
+    "approval_required": "Manual approval required"
+  },
+  "observability": {
+    "trace_started": "Trace started",
+    "trace_completed": "Trace completed",
+    "event_emitted": "Event emitted",
+    "metrics_updated": "Metrics updated"
+  },
+  "sync": {
+    "syncing": "Syncing...",
+    "synced": "Synced",
+    "offline": "Offline",
+    "reconnecting": "Reconnecting...",
+    "conflict_detected": "Conflict detected",
+    "conflict_resolved": "Conflict resolved"
+  },
+  "skills": {
+    "installed": "Skill installed",
+    "uninstalled": "Skill uninstalled",
+    "published": "Skill published",
+    "already_installed": "Skill already installed",
+    "not_found": "Skill not found"
+  },
+  "governance": {
+    "request_pending": "Approval request pending",
+    "request_approved": "Request approved",
+    "request_rejected": "Request rejected",
+    "no_pending_requests": "No pending requests"
+  },
+  "budget": {
+    "budget_exhausted": "Budget exhausted",
+    "budget_warning": "Budget warning",
+    "cost_tracking": "Cost tracking enabled",
+    "tokens_used": "Tokens used"
+  },
+  "common": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "done": "Done",
+    "cancelled": "Cancelled",
+    "unknown": "Unknown",
+    "not_available": "Not available",
+    "invalid_input": "Invalid input",
+    "permission_denied": "Permission denied"
+  }
+}

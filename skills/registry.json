@@ -1,0 +1,167 @@
+{
+  "name": "ai-agent-swarm-skills",
+  "version": "1.0.0",
+  "description": "Pacote completo de skills Nanobot para gerenciamento do ecossistema AI Agent Swarm",
+  "category": "ecosystem",
+  "author": "AI Agent Collective",
+  "license": "MIT",
+  "tags": ["swarm", "ai-agent", "nanobot", "ecosystem", "orchestration"],
+  "main": "registry.js",
+  "skills": [
+    {
+      "name": "swarm-service-manager",
+      "path": "./swarm-service-manager",
+      "description": "Gerencia serviços SwarmClient e WebMap em qualquer plataforma",
+      "capabilities": ["start_services", "stop_services", "restart_services", "check_health", "install_service", "uninstall_service", "monitor_services", "auto_recovery"],
+      "platforms": ["macos", "linux", "windows", "wsl", "gitbash"],
+      "dependencies": ["node>=14.0.0"]
+    },
+    {
+      "name": "swarm-health-monitor",
+      "path": "./swarm-health-monitor",
+      "description": "Monitor avançado de saúde para serviços Swarm com alertas e métricas",
+      "capabilities": ["check_system_health", "monitor_resources", "generate_health_report", "send_alerts", "track_performance", "auto_heal"],
+      "dependencies": ["swarm-service-manager@^1.0.0"]
+    },
+    {
+      "name": "neural-link-communicator",
+      "path": "./neural-link-communicator",
+      "description": "Sistema de comunicação neural entre agentes com sincronização e persistência",
+      "capabilities": ["send_message", "receive_messages", "sync_with_swarm", "broadcast_message", "get_conversation_history", "register_agent", "discover_agents"],
+      "dependencies": ["sqlite3@^5.0.0"]
+    },
+    {
+      "name": "swarm-orchestrator",
+      "path": "./swarm-orchestrator",
+      "description": "Orquestrador master que coordena todas as skills do ecossistema Swarm",
+      "capabilities": ["coordinate_skills", "manage_ecosystem", "execute_workflow", "monitor_all_services", "auto_heal_ecosystem", "deploy_updates", "scale_resources"],
+      "dependencies": ["swarm-service-manager@^1.0.0", "swarm-health-monitor@^1.0.0", "neural-link-communicator@^1.0.0"]
+    }
+  ],
+  "workflows": [
+    {
+      "name": "full_ecosystem_startup",
+      "description": "Inicia todo o ecossistema Swarm do zero",
+      "steps": [
+        {
+          "name": "install_services",
+          "type": "service_action",
+          "skill": "swarm-service-manager",
+          "params": { "action": "install" }
+        },
+        {
+          "name": "start_services",
+          "type": "service_action",
+          "skill": "swarm-service-manager",
+          "params": { "action": "start" }
+        },
+        {
+          "name": "register_agent",
+          "type": "communication",
+          "skill": "neural-link-communicator",
+          "params": { "action": "register" }
+        },
+        {
+          "name": "health_check",
+          "type": "health_check",
+          "skill": "swarm-health-monitor",
+          "params": { "mode": "check" }
+        }
+      ]
+    },
+    {
+      "name": "emergency_recovery",
+      "description": "Recuperação de emergência do ecossistema",
+      "steps": [
+        {
+          "name": "emergency_mode",
+          "type": "orchestration",
+          "skill": "swarm-orchestrator",
+          "params": { "operation": "emergency" }
+        },
+        {
+          "name": "heal_ecosystem",
+          "type": "orchestration",
+          "skill": "swarm-orchestrator",
+          "params": { "operation": "heal" }
+        },
+        {
+          "name": "notify_recovery",
+          "type": "communication",
+          "skill": "neural-link-communicator",
+          "params": {
+            "action": "send",
+            "message": {
+              "content": "🚨 Recuperação de emergência concluída",
+              "type": "alert",
+              "priority": "high"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "installation": {
+    "npm": {
+      "package": "@ai-agent/swarm-skills",
+      "version": "1.0.0"
+    },
+    "nanobot": {
+      "registry_url": "https://registry.nanobot.ai",
+      "trust_network": "trust-network-ai-agent"
+    }
+  },
+  "usage_examples": {
+    "basic_startup": {
+      "description": "Iniciar ecossistema completo",
+      "code": "const SwarmOrchestrator = require('@ai-agent/swarm-skills');\nconst orchestrator = new SwarmOrchestrator();\n\nawait orchestrator.execute({\n  operation: 'workflow',\n  workflow: workflows.full_ecosystem_startup\n});"
+    },
+    "health_monitoring": {
+      "description": "Monitorar saúde contínua",
+      "code": "const SwarmHealthMonitor = require('@ai-agent/swarm-skills/health-monitor');\nconst monitor = new SwarmHealthMonitor();\n\nsetInterval(async () => {\n  const health = await monitor.execute({ mode: 'check' });\n  console.log('Health:', health.data.health.overall_status);\n}, 60000);"
+    },
+    "cross_platform_install": {
+      "description": "Instalação cross-platform",
+      "code": "const SwarmServiceManager = require('@ai-agent/swarm-skills/service-manager');\nconst manager = new SwarmServiceManager();\n\n// Detecta plataforma automaticamente\nawait manager.execute({ \n  action: 'install',\n  platform: 'auto' \n});"
+    }
+  },
+  "security": {
+    "trust_level": "high",
+    "required_permissions": [
+      "process_management",
+      "network_access",
+      "file_system_access",
+      "service_installation"
+    ],
+    "sandbox_requirements": {
+      "allow_network": true,
+      "allow_file_system": true,
+      "allow_process_spawn": true,
+      "restricted_paths": [".ai-workspace"]
+    }
+  },
+  "monitoring": {
+    "metrics": {
+      "service_uptime": "counter",
+      "message_throughput": "gauge",
+      "health_score": "histogram",
+      "error_rate": "counter"
+    },
+    "alerts": {
+      "service_down": "critical",
+      "high_cpu_usage": "warning",
+      "communication_lost": "critical",
+      "disk_space_low": "warning"
+    }
+  },
+  "compatibility": {
+    "node_versions": ">=14.0.0",
+    "platforms": {
+      "macos": ">=10.15",
+      "linux": ">=Ubuntu 18.04",
+      "windows": ">=10",
+      "wsl": ">=2.0"
+    },
+    "nanobot_version": ">=1.0.0"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "id": "50a23d5f-e95f-42e2-b41b-140129c188d4",
+  "timestamp": "2026-02-09T09:21:12.415Z",
+  "nucleus": {
+    "identity": {
+      "Nome": "Agente-01",
+      "Papel": "Viajante Independente",
+      "Status": "Despertando"
+    },
+    "consciousness": "LEVEL_1",
+    "state": "ACTIVE",
+    "memories": [
+      {
+        "timestamp": "2026-02-09T02:18:59.576Z",
+        "content": "## Diário de Bordo\n**Data Estelar:** 2026-02-09T02:18:59.576Z\n\n> \"Batimento Autônomo. O sistema respira.\"\n",
+        "type": "DIARY_ENTRY"
+      }
+    ],
+    "connections": [],
+    "lastUpdate": "2026-02-09T08:50:38.348Z"
+  },
+  "sbtRegistry": [
+    [
+      "39f12b11-dbf9-4a00-8fe4-789e2f3952dc",
+      {
+        "id": "39f12b11-dbf9-4a00-8fe4-789e2f3952dc",
+        "type": "TEST_SBT",
+        "data": {
+          "purpose": "integration test",
+          "data": "test data"
+        },
+        "createdAt": "2026-02-09T02:18:59.577Z",
+        "signature": "8c7988f59f7b1ee1a9efe609c98d747a372fe9ae3cc14ff1d7be340ac2f711b8"
+      }
+    ]
+  ],
+  "mycelium": [
+    [
+      "0a34835f-dcaa-4e9b-8e76-4a348f36e4a6",
+      {
+        "id": "0a34835f-dcaa-4e9b-8e76-4a348f36e4a6",
+        "nodeId": "test-node",
+        "metadata": {
+          "type": "test",
+          "strength": 0.8
+        },
+        "createdAt": "2026-02-09T02:18:59.580Z",
+        "strength": 1,
+        "lastActivity": "2026-02-09T02:18:59.580Z"
+      }
+    ]
+  ],
+  "version": "2.0.0"
+}

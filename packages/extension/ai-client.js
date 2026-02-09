@@ -1,15 +1,26 @@
 /**
- * AIClient - Wrapper para comunicação com o CLI (Core Intelligence)
+ * AIClient - Wrapper para comunicação com o Core Unificado
+ * 
+ * MIGRADO: Agora usa @ai-agent/core em vez de CLI direto
  */
 const { execFile, exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const vscode = require('vscode');
 
+// Import do Core Unificado
+const { AIClient: CoreAIClient, ToneConfigManager, SecuritySandbox } = require('../../core/src/index.js');
+
 class AIClient {
     constructor(projectRoot) {
         this.projectRoot = projectRoot || vscode.workspace.rootPath;
-        // Caminho relativo ao CLI dentro do monorepo (packages/extension -> packages -> root -> packages/cli)
+
+        // Inicializa o Core AIClient
+        this.toneManager = new ToneConfigManager();
+        this.security = new SecuritySandbox();
+        this.coreClient = new CoreAIClient(this.toneManager, this.security);
+
+        // Legacy support
         this.cliPath = path.resolve(__dirname, '../cli/cli/ai-doc.js');
     }
 
@@ -18,11 +29,39 @@ class AIClient {
     }
 
     /**
-     * Executa qualquer comando do CLI
+     * Executa qualquer comando do CLI (MIGRADO para Core)
      * @param {string[]} args 
      * @returns {Promise<string>}
      */
     async execute(args) {
+        try {
+            // Usa o Core AIClient para operações nativas
+            if (args[0] === 'complete') {
+                const prompt = args.slice(1).join(' ');
+                return await this.coreClient.complete(prompt);
+            }
+
+            if (args[0] === 'generate-prompt') {
+                const goal = args.slice(1).join(' ');
+                return await this.coreClient.generatePrompt(goal);
+            }
+
+            // Fallback para CLI legacy se necessário
+            return await this._executeLegacy(args);
+        } catch (error) {
+            if (AIClient.logger) {
+                AIClient.logger.error(`[AIClient] Core execution failed: ${error.message}`, error);
+            } else {
+                console.error(`[AIClient] Core execution failed: ${error.message}`);
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Legacy CLI execution para comandos não migrados
+     */
+    async _executeLegacy(args) {
         return new Promise((resolve, reject) => {
             const useLocal = fs.existsSync(this.cliPath);
             const command = useLocal ? 'node' : 'ai-doc';
@@ -43,7 +82,7 @@ class AIClient {
                         reject(msg);
                         return;
                     }
-                    
+
                     // Se existe, executa
                     this._runExecFile(command, commandArgs, resolve, reject);
                 });
@@ -140,45 +179,50 @@ class AIClient {
         return this.execute(args);
     }
 
-    async scanDocs(targetDir = '.') {
-        return this.execute(['scan', targetDir]);
-    }
-
-    async runRitual() {
-        return this.execute(['ritual']);
-    }
-
-    async evolveRules() {
-        return this.execute(['evolve']);
-    }
-
-    async getKernelStatus() {
-         return this.execute(['kernel']);
-    }
-
-    async listRules() {
-        // Retorna output bruto, parsing deve ser feito por quem chama ou melhorar CLI para JSON
-        return this.execute(['rules', '--list']);
-    }
-
-    async initWorkspace() {
-        return this.execute(['init']);
-    }
-
+    // Métodos migrados para o Core
     async buildContext() {
-        return this.execute(['build']);
+        return await this.coreClient.buildContext();
     }
 
     async getStatus() {
-        return this.execute(['status']);
+        return await this.coreClient.getStatus();
+    }
+
+    async initializeWorkspace() {
+        return await this.coreClient.initializeWorkspace();
+    }
+
+    // Métodos legacy que ainda usam CLI
+    async scanDocs(targetDir = '.') {
+        return this._executeLegacy(['scan', targetDir]);
+    }
+
+    async runRitual() {
+        return this._executeLegacy(['ritual']);
+    }
+
+    async evolveRules() {
+        return this._executeLegacy(['evolve']);
+    }
+
+    async getKernelStatus() {
+        return this._executeLegacy(['kernel']);
+    }
+
+    async listRules() {
+        return this._executeLegacy(['rules', '--list']);
+    }
+
+    async initWorkspace() {
+        return this._executeLegacy(['init']);
     }
 
     async createIdentity(name) {
-        return this.execute(['identity', 'create', name]);
+        return this._executeLegacy(['identity', 'create', name]);
     }
 
     async listHeuristics() {
-        return this.execute(['heuristics']);
+        return this._executeLegacy(['heuristics']);
     }
 }
 
