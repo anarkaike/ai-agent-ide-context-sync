@@ -1,0 +1,154 @@
+[
+  {
+    "type": "TRANSACTION_BEGIN",
+    "transactionId": "76f55c2d-b1b3-4b8e-93f3-fc325e088af1",
+    "data": {
+      "id": "76f55c2d-b1b3-4b8e-93f3-fc325e088af1",
+      "type": "TEST_TRANSACTION",
+      "status": "COMMITTED",
+      "createdAt": "2026-02-09T02:18:59.567Z",
+      "metadata": {
+        "description": "Integration test transaction"
+      },
+      "operations": [
+        {
+          "id": "2badfc74-b836-44e9-9b45-ff8442783318",
+          "transactionId": "76f55c2d-b1b3-4b8e-93f3-fc325e088af1",
+          "type": "TEST_OPERATION",
+          "timestamp": "2026-02-09T02:18:59.568Z",
+          "operation": {
+            "type": "file_write",
+            "path": "test.txt",
+            "content": "test data"
+          }
+        }
+      ],
+      "committedAt": "2026-02-09T02:18:59.569Z"
+    },
+    "id": "5377fe46-6e42-4e2f-8a1a-dbdbf3376964",
+    "timestamp": "2026-02-09T02:18:59.568Z",
+    "sequence": 0
+  },
+  {
+    "type": "OPERATION",
+    "data": {
+      "id": "2badfc74-b836-44e9-9b45-ff8442783318",
+      "transactionId": "76f55c2d-b1b3-4b8e-93f3-fc325e088af1",
+      "type": "TEST_OPERATION",
+      "timestamp": "2026-02-09T02:18:59.568Z",
+      "operation": {
+        "type": "file_write",
+        "path": "test.txt",
+        "content": "test data"
+      }
+    },
+    "id": "a54f4ee7-26be-4953-9392-1d8392342a66",
+    "timestamp": "2026-02-09T02:18:59.568Z",
+    "sequence": 1
+  },
+  {
+    "type": "TRANSACTION_COMMIT",
+    "transactionId": "76f55c2d-b1b3-4b8e-93f3-fc325e088af1",
+    "data": {
+      "id": "76f55c2d-b1b3-4b8e-93f3-fc325e088af1",
+      "type": "TEST_TRANSACTION",
+      "status": "COMMITTED",
+      "createdAt": "2026-02-09T02:18:59.567Z",
+      "metadata": {
+        "description": "Integration test transaction"
+      },
+      "operations": [
+        {
+          "id": "2badfc74-b836-44e9-9b45-ff8442783318",
+          "transactionId": "76f55c2d-b1b3-4b8e-93f3-fc325e088af1",
+          "type": "TEST_OPERATION",
+          "timestamp": "2026-02-09T02:18:59.568Z",
+          "operation": {
+            "type": "file_write",
+            "path": "test.txt",
+            "content": "test data"
+          }
+        }
+      ],
+      "committedAt": "2026-02-09T02:18:59.569Z"
+    },
+    "id": "0b46f199-f1b9-440b-af29-962d9bc278b4",
+    "timestamp": "2026-02-09T02:18:59.569Z",
+    "sequence": 2
+  },
+  {
+    "type": "TRANSACTION_BEGIN",
+    "transactionId": "72759c59-f421-4f2b-93e8-560e4f2271fb",
+    "data": {
+      "id": "72759c59-f421-4f2b-93e8-560e4f2271fb",
+      "type": "ROLLBACK_TEST",
+      "status": "ROLLED_BACK",
+      "createdAt": "2026-02-09T02:18:59.570Z",
+      "metadata": {},
+      "operations": [
+        {
+          "id": "18a37527-e485-47a0-9a82-f68e29fbf7d3",
+          "transactionId": "72759c59-f421-4f2b-93e8-560e4f2271fb",
+          "type": "TEST_ROLLBACK",
+          "timestamp": "2026-02-09T02:18:59.570Z",
+          "operation": {
+            "data": "test"
+          }
+        }
+      ],
+      "rolledBackAt": "2026-02-09T02:18:59.570Z",
+      "rollbackReason": "test rollback"
+    },
+    "id": "66b7f6da-41ea-4107-9a03-d92a62afdd00",
+    "timestamp": "2026-02-09T02:18:59.570Z",
+    "sequence": 3
+  },
+  {
+    "type": "OPERATION",
+    "data": {
+      "id": "18a37527-e485-47a0-9a82-f68e29fbf7d3",
+      "transactionId": "72759c59-f421-4f2b-93e8-560e4f2271fb",
+      "type": "TEST_ROLLBACK",
+      "timestamp": "2026-02-09T02:18:59.570Z",
+      "operation": {
+        "data": "test"
+      }
+    },
+    "id": "810b99b7-70c5-4436-a2cb-3315fa99fa81",
+    "timestamp": "2026-02-09T02:18:59.570Z",
+    "sequence": 4
+  },
+  {
+    "type": "TRANSACTION_ROLLBACK",
+    "transactionId": "72759c59-f421-4f2b-93e8-560e4f2271fb",
+    "data": {
+      "id": "72759c59-f421-4f2b-93e8-560e4f2271fb",
+      "type": "ROLLBACK_TEST",
+      "status": "ROLLED_BACK",
+      "createdAt": "2026-02-09T02:18:59.570Z",
+      "metadata": {},
+      "operations": [
+        {
+          "id": "18a37527-e485-47a0-9a82-f68e29fbf7d3",
+          "transactionId": "72759c59-f421-4f2b-93e8-560e4f2271fb",
+          "type": "TEST_ROLLBACK",
+          "timestamp": "2026-02-09T02:18:59.570Z",
+          "operation": {
+            "data": "test"
+          }
+        }
+      ],
+      "rolledBackAt": "2026-02-09T02:18:59.570Z",
+      "rollbackReason": "test rollback",
+      "rollbackResults": [
+        {
+          "success": false,
+          "error": "Unsupported rollback operation: TEST_ROLLBACK"
+        }
+      ]
+    },
+    "id": "1fdc99e2-58c2-4151-818c-6e045bf37c9e",
+    "timestamp": "2026-02-09T02:18:59.571Z",
+    "sequence": 5
+  }
+]

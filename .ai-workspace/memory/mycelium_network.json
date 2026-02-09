@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "connections": [
+    {
+      "id": "0a34835f-dcaa-4e9b-8e76-4a348f36e4a6",
+      "nodeId": "test-node",
+      "metadata": {
+        "type": "test",
+        "strength": 0.8
+      },
+      "createdAt": "2026-02-09T02:18:59.580Z",
+      "strength": 1,
+      "lastActivity": "2026-02-09T02:18:59.580Z"
+    }
+  ],
+  "lastUpdate": "2026-02-09T02:18:59.581Z"
+}

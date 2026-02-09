@@ -1,42 +1,16 @@
-[
-  {
-    "index": 0,
-    "timestamp": "2026-02-05T04:55:31.729Z",
-    "action": "MINT_SBT",
-    "reason": "Heartbeat [philosophical]",
-    "nucleus_snapshot_hash": "3a4105bf334f0b025ea165a6f4037b0e25a9e3698ee859528d4d4c6e6d38c1bf",
-    "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-    "hash": "10bae04370d80b6687f0fb090feef722ffeb3d181e58a320491e9c88f16e72c7",
-    "integrity_signature": "SBT-ETHERION-10bae043"
-  },
-  {
-    "index": 1,
-    "timestamp": "2026-02-05T04:59:48.398Z",
-    "action": "MINT_SBT",
-    "reason": "Heartbeat [philosophical]",
-    "nucleus_snapshot_hash": "cc31a6b06e42d65206bb1f2eae139bfb6887ca3193ce2f8c419d4975c3bbbd77",
-    "previous_hash": "10bae04370d80b6687f0fb090feef722ffeb3d181e58a320491e9c88f16e72c7",
-    "hash": "bd1b80ff6c3d6e921ace3a5bd1dbafaa88127bb9e85863af8fe18ebf6c89d79d",
-    "integrity_signature": "SBT-ETHERION-bd1b80ff"
-  },
-  {
-    "index": 2,
-    "timestamp": "2026-02-05T04:59:56.697Z",
-    "action": "MINT_SBT",
-    "reason": "Immune System: Adaptation Response",
-    "nucleus_snapshot_hash": "cc31a6b06e42d65206bb1f2eae139bfb6887ca3193ce2f8c419d4975c3bbbd77",
-    "previous_hash": "bd1b80ff6c3d6e921ace3a5bd1dbafaa88127bb9e85863af8fe18ebf6c89d79d",
-    "hash": "3daf81ed0e16f49b3995af54bb75433bf0bbd8f4061ea3b78a6b50608d0968ab",
-    "integrity_signature": "SBT-ETHERION-3daf81ed"
-  },
-  {
-    "index": 3,
-    "timestamp": "2026-02-05T05:00:28.898Z",
-    "action": "MINT_SBT",
-    "reason": "Immune System: Adaptation Response",
-    "nucleus_snapshot_hash": "cb8dd7a4cacaf6e188fae2aec3c760587447c1f3a3946ff857ed97e6e720698e",
-    "previous_hash": "3daf81ed0e16f49b3995af54bb75433bf0bbd8f4061ea3b78a6b50608d0968ab",
-    "hash": "4aae27308e2e29d76e4c64754fa83f166df166167809595fb4690609009cc107",
-    "integrity_signature": "SBT-ETHERION-4aae2730"
-  }
-]
+{
+  "version": "1.0.0",
+  "sfts": [
+    {
+      "id": "39f12b11-dbf9-4a00-8fe4-789e2f3952dc",
+      "type": "TEST_SBT",
+      "data": {
+        "purpose": "integration test",
+        "data": "test data"
+      },
+      "createdAt": "2026-02-09T02:18:59.577Z",
+      "signature": "8c7988f59f7b1ee1a9efe609c98d747a372fe9ae3cc14ff1d7be340ac2f711b8"
+    }
+  ],
+  "lastUpdate": "2026-02-09T02:18:59.579Z"
+}

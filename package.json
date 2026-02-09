@@ -1,15 +1,19 @@
 {
-    "name": "@ai-agent-ide-context-sync/root",
-    "private": true,
-    "description": "Universal Context Hub for AI Agents across multiple IDEs.",
-    "workspaces": [
-        "packages/*"
-    ],
-    "scripts": {
+  "name": "@ai-agent-ide-context-sync/root",
+  "private": true,
+  "description": "Universal Context Hub for AI Agents across multiple IDEs.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
     "cli:dev": "node packages/cli/cli/ai-doc.js",
     "sync-notification-channels": "node scripts/sync-notification-channels.js",
-  "build": "npm run build --workspaces"
+    "build": "npm run build --workspaces",
+    "core:dev": "node packages/core/src/index.js",
+    "core:test": "node --test packages/core/src/**/*.test.js",
+    "core:build": "npm run build --workspace=@ai-agent/core",
+    "install:core": "npm install --workspace=@ai-agent/core"
   },
-    "author": "Junio",
-    "license": "MIT"
+  "author": "Junio",
+  "license": "MIT"
 }

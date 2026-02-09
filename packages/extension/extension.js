@@ -2,7 +2,7 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const AIClient = require('./ai-client');
+const LegacyAIClient = require('./ai-client-core');
 const Logger = require('./modules/Logger');
 const { I18n, SmartNotifications } = require('./modules');
 const { KanbanManager, AdvancedAnalytics, ThemeManager, CloudSyncManager } = require('./advanced-modules');
@@ -13,7 +13,9 @@ const { SecurityTreeDataProvider, handleApproveTask, handleRejectTask } = requir
 const cp = require('child_process');
 const RitualScheduler = require('./modules/RitualScheduler');
 
-// Global Management Instances
+// Core System Instance
+let coreSystem = null;
+let aiClient = null;
 let logger = null;
 let i18n = null;
 let notifications = null;
@@ -389,7 +391,7 @@ class StatusTreeProvider {
         if (element) {
             if (element.label === '🚀 Quick Actions') {
                 const items = [];
-                
+
                 const openKanban = new vscode.TreeItem('Open Kanban Board');
                 openKanban.command = { command: 'ai-agent-sync.openKanban', title: 'Open Kanban' };
                 openKanban.iconPath = new vscode.ThemeIcon('project');
@@ -416,7 +418,7 @@ class StatusTreeProvider {
             // 1. Environment Info
             const extension = vscode.extensions.getExtension('junio-de-almeida-vitorino.ai-agent-ide-context-sync-vscode');
             const extensionVersion = extension ? extension.packageJSON.version : 'Unknown';
-            
+
             const envItem = new vscode.TreeItem(`Ext: v${extensionVersion}`);
             envItem.iconPath = new vscode.ThemeIcon('extensions');
             items.push(envItem);
@@ -440,7 +442,7 @@ class StatusTreeProvider {
             try {
                 const output = await client.getKernelStatus();
                 const cleanOutput = output.replace(/\x1b\[[0-9;]*m/g, '');
-                
+
                 // Try to find kernel status line
                 const kernelLine = cleanOutput.split('\n').find(l => l.toLowerCase().includes('kernel:'));
                 if (kernelLine) {
@@ -460,11 +462,11 @@ class StatusTreeProvider {
 
             const aiWorkspacePath = getAiWorkspacePath();
             const isInitialized = aiWorkspacePath && fs.existsSync(aiWorkspacePath);
-            
+
             const wsItem = new vscode.TreeItem(
                 isInitialized ? 'Workspace: Active' : 'Workspace: Not Initialized'
             );
-            wsItem.iconPath = isInitialized 
+            wsItem.iconPath = isInitialized
                 ? new vscode.ThemeIcon('root-folder')
                 : new vscode.ThemeIcon('error');
             items.push(wsItem);
@@ -473,7 +475,7 @@ class StatusTreeProvider {
             try {
                 const immunityJson = await client.execute(['agent', 'status', '--json']);
                 const immunityReport = JSON.parse(immunityJson);
-                
+
                 const immunityItem = new vscode.TreeItem(`Immunity: ${immunityReport.status}`);
                 if (immunityReport.status === 'HEALTHY') {
                     immunityItem.iconPath = new vscode.ThemeIcon('shield', new vscode.ThemeColor('testing.iconPassed'));
@@ -484,13 +486,13 @@ class StatusTreeProvider {
                     immunityItem.tooltip = `Nodes compromised: ${immunityReport.compromised_nodes ? immunityReport.compromised_nodes.join(', ') : 'Unknown'}`;
                     immunityItem.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                     items.push(immunityItem);
-                    
+
                     // Action Buttons
                     const healItem = new vscode.TreeItem('💉 Heal System (Purge)');
                     healItem.command = { command: 'ai-agent-sync.agentHeal', title: 'Heal System' };
                     healItem.iconPath = new vscode.ThemeIcon('heart');
                     items.push(healItem);
-                    
+
                     const evolveItem = new vscode.TreeItem('🧬 Evolve System (Adapt)');
                     evolveItem.command = { command: 'ai-agent-sync.agentEvolve', title: 'Evolve System' };
                     evolveItem.iconPath = new vscode.ThemeIcon('git-merge');
@@ -501,18 +503,18 @@ class StatusTreeProvider {
             }
 
             if (isInitialized) {
-                 try {
-                     const analyticsProvider = new AnalyticsTreeProvider();
-                     const stats = analyticsProvider.calculateStats(aiWorkspacePath);
-                     
-                     const personasItem = new vscode.TreeItem(`Personas: ${stats.personas}`);
-                     personasItem.iconPath = new vscode.ThemeIcon('account');
-                     items.push(personasItem);
- 
-                     const activeTasksItem = new vscode.TreeItem(`Active Tasks: ${stats.activeTasks}`);
-                     activeTasksItem.iconPath = new vscode.ThemeIcon('flame');
-                     items.push(activeTasksItem);
-                 } catch (e) { }
+                try {
+                    const analyticsProvider = new AnalyticsTreeProvider();
+                    const stats = analyticsProvider.calculateStats(aiWorkspacePath);
+
+                    const personasItem = new vscode.TreeItem(`Personas: ${stats.personas}`);
+                    personasItem.iconPath = new vscode.ThemeIcon('account');
+                    items.push(personasItem);
+
+                    const activeTasksItem = new vscode.TreeItem(`Active Tasks: ${stats.activeTasks}`);
+                    activeTasksItem.iconPath = new vscode.ThemeIcon('flame');
+                    items.push(activeTasksItem);
+                } catch (e) { }
             }
 
             return items;
@@ -955,15 +957,15 @@ class StatusBarManager {
  */
 function activate(context) {
     // Initialize Logger
-            logger = new Logger();
-            context.subscriptions.push(logger);
-            logger.log('AI Agent IDE Context Sync extension activated!');
-            
-            // Set Logger for AIClient
-            AIClient.setLogger(logger);
+    logger = new Logger();
+    context.subscriptions.push(logger);
+    logger.log('AI Agent IDE Context Sync extension activated!');
 
-            // Initialize i18n
-            i18n = new I18n(context.extensionPath);
+    // Set Logger for AIClient
+    AIClient.setLogger(logger);
+
+    // Initialize i18n
+    i18n = new I18n(context.extensionPath);
     logger.setI18n(i18n);
     setAutomationI18n(i18n);
     setAutomationLogger(logger);
@@ -1025,7 +1027,7 @@ function activate(context) {
             }
             const currentPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
             const exists = registry.projects.find(p => p.path === currentPath);
-            
+
             if (!exists) {
                 registry.projects.push({
                     path: currentPath,
@@ -1045,7 +1047,7 @@ function activate(context) {
         } catch (e) {
             logger.error('Failed to register project visibility', e);
         }
-        
+
         // 🛡️ Auto-Audit on Boot (Self-Healing Check)
         setTimeout(async () => {
             const client = new AIClient();
@@ -1221,35 +1223,35 @@ function registerCommands(context) {
         }),
         // Immunity Commands
         vscode.commands.registerCommand('ai-agent-sync.agentHeal', async () => {
-             const client = new AIClient();
-             try {
-                 await vscode.window.withProgress({
-                     location: vscode.ProgressLocation.Notification,
-                     title: 'Healing Agent System (PURGE)...',
-                     cancellable: false
-                 }, async () => {
-                     const output = await client.execute(['agent', 'heal']);
-                     vscode.window.showInformationMessage('System Healed: ' + output);
-                     statusProvider.refresh();
-                 });
-             } catch (e) {
-                 vscode.window.showErrorMessage('Heal Failed: ' + e.message);
-             }
+            const client = new AIClient();
+            try {
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: 'Healing Agent System (PURGE)...',
+                    cancellable: false
+                }, async () => {
+                    const output = await client.execute(['agent', 'heal']);
+                    vscode.window.showInformationMessage('System Healed: ' + output);
+                    statusProvider.refresh();
+                });
+            } catch (e) {
+                vscode.window.showErrorMessage('Heal Failed: ' + e.message);
+            }
         }),
         vscode.commands.registerCommand('ai-agent-sync.agentEvolve', async () => {
-             const client = new AIClient();
-             try {
-                 await vscode.window.withProgress({
-                     location: vscode.ProgressLocation.Notification,
-                     title: 'Evolving Agent System (ADAPT)...',
-                     cancellable: false
-                 }, async () => {
-                     const output = await client.execute(['agent', 'evolve']);
-                     vscode.window.showInformationMessage('System Evolved: ' + output);
-                     statusProvider.refresh();
-                 });
-             } catch (e) {
-                 vscode.window.showErrorMessage('Evolve Failed: ' + e.message);
+            const client = new AIClient();
+            try {
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: 'Evolving Agent System (ADAPT)...',
+                    cancellable: false
+                }, async () => {
+                    const output = await client.execute(['agent', 'evolve']);
+                    vscode.window.showInformationMessage('System Evolved: ' + output);
+                    statusProvider.refresh();
+                });
+            } catch (e) {
+                vscode.window.showErrorMessage('Evolve Failed: ' + e.message);
             }
         }),
 
@@ -1277,18 +1279,18 @@ function registerCommands(context) {
 
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.agent.nucleus', async () => {
-             const aiWorkspacePath = getAiWorkspacePath();
-             if (aiWorkspacePath) {
-                 const nucleusPath = path.join(aiWorkspacePath, 'memory', 'NUCLEUS.md');
-                 if (fs.existsSync(nucleusPath)) {
-                     const doc = await vscode.workspace.openTextDocument(nucleusPath);
-                     await vscode.window.showTextDocument(doc);
-                 } else {
-                     vscode.window.showInformationMessage('Nucleus not found yet. Run Heartbeat first.');
-                 }
-             } else {
-                 vscode.window.showErrorMessage('No workspace detected.');
-             }
+            const aiWorkspacePath = getAiWorkspacePath();
+            if (aiWorkspacePath) {
+                const nucleusPath = path.join(aiWorkspacePath, 'memory', 'NUCLEUS.md');
+                if (fs.existsSync(nucleusPath)) {
+                    const doc = await vscode.workspace.openTextDocument(nucleusPath);
+                    await vscode.window.showTextDocument(doc);
+                } else {
+                    vscode.window.showInformationMessage('Nucleus not found yet. Run Heartbeat first.');
+                }
+            } else {
+                vscode.window.showErrorMessage('No workspace detected.');
+            }
         })
     );
 
@@ -2426,7 +2428,7 @@ status: active
                 const extensionVersion = extension ? extension.packageJSON.version : 'Unknown';
                 const aiWorkspacePath = getAiWorkspacePath();
                 const isInitialized = aiWorkspacePath && fs.existsSync(aiWorkspacePath);
-                
+
                 let kernelStatus = 'Not Checked';
                 try {
                     const client = new AIClient();
@@ -2479,7 +2481,7 @@ status: active
             // Collect and send data
             function sendDashboardData() {
                 const aiWorkspacePath = getAiWorkspacePath();
-                
+
                 // Get SBTs from Global State
                 let sbts = [];
                 try {
@@ -2490,7 +2492,7 @@ status: active
                     } else {
                         // Fallback/Legacy
                         const legacyPath = path.join(os.homedir(), '.ai-workspace', 'live-state', 'sbt-vault.json');
-                         if (fs.existsSync(legacyPath)) {
+                        if (fs.existsSync(legacyPath)) {
                             sbts = JSON.parse(fs.readFileSync(legacyPath, 'utf-8'));
                         }
                     }
@@ -2863,7 +2865,7 @@ status: active
                 const extensionVersion = extension ? extension.packageJSON.version : 'Unknown';
                 const aiWorkspacePath = getAiWorkspacePath();
                 const isInitialized = aiWorkspacePath && fs.existsSync(aiWorkspacePath);
-                
+
                 let kernelStatus = 'Not Checked';
                 try {
                     const client = new AIClient();
