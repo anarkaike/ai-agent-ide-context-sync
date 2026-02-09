@@ -19,13 +19,13 @@ class PerformanceOptimizerBot extends Nanobot {
       network: 'trust-network-ai-agent',
       description: 'Nanobot especializado em otimização de performance e gerenciamento de recursos'
     });
-    
+
     // Registra capacidades
     this.addCapability('performance-monitoring');
     this.addCapability('resource-optimization');
     this.addCapability('bottleneck-detection');
     this.addCapability('auto-tuning');
-    
+
     // Configurações de performance
     this.performanceConfig = {
       thresholds: {
@@ -39,7 +39,7 @@ class PerformanceOptimizerBot extends Nanobot {
         historySize: 100  // Manter 100 amostras
       }
     };
-    
+
     this.metrics = {
       cpu: [],
       memory: [],
@@ -47,19 +47,19 @@ class PerformanceOptimizerBot extends Nanobot {
       load: [],
       network: []
     };
-    
+
     this.optimizations = [];
     this.bottlenecks = [];
   }
-  
+
   async initialize() {
     await super.initialize();
     await this.register('trust-network-ai-agent');
     await this.loadPerformanceKnowledge();
-    
+
     this.log('Performance Optimizer Bot inicializado na rede de confiança');
   }
-  
+
   async loadPerformanceKnowledge() {
     // Carrega conhecimento de performance compartilhado
     const performanceProfiles = await this.getKnowledge('performance-profiles') || {
@@ -79,14 +79,14 @@ class PerformanceOptimizerBot extends Nanobot {
         tuningParams: ['parallel_jobs', 'cache_size']
       }
     };
-    
+
     this.performanceProfiles = performanceProfiles;
     await this.shareKnowledge('performance-profiles', performanceProfiles);
   }
-  
+
   async analyzePerformance() {
     this.log('Iniciando análise de performance...');
-    
+
     const analysis = {
       timestamp: new Date().toISOString(),
       systemMetrics: await this.collectSystemMetrics(),
@@ -94,21 +94,21 @@ class PerformanceOptimizerBot extends Nanobot {
       bottlenecks: await this.detectBottlenecks(),
       recommendations: []
     };
-    
+
     // Gera recomendações
     analysis.recommendations = this.generateOptimizationRecommendations(analysis);
-    
+
     // Aplica otimizações automáticas se seguro
     if (analysis.bottlenecks.some(b => b.severity === 'critical')) {
       await this.applyAutoOptimizations(analysis);
     }
-    
+
     // Compartilha análise na rede
     await this.shareKnowledge('performance-analysis', analysis);
-    
+
     return analysis;
   }
-  
+
   async collectSystemMetrics() {
     const metrics = {
       cpu: await this.getCPUMetrics(),
@@ -117,7 +117,7 @@ class PerformanceOptimizerBot extends Nanobot {
       network: await this.getNetworkMetrics(),
       load: await this.getLoadMetrics()
     };
-    
+
     // Atualiza histórico
     Object.keys(metrics).forEach(key => {
       if (this.metrics[key]) {
@@ -125,29 +125,29 @@ class PerformanceOptimizerBot extends Nanobot {
           timestamp: Date.now(),
           value: metrics[key].usage || metrics[key].value
         });
-        
+
         // Mantém tamanho do histórico
         if (this.metrics[key].length > this.performanceConfig.sampling.historySize) {
           this.metrics[key].shift();
         }
       }
     });
-    
+
     return metrics;
   }
-  
+
   async getCPUMetrics() {
     try {
       // Obtém uso de CPU
       const topOutput = execSync('top -bn1 | grep "Cpu(s)"', { encoding: 'utf8' });
       const cpuMatch = topOutput.match(/(\d+\.?\d*)\s*%us/);
       const userCPU = parseFloat(cpuMatch ? cpuMatch[1] : 0);
-      
+
       // Obtém carga da CPU
       const loadAvg = execSync('uptime', { encoding: 'utf8' });
       const loadMatch = loadAvg.match(/load average: ([\d.]+)/);
       const load1 = parseFloat(loadMatch ? loadMatch[1] : 0);
-      
+
       // Obtém temperatura se disponível
       let temperature = null;
       try {
@@ -158,7 +158,7 @@ class PerformanceOptimizerBot extends Nanobot {
       } catch (error) {
         // Temperatura não disponível
       }
-      
+
       return {
         usage: userCPU,
         loadAverage: load1,
@@ -170,24 +170,24 @@ class PerformanceOptimizerBot extends Nanobot {
       return {};
     }
   }
-  
+
   async getMemoryMetrics() {
     try {
       const memInfo = execSync('free -m', { encoding: 'utf8' });
       const lines = memInfo.split('\n');
-      
+
       // Linha Mem: total used free shared buff/cache available
       const memLine = lines[1].split(/\s+/);
       const total = parseInt(memLine[1]);
       const used = parseInt(memLine[2]);
       const free = parseInt(memLine[3]);
       const available = parseInt(memLine[6] || memLine[4]);
-      
+
       // Linha Swap: total used free
       const swapLine = lines[2].split(/\s+/);
       const swapTotal = parseInt(swapLine[1]);
       const swapUsed = parseInt(swapLine[2]);
-      
+
       return {
         total: total,
         used: used,
@@ -205,17 +205,17 @@ class PerformanceOptimizerBot extends Nanobot {
       return {};
     }
   }
-  
+
   async getDiskMetrics() {
     try {
       const dfOutput = execSync('df -h /', { encoding: 'utf8' });
       const dfLine = dfOutput.split('\n')[1].split(/\s+/);
-      
+
       const total = dfLine[1];
       const used = dfLine[2];
       const available = dfLine[3];
       const usage = parseInt(dfLine[4]);
-      
+
       // Obtém I/O stats
       let ioStats = null;
       try {
@@ -234,7 +234,7 @@ class PerformanceOptimizerBot extends Nanobot {
       } catch (error) {
         // iostat não disponível
       }
-      
+
       return {
         total: total,
         used: used,
@@ -247,16 +247,16 @@ class PerformanceOptimizerBot extends Nanobot {
       return {};
     }
   }
-  
+
   async getNetworkMetrics() {
     try {
       // Obtém estatísticas de rede
       const netstat = execSync('cat /proc/net/dev', { encoding: 'utf8' });
       const lines = netstat.split('\n');
-      
+
       let totalRx = 0;
       let totalTx = 0;
-      
+
       for (let i = 2; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line) {
@@ -265,11 +265,11 @@ class PerformanceOptimizerBot extends Nanobot {
           totalTx += parseInt(parts[9]);  // Transmit bytes
         }
       }
-      
+
       // Obtém conexões ativas
       const connections = execSync('netstat -an | grep ESTABLISHED | wc -l', { encoding: 'utf8' });
       const activeConnections = parseInt(connections.trim());
-      
+
       return {
         bytesReceived: totalRx,
         bytesTransmitted: totalTx,
@@ -280,12 +280,12 @@ class PerformanceOptimizerBot extends Nanobot {
       return {};
     }
   }
-  
+
   async getLoadMetrics() {
     try {
       const uptime = execSync('uptime', { encoding: 'utf8' });
       const loadMatch = uptime.match(/load average: ([\d.]+),?\s*([\d.]+)?,?\s*([\d.]+)?/);
-      
+
       return {
         load1: parseFloat(loadMatch ? loadMatch[1] : 0),
         load5: parseFloat(loadMatch && loadMatch[2] ? loadMatch[2] : 0),
@@ -296,20 +296,20 @@ class PerformanceOptimizerBot extends Nanobot {
       return {};
     }
   }
-  
+
   async analyzeProcessMetrics() {
     try {
       const psOutput = execSync('ps aux --sort=-%cpu,-%mem | head -20', { encoding: 'utf8' });
       const lines = psOutput.split('\n').slice(1);
-      
+
       const processes = [];
-      
+
       for (const line of lines) {
         if (!line.trim()) continue;
-        
+
         const parts = line.trim().split(/\s+/);
         if (parts.length < 11) continue;
-        
+
         const process = {
           user: parts[0],
           pid: parseInt(parts[1]),
@@ -323,13 +323,13 @@ class PerformanceOptimizerBot extends Nanobot {
           time: parts[9],
           cmd: parts.slice(10).join(' ')
         };
-        
+
         process.isHeavy = process.cpu > 50 || process.mem > 10;
         process.isLongRunning = process.time.includes(':') && !process.time.includes('00:00');
-        
+
         processes.push(process);
       }
-      
+
       return {
         topProcesses: processes,
         heavyProcesses: processes.filter(p => p.isHeavy),
@@ -340,11 +340,11 @@ class PerformanceOptimizerBot extends Nanobot {
       return {};
     }
   }
-  
+
   async detectBottlenecks() {
     const bottlenecks = [];
     const currentMetrics = await this.collectSystemMetrics();
-    
+
     // Verifica CPU
     if (currentMetrics.cpu.usage > this.performanceConfig.thresholds.cpu.critical) {
       bottlenecks.push({
@@ -363,7 +363,7 @@ class PerformanceOptimizerBot extends Nanobot {
         description: 'Uso de CPU elevado'
       });
     }
-    
+
     // Verifica memória
     if (currentMetrics.memory.usage > this.performanceConfig.thresholds.memory.critical) {
       bottlenecks.push({
@@ -382,7 +382,7 @@ class PerformanceOptimizerBot extends Nanobot {
         description: 'Uso de memória elevado'
       });
     }
-    
+
     // Verifica disco
     if (currentMetrics.disk.usage > this.performanceConfig.thresholds.disk.critical) {
       bottlenecks.push({
@@ -401,11 +401,11 @@ class PerformanceOptimizerBot extends Nanobot {
         description: 'Uso de disco elevado'
       });
     }
-    
+
     // Verifica load average
     const cpuCores = require('os').cpus().length;
     const normalizedLoad = currentMetrics.load.load1 / cpuCores;
-    
+
     if (normalizedLoad > this.performanceConfig.thresholds.load.critical) {
       bottlenecks.push({
         type: 'load',
@@ -423,7 +423,7 @@ class PerformanceOptimizerBot extends Nanobot {
         description: 'Load average elevado'
       });
     }
-    
+
     // Verifica swap
     if (currentMetrics.memory.swap.usage > 50) {
       bottlenecks.push({
@@ -434,19 +434,19 @@ class PerformanceOptimizerBot extends Nanobot {
         description: 'Uso elevado de swap'
       });
     }
-    
+
     this.bottlenecks = bottlenecks;
     return bottlenecks;
   }
-  
+
   generateOptimizationRecommendations(analysis) {
     const recommendations = [];
-    
+
     // Recomendações para CPU
     const cpuBottleneck = analysis.bottlenecks.find(b => b.type === 'cpu');
     if (cpuBottleneck) {
       const heavyProcesses = analysis.processMetrics.heavyProcesses.filter(p => p.cpu > 20);
-      
+
       recommendations.push({
         priority: cpuBottleneck.severity === 'critical' ? 'high' : 'medium',
         type: 'cpu-optimization',
@@ -459,7 +459,7 @@ class PerformanceOptimizerBot extends Nanobot {
         processes: heavyProcesses.slice(0, 5)
       });
     }
-    
+
     // Recomendações para memória
     const memBottleneck = analysis.bottlenecks.find(b => b.type === 'memory');
     if (memBottleneck) {
@@ -474,7 +474,7 @@ class PerformanceOptimizerBot extends Nanobot {
         ]
       });
     }
-    
+
     // Recomendações para disco
     const diskBottleneck = analysis.bottlenecks.find(b => b.type === 'disk');
     if (diskBottleneck) {
@@ -489,7 +489,7 @@ class PerformanceOptimizerBot extends Nanobot {
         ]
       });
     }
-    
+
     // Recomendações gerais
     if (analysis.bottlenecks.length === 0) {
       recommendations.push({
@@ -502,13 +502,13 @@ class PerformanceOptimizerBot extends Nanobot {
         ]
       });
     }
-    
+
     return recommendations;
   }
-  
+
   async applyAutoOptimizations(analysis) {
     const optimizations = [];
-    
+
     // Limpa cache de memória se crítico
     const memBottleneck = analysis.bottlenecks.find(b => b.type === 'memory' && b.severity === 'critical');
     if (memBottleneck) {
@@ -527,7 +527,7 @@ class PerformanceOptimizerBot extends Nanobot {
         });
       }
     }
-    
+
     // Limpa arquivos temporários se disco crítico
     const diskBottleneck = analysis.bottlenecks.find(b => b.type === 'disk' && b.severity === 'critical');
     if (diskBottleneck) {
@@ -547,20 +547,20 @@ class PerformanceOptimizerBot extends Nanobot {
         });
       }
     }
-    
+
     this.optimizations = optimizations;
-    
+
     // Compartilha otimizações
     await this.shareKnowledge('performance-optimizations', optimizations);
-    
+
     return optimizations;
   }
-  
+
   async run(options = {}) {
     this.log('Iniciando otimização de performance...');
-    
+
     const analysis = await this.analyzePerformance();
-    
+
     // Gera relatório
     const report = {
       timestamp: new Date().toISOString(),
@@ -572,38 +572,38 @@ class PerformanceOptimizerBot extends Nanobot {
         optimizationsApplied: this.optimizations.length
       }
     };
-    
+
     this.log('Relatório de performance gerado');
     return report;
   }
-  
+
   async startMonitoring() {
     this.log('Iniciando monitoramento contínuo...');
-    
+
     const monitor = setInterval(async () => {
       try {
         const metrics = await this.collectSystemMetrics();
         const bottlenecks = await this.detectBottlenecks();
-        
+
         if (bottlenecks.some(b => b.severity === 'critical')) {
           await this.sendAlert('PERFORMANCE_CRITICAL', bottlenecks);
         }
-        
+
         // Compartilha métricas na rede
         await this.shareKnowledge('performance-metrics', {
           timestamp: new Date().toISOString(),
           metrics: metrics,
           bottlenecks: bottlenecks
         });
-        
+
       } catch (error) {
         this.error('Erro no monitoramento:', error);
       }
     }, this.performanceConfig.sampling.interval);
-    
+
     return monitor;
   }
-  
+
   async sendAlert(type, data) {
     const alert = {
       type: type,
@@ -611,10 +611,10 @@ class PerformanceOptimizerBot extends Nanobot {
       agent: this.config.name,
       data: data
     };
-    
+
     this.emit('performance:alert', alert);
     await this.shareKnowledge('performance-alert', alert);
-    
+
     this.warn(`ALERTA DE PERFORMANCE: ${type}`);
   }
 }
@@ -622,20 +622,23 @@ class PerformanceOptimizerBot extends Nanobot {
 // CLI interface
 if (require.main === module) {
   const bot = new PerformanceOptimizerBot();
-  
+
   bot.initialize().then(() => {
     const options = {
       monitor: process.argv.includes('--monitor'),
       once: process.argv.includes('--once')
     };
-    
+
     if (options.monitor) {
       return bot.startMonitoring();
     } else {
       return bot.run();
     }
   }).then(result => {
-    if (result && !options.monitor) {
+    const args = process.argv.slice(2);
+    const monitorMode = args.includes('--monitor');
+
+    if (result && !monitorMode) {
       console.log('\n=== PERFORMANCE OPTIMIZER REPORT ===');
       console.log(JSON.stringify(result, null, 2));
     }
