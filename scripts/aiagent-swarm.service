@@ -1,0 +1,22 @@
+[Unit]
+Description=AI Agent Swarm Service Manager
+Documentation=https://github.com/anarkaike/ai-agent-ide-context-sync
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /root/projects/dev/ai-agent-ide-context-sync/scripts/swarm-service-manager.sh check
+ExecStartPre=/bin/sleep 10
+WorkingDirectory=/root/projects/dev/ai-agent-ide-context-sync
+User=root
+Group=root
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+Environment=MOTHERSHIP_IP=100.104.189.106
+Environment=AGENT_ID=linux-%H
+StandardOutput=append:/root/projects/dev/ai-agent-ide-context-sync/.ai-workspace/logs/systemd.log
+StandardError=append:/root/projects/dev/ai-agent-ide-context-sync/.ai-workspace/logs/systemd-error.log
+TimeoutStartSec=30
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

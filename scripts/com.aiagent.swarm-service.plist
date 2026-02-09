@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.aiagent.swarm-service</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/$(whoami)/ai-agent-ide-context-sync/scripts/swarm-service-manager.sh</string>
+        <string>check</string>
+    </array>
+    
+    <key>WorkingDirectory</key>
+    <string>/Users/$(whoami)/ai-agent-ide-context-sync</string>
+    
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <key>StartInterval</key>
+    <integer>60</integer>
+    
+    <key>StandardOutPath</key>
+    <string>/Users/$(whoami)/ai-agent-ide-context-sync/.ai-workspace/logs/launchd.log</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/Users/$(whoami)/ai-agent-ide-context-sync/.ai-workspace/logs/launchd-error.log</string>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>MOTHERSHIP_IP</key>
+        <string>100.104.189.106</string>
+    </dict>
+    
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+</dict>
+</plist>
