@@ -1,4 +1,5 @@
 const SecurityKernel = require('./SecurityKernel');
+const DatabaseManager = require('./DatabaseManager');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -11,18 +12,26 @@ const os = require('os');
 class SwarmNetwork {
     constructor() {
         this.nodes = new Map(); // ID -> SwarmNode instance
-        this.security = new SecurityKernel();
+        this.dbManager = new DatabaseManager();
+        this.security = new SecurityKernel(this.dbManager); // Pass DB Manager for logging
         this.logFile = path.join(os.homedir(), '.ai-doc', 'swarm', 'network_logs.json');
         this.init();
     }
 
-    init() {
+    async init() {
         const dir = path.dirname(this.logFile);
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
         if (!fs.existsSync(this.logFile)) {
             fs.writeFileSync(this.logFile, JSON.stringify([], null, 2));
+        }
+        
+        try {
+            await this.dbManager.init();
+            console.log('🔌 [Network] Connected to SQLite persistence.');
+        } catch (e) {
+            console.error('❌ [Network] Failed to connect to SQLite:', e);
         }
     }
 
@@ -56,12 +65,26 @@ class SwarmNetwork {
         if (!access.allowed) {
             console.warn(`🛡️ [Network] BLOCKED: ${source.config.name} -> ${target.config.name} (${access.reason})`);
             this._log(sourceId, targetId, type, 'BLOCKED', access.reason);
+            
+            // Log Security Event
+            this.security.logSecurityEvent({
+                severity: 'HIGH',
+                action: 'COMMUNICATION_BLOCKED',
+                agent_role: source.config.roles[0],
+                resource: `AGENT:${target.config.name}`,
+                details: access.reason,
+                ip: source.config.network?.ip || '0.0.0.0'
+            }).catch(err => console.error('Failed to log security event:', err));
+
             return { success: false, error: 'ACCESS_DENIED', reason: access.reason };
         }
 
         // 📨 Deliver Message
         this._log(sourceId, targetId, type, 'DELIVERED', access.reason);
         
+        // Record Interaction in Topology
+        this.dbManager.recordInteraction(sourceId, targetId, type).catch(err => console.error('Topology Record Error:', err));
+
         // Async delivery simulation
         setImmediate(() => {
             if (target.receiveMessage) {
@@ -88,6 +111,9 @@ class SwarmNetwork {
             reason
         };
         
+        // Log to SQLite
+        this.dbManager.logNetworkEvent(log).catch(err => console.error('Network Log Error:', err));
+
         // Load existing logs
         let logs = [];
         try {

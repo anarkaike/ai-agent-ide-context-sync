@@ -1,0 +1,10 @@
+{
+  "id": "req-1770533326062",
+  "timestamp": "2026-02-08T06:48:46.062Z",
+  "title": "Validar Fix do WebMap",
+  "description": "Verificar se a listagem de agentes e tarefas está funcionando.",
+  "priority": "high",
+  "status": "queued",
+  "source": "WebMap User Interface",
+  "requester_ip": "::1"
+}

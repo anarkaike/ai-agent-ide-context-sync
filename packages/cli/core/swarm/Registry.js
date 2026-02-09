@@ -1,88 +1,70 @@
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const DatabaseManager = require('./DatabaseManager');
 const NetworkLayer = require('./NetworkLayer');
 
 /**
- * 🐝 Swarm Registry (A Lista Telefônica dos Agentes)
+ * 🐝 Swarm Registry (DB-Backed)
  * 
- * Mantém um registro global de todos os Agentes ativos nesta máquina.
- * Permite que o Agente do Projeto A encontre o Agente do Projeto B.
+ * Mantém um registro global de todos os Agentes ativos via SQLite.
  */
 class SwarmRegistry {
     constructor() {
-        this.homeDir = os.homedir();
-        this.baseDir = path.join(this.homeDir, '.ai-doc', 'swarm');
-        this.registryFile = process.env.AI_DOC_SWARM_REGISTRY || path.join(this.baseDir, 'registry.json');
-        
+        this.dbManager = new DatabaseManager();
         this.network = new NetworkLayer();
-        this.init();
+        // Implicit init, but consumer should await operations
+        this.initPromise = this.dbManager.init();
     }
 
-    init() {
-        // If custom registry path is provided, ensure its directory exists
-        const dir = path.dirname(this.registryFile);
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
-        if (!fs.existsSync(this.registryFile)) {
-            fs.writeFileSync(this.registryFile, JSON.stringify([], null, 2));
-        }
+    async init() {
+        return this.initPromise;
     }
 
     /**
      * Registra ou atualiza o agente atual na rede Swarm.
      * @param {Object} agentInfo 
      */
-    registerAgent(agentInfo) {
-        const registry = this.listAgents();
-        // Uniqueness by ID, not path (to allow multiple agents in same project/machine)
-        const existingIndex = registry.findIndex(a => a.id === agentInfo.id);
+    async registerAgent(agentInfo) {
+        await this.initPromise;
         
-        const netInfo = this.network.getNetworkInfo();
-
-        const entry = {
-            id: agentInfo.id || path.basename(agentInfo.path),
-            name: agentInfo.name || 'Anonymous Drone',
-            path: agentInfo.path,
-            last_seen: new Date().toISOString(),
-            capabilities: agentInfo.capabilities || ['general-purpose'],
-            network: {
+        // If network info is provided (e.g. from WebMap HTTP handler), use it.
+        // Otherwise, detect local network info.
+        let networkData = agentInfo.network;
+        if (!networkData) {
+             const netInfo = this.network.getNetworkInfo();
+             networkData = {
                 ip: netInfo.address,
                 provider: netInfo.provider,
                 secure: netInfo.is_secure
-            },
-            security_level: agentInfo.security_level || 5, // Default to Standard
-            current_task: agentInfo.current_task || 'IDLE',
-            trajectory: agentInfo.trajectory || [] // Future plans
-        };
-
-        if (existingIndex >= 0) {
-            registry[existingIndex] = { ...registry[existingIndex], ...entry };
-        } else {
-            registry.push(entry);
+             };
         }
 
-        this.saveRegistry(registry);
+        const entry = {
+            id: agentInfo.id,
+            role: (agentInfo.roles || [])[0] || 'Generalist', // Use 'roles' from config or 'capabilities'
+            name: agentInfo.name || 'Anonymous Drone',
+            security_level: agentInfo.security_level || 5,
+            status: agentInfo.status || 'ACTIVE', // SwarmNode might send status
+            last_heartbeat: new Date().toISOString(),
+            teams: agentInfo.teams || [], // SwarmNode sends teams
+            capabilities: agentInfo.capabilities || [],
+            network: networkData,
+            current_task: agentInfo.current_task || 'IDLE',
+            trajectory: agentInfo.trajectory || [],
+            tags: agentInfo.tags || []
+        };
+
+        await this.dbManager.saveAgent(entry);
         return entry;
     }
 
-    listAgents() {
-        try {
-            return JSON.parse(fs.readFileSync(this.registryFile, 'utf8'));
-        } catch (e) {
-            return [];
-        }
+    async listAgents() {
+        await this.initPromise;
+        return this.dbManager.getAgents();
     }
 
-    findAgent(query) {
-        const agents = this.listAgents();
-        // Busca por ID exato ou match parcial no nome
+    async findAgent(query) {
+        await this.initPromise;
+        const agents = await this.dbManager.getAgents();
         return agents.find(a => a.id === query || a.name.toLowerCase().includes(query.toLowerCase()));
-    }
-
-    saveRegistry(data) {
-        fs.writeFileSync(this.registryFile, JSON.stringify(data, null, 2));
     }
 }
 

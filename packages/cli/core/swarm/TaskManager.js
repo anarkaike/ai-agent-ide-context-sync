@@ -1,106 +1,145 @@
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+const DatabaseManager = require('./DatabaseManager');
+
+// Load Workflows
+let WORKFLOWS = {};
+try {
+    WORKFLOWS = require('./workflows.json').workflows;
+} catch (e) {
+    console.warn('Could not load workflows.json, using defaults.');
+}
 
 class TaskManager {
     constructor() {
-        this.homeDir = os.homedir();
-        this.baseDir = path.join(this.homeDir, '.ai-doc', 'swarm');
-        this.tasksFile = process.env.AI_DOC_SWARM_TASKS || path.join(this.baseDir, 'tasks.json');
-        this.init();
+        this.dbManager = new DatabaseManager();
+        // Initialize implicitly, but methods should wait for it if strictly necessary.
+        // For simplicity in this architecture, we assume the db is fast enough or handled.
+        // Ideally, we should await this.init() in the consumer.
+        this.initPromise = this.dbManager.init();
+        this.contextDir = path.join(process.cwd(), '.ai-workspace/tasks');
+        if (!fs.existsSync(this.contextDir)) {
+            fs.mkdirSync(this.contextDir, { recursive: true });
+        }
     }
 
     _generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     }
 
-    init() {
-        const dir = path.dirname(this.tasksFile);
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
-        if (!fs.existsSync(this.tasksFile)) {
-            fs.writeFileSync(this.tasksFile, JSON.stringify([], null, 2));
-        }
+    async init() {
+        return this.initPromise;
     }
 
-    _loadTasks() {
-        try {
-            return JSON.parse(fs.readFileSync(this.tasksFile, 'utf8'));
-        } catch (e) {
-            return [];
-        }
-    }
-
-    _saveTasks(tasks) {
-        fs.writeFileSync(this.tasksFile, JSON.stringify(tasks, null, 2));
-    }
-
-    createTask(title, description, priority = 'medium', context = {}, requiredSecurityLevel = 1, creatorId = 'system', parentId = null) {
-        const tasks = this._loadTasks();
+    async createTask(title, description, priority = 'medium', context = {}, requiredSecurityLevel = 1, creatorId = 'system', parentId = null) {
+        await this.initPromise;
+        
+        // Determine Type and Template
+        const type = context.type || 'feature_dev'; // Default type
+        const workflow = WORKFLOWS[type] || WORKFLOWS['feature_dev'];
+        
         const newTask = {
             id: this._generateId(),
             title,
             description,
             priority,
             required_security_level: requiredSecurityLevel,
-            status: 'PENDING', // PENDING, IN_PROGRESS, COMPLETED, BLOCKED
+            status: workflow.states[0] || 'PENDING', // Initial state from workflow
             assignee: null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            context,
+            metadata: { ...context, type, workflow: workflow.name }, // Store type in metadata
             creator_id: creatorId,
             parent_id: parentId,
             trace_id: context.traceId || this._generateId()
         };
-        tasks.push(newTask);
-        this._saveTasks(tasks);
+
+        await this.dbManager.saveTask(newTask);
+
+        // 📝 Create Context File (Markdown)
+        this._createContextFile(newTask, workflow);
+
         return newTask;
     }
 
-    deleteAllTasks() {
-        this._saveTasks([]);
-    }
+    _createContextFile(task, workflow) {
+        try {
+            let content = `# ${task.title}\n`;
+            content += `> **ID:** ${task.id} | **Type:** ${workflow.name} | **Priority:** ${task.priority}\n\n`;
+            
+            // Inject Template
+            let template = workflow.template || '## Details\n{description}';
+            template = template.replace('{description}', task.description || '')
+                               .replace('{priority}', task.priority);
+            
+            content += template;
+            content += `\n\n---\n*Created via Swarm TaskManager at ${task.created_at}*`;
 
-    assignTask(taskId, agentId) {
-        const tasks = this._loadTasks();
-        const taskIndex = tasks.findIndex(t => t.id === taskId);
-        if (taskIndex === -1) throw new Error(`Task ${taskId} not found`);
-
-        tasks[taskIndex].assignee = agentId;
-        tasks[taskIndex].status = 'IN_PROGRESS';
-        tasks[taskIndex].updated_at = new Date().toISOString();
-        
-        this._saveTasks(tasks);
-        return tasks[taskIndex];
-    }
-
-    updateStatus(taskId, status) {
-        const tasks = this._loadTasks();
-        const taskIndex = tasks.findIndex(t => t.id === taskId);
-        if (taskIndex === -1) throw new Error(`Task ${taskId} not found`);
-
-        tasks[taskIndex].status = status;
-        tasks[taskIndex].updated_at = new Date().toISOString();
-        
-        this._saveTasks(tasks);
-        return tasks[taskIndex];
-    }
-
-    listTasks(filter = {}) {
-        let tasks = this._loadTasks();
-        if (filter.status) {
-            tasks = tasks.filter(t => t.status === filter.status);
+            const filePath = path.join(this.contextDir, `${task.id}.md`);
+            fs.writeFileSync(filePath, content);
+            console.log(`📝 [TaskManager] Context file created: ${filePath}`);
+        } catch (e) {
+            console.error('Failed to create context file', e);
         }
-        if (filter.assignee) {
-            tasks = tasks.filter(t => t.assignee === filter.assignee);
-        }
-        return tasks;
     }
 
-    getTask(taskId) {
-        const tasks = this._loadTasks();
-        return tasks.find(t => t.id === taskId);
+    async listTasks(filter = {}) {
+        await this.initPromise;
+        return this.dbManager.getTasks(filter);
+    }
+
+    async getTask(id) {
+        await this.initPromise;
+        return this.dbManager.getTask(id);
+    }
+
+    async deleteAllTasks() {
+        await this.initPromise;
+        return this.dbManager.deleteAllTasks();
+    }
+
+    async assignTask(taskId, agentId) {
+        await this.initPromise;
+        const task = await this.dbManager.getTask(taskId);
+        if (!task) throw new Error(`Task ${taskId} not found`);
+
+        task.assignee = agentId;
+        task.status = 'IN_PROGRESS';
+        task.updated_at = new Date().toISOString();
+
+        await this.dbManager.saveTask(task);
+        return task;
+    }
+
+    async updateStatus(taskId, status) {
+        await this.initPromise;
+        const task = await this.dbManager.getTask(taskId);
+        if (!task) throw new Error(`Task ${taskId} not found`);
+
+        task.status = status;
+        task.updated_at = new Date().toISOString();
+        if (status === 'COMPLETED') {
+            task.completed_at = new Date().toISOString();
+        }
+
+        await this.dbManager.saveTask(task);
+        return task;
+    }
+
+    async updateTaskFields(taskId, fields = {}) {
+        await this.initPromise;
+        const allowed = new Set(['status', 'assignee', 'priority', 'parent_id', 'trace_id']);
+        const validFields = {};
+        
+        Object.entries(fields).forEach(([k, v]) => {
+            if (allowed.has(k)) validFields[k] = v;
+        });
+
+        if (Object.keys(validFields).length > 0) {
+            await this.dbManager.updateTask(taskId, validFields);
+        }
+        
+        return this.dbManager.getTask(taskId);
     }
 }
 

@@ -1,0 +1,34 @@
+{
+  "workflows": {
+    "bug_fix": {
+      "name": "Correção de Erro",
+      "roles": ["Security Analyst", "Senior Developer", "Quality Assurance"],
+      "states": [
+        "TRIAGE",      // Análise de impacto e reprodução (SecOps/QA)
+        "IN_PROGRESS", // Implementação da correção (Dev)
+        "CODE_REVIEW", // Validação de segurança e qualidade (Architect)
+        "TESTING",     // Testes automatizados (QA)
+        "COMPLETED"    // Merge e Deploy
+      ],
+      "transitions": {
+        "TRIAGE": ["IN_PROGRESS", "COMPLETED"], // Pode fechar se for falso-positivo
+        "IN_PROGRESS": ["CODE_REVIEW"],
+        "CODE_REVIEW": ["TESTING", "IN_PROGRESS"], // Volta se reprovado
+        "TESTING": ["COMPLETED", "IN_PROGRESS"]
+      },
+      "template": "## 🐛 Bug Report\n**Severidade:** {priority}\n**Reprodução:**\n- [ ] Passo 1...\n\n## 🔍 Análise\n..."
+    },
+    "feature_dev": {
+      "name": "Implementação de Código",
+      "roles": ["Chief Architect", "Senior Developer"],
+      "states": ["DESIGN", "IMPLEMENTATION", "REVIEW", "COMPLETED"],
+      "template": "## 🚀 Feature Spec\n**Objetivo:** {description}\n\n## 📐 Design Técnico\n..."
+    },
+    "nanobot_forge": {
+      "name": "Criação de Nanobot",
+      "roles": ["Prime Architect", "Swarm Specialist"],
+      "states": ["DEFINITION", "TRAINING", "EVALUATION", "DEPLOY"],
+      "template": "## 🤖 Nanobot Spec\n**Função:** ...\n**Restrições:** ..."
+    }
+  }
+}

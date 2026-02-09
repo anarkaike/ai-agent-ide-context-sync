@@ -1,0 +1,34 @@
+{
+  "patterns": [
+    {
+      "id": "pattern-refactor-001",
+      "timestamp": "2026-02-07T10:00:00.000Z",
+      "title": "Legacy Code Modernization",
+      "problem": "Monolithic functions with high cyclomatic complexity and no tests.",
+      "solution": "1. Write characterization tests. 2. Apply 'Extract Method' to break down large functions. 3. Introduce strict typing (TypeScript). 4. Refactor control flow. 5. Verify with tests.",
+      "tags": ["refactoring", "clean-code", "legacy", "testing"],
+      "author": "Senior Dev",
+      "usageCount": 1
+    },
+    {
+      "id": "pattern-refactor-002",
+      "timestamp": "2026-02-07T11:00:00.000Z",
+      "title": "Refatoração para Micro-módulos (Holonic)",
+      "problem": "Código acoplado que dificulta a reutilização por agentes/holons específicos.",
+      "solution": "1. Identificar responsabilidades isoladas (Single Responsibility Principle). 2. Extrair lógica para módulos independentes em `packages/cli/modules`. 3. Definir interfaces claras de entrada/saída. 4. Documentar com AI-DOC para ingestão automática. 5. Publicar como ferramenta MCP se aplicável.",
+      "tags": ["refactoring", "modularization", "holonic", "architecture"],
+      "author": "Architect Agent",
+      "usageCount": 0
+    },
+    {
+      "id": "pattern-refactor-003",
+      "timestamp": "2026-02-07T12:00:00.000Z",
+      "title": "Callback to Async/Await Migration",
+      "problem": "Deeply nested callbacks (callback hell) making code unreadable and hard to debug.",
+      "solution": "1. Identify callback-based functions. 2. Wrap them in util.promisify or rewrite to return Promises. 3. Replace .then().catch() chains with try/catch blocks using await. 4. Ensure error propagation is preserved.",
+      "tags": ["refactoring", "nodejs", "async", "modernization"],
+      "author": "Senior Dev",
+      "usageCount": 0
+    }
+  ]
+}

@@ -9,9 +9,10 @@ const os = require('os');
  * Baseado no modelo de Níveis 1-10 (Nanobot -> OpenClaw).
  */
 class SecurityKernel {
-    constructor() {
+    constructor(dbManager = null) {
         this.baseDir = path.join(os.homedir(), '.ai-doc', 'swarm', 'security');
         this.tokensFile = path.join(this.baseDir, 'tokens.json');
+        this.dbManager = dbManager; // Optional persistence layer
         this.secretFile = path.join(this.baseDir, 'kernel.key');
         this.tokenLifetimeMs = 60 * 60 * 1000; // 1 hour window by default
         
@@ -24,6 +25,23 @@ class SecurityKernel {
             OPENCLAW: 10     // ROOT, Acesso total ao sistema, Blacklist apenas
         };
 
+        // Network Policy Configuration
+        this.NETWORK_POLICY = {
+            TRUSTED_RANGES: [
+                '127.0.0.0/8',      // Localhost
+                '100.64.0.0/10'     // Tailscale CGNAT
+            ],
+            TRUSTED_IPS: [
+                '::1',
+                'localhost'
+            ],
+            // MagicDNS domains or specific hosts
+            TRUSTED_DOMAINS: [
+                '.ts.net',          // Tailscale MagicDNS
+                '.local'
+            ]
+        };
+
         // Definição de Perfis (Arquétipos)
         this.PROFILES = {
             'nanobot': { level: 1, strategy: 'CONTAINER_ISOLATION' },
@@ -31,7 +49,120 @@ class SecurityKernel {
             'openclaw': { level: 10, strategy: 'ROOT_DELEGATION' }
         };
 
+        // Definição de Políticas de Ação por Role (RBAC)
+        this.ACTION_POLICIES = {
+            'Architect': ['CREATE_TASK', 'READ_MEMORY', 'READ_LOGS', 'PLAN_ARCHITECTURE'],
+            'Orchestrator': ['ASSIGN_TASK', 'READ_MEMORY', 'READ_LOGS', 'MANAGE_TEAMS'],
+            'Security Sentinel': ['BLOCK_IP', 'AUDIT_LOGS', 'READ_MEMORY', 'WRITE_MEMORY', 'EXECUTE_COMMAND', 'MANAGE_TOKENS'],
+            'Memory Keeper': ['READ_MEMORY', 'WRITE_MEMORY', 'ORGANIZE_PATTERNS'],
+            'Pattern Analyst': ['READ_MEMORY', 'WRITE_PATTERNS', 'ANALYZE_DATA'],
+            'Code Weaver': ['READ_CODE', 'WRITE_CODE', 'RUN_TESTS'],
+            'Iron Wall': ['BLOCK_TRAFFIC', 'MONITOR_NETWORK', 'AUDIT_SECURITY']
+        };
+
+        this.securityLogs = []; // In-memory security logs
         this.init();
+    }
+
+    /**
+     * Registra um evento de segurança.
+     */
+    async logSecurityEvent(event) {
+        const logEntry = {
+            id: crypto.randomBytes(8).toString('hex'),
+            timestamp: new Date().toISOString(),
+            ...event
+        };
+        this.securityLogs.unshift(logEntry);
+        // Manter apenas os últimos 1000 logs
+        if (this.securityLogs.length > 1000) this.securityLogs.pop();
+        
+        // 1. Persistir no Banco de Dados (SQLite) se disponível
+        if (this.dbManager && typeof this.dbManager.logSecurityEvent === 'function') {
+            try {
+                // Mapear para schema do DB
+                const dbEvent = {
+                    id: logEntry.id,
+                    timestamp: logEntry.timestamp,
+                    severity: logEntry.severity || 'INFO',
+                    action: logEntry.type || logEntry.action || 'UNKNOWN',
+                    agent_role: logEntry.agentRole || 'system',
+                    resource: logEntry.resource || 'network',
+                    details: logEntry.details || logEntry.reason || JSON.stringify(logEntry),
+                    ip: logEntry.ip || '0.0.0.0'
+                };
+                await this.dbManager.logSecurityEvent(dbEvent);
+            } catch (e) {
+                console.error('❌ [Security] Failed to persist log:', e);
+            }
+        }
+
+        // 2. Persistir em arquivo se crítico (Fallback)
+        if (event.severity === 'HIGH' || event.severity === 'CRITICAL') {
+            try {
+                fs.appendFileSync(path.join(this.baseDir, 'security.log'), JSON.stringify(logEntry) + '\n');
+            } catch (e) { /* ignore */ }
+        }
+        return logEntry;
+    }
+
+    getSecurityLogs(limit = 50) {
+        return this.securityLogs.slice(0, limit);
+    }
+
+    /**
+     * Valida se um Agente pode executar uma Tarefa.
+     * @param {Object} agentConfig 
+     * @param {Object} task 
+     */
+    validateTaskExecution(agentConfig, task) {
+        // 1. Validação de Nível de Segurança
+        const agentLevel = agentConfig.security_level || 1;
+        const requiredLevel = task.required_security_level || 1;
+
+        if (agentLevel < requiredLevel) {
+            this.logSecurityEvent({
+                type: 'TASK_REJECTED',
+                severity: 'MEDIUM',
+                agentId: agentConfig.id,
+                agentName: agentConfig.name,
+                taskTitle: task.title,
+                reason: `Insufficient Security Level (Agent: ${agentLevel} < Task: ${requiredLevel})`
+            });
+            return { allowed: false, reason: 'INSUFFICIENT_SECURITY_LEVEL' };
+        }
+
+        // 2. Validação de Role (Opcional, mas recomendado)
+        // Se a tarefa exige um Role específico (não implementado ainda no TaskManager, mas previsto)
+        // ...
+
+        return { allowed: true };
+    }
+
+    /**
+     * Valida se um Role tem permissão para uma Ação.
+     */
+    validateAction(agentRole, actionType) {
+        // 1. Roles Superiores (OpenClaw like)
+        if (['Prime Agent', 'System Admin'].includes(agentRole)) return { allowed: true, reason: 'SUPER_USER' };
+
+        // 2. Verifica Política Explícita
+        const allowedActions = this.ACTION_POLICIES[agentRole] || [];
+        
+        // 3. Permissões Genéricas
+        if (allowedActions.includes('*')) return { allowed: true, reason: 'WILDCARD_PERMISSION' };
+        if (allowedActions.includes(actionType)) return { allowed: true, reason: 'POLICY_ALLOWED' };
+
+        // 4. Bloqueio Default
+        this.logSecurityEvent({
+            type: 'ACTION_BLOCKED',
+            severity: 'MEDIUM',
+            agentRole,
+            action: actionType,
+            reason: 'POLICY_VIOLATION'
+        });
+
+        return { allowed: false, reason: `ROLE_${agentRole}_CANNOT_${actionType}` };
     }
 
     init() {
@@ -123,28 +254,37 @@ class SecurityKernel {
     /**
      * Valida se a origem da requisição é confiável (Tailscale ou Localhost).
      * @param {string} ip - Endereço IP da requisição.
+     * @returns {Object} { trusted: boolean, network: string, trustLevel: number }
      */
     validateNetworkOrigin(ip) {
+        if (!ip) return { trusted: false, network: 'UNKNOWN', trustLevel: 0 };
+        
         // Normaliza IP (remove prefixo IPv6 ::ffff:)
         const normalizedIp = ip.replace(/^::ffff:/, '');
         
-        // 1. Localhost é sempre confiável
-        if (['127.0.0.1', '::1', 'localhost'].includes(normalizedIp)) {
-            return { trusted: true, network: 'LOCAL' };
+        // 1. Check Explicit IPs (Whitelist)
+        if (this.NETWORK_POLICY.TRUSTED_IPS.includes(normalizedIp)) {
+             return { trusted: true, network: 'LOCAL', trustLevel: 10 };
         }
 
-        // 2. Verifica Range Tailscale (100.64.0.0/10)
+        // 2. Check Localhost Range (127.0.0.0/8)
+        if (normalizedIp.startsWith('127.')) {
+            return { trusted: true, network: 'LOCAL', trustLevel: 10 };
+        }
+
+        // 3. Check Tailscale Range (100.64.0.0/10)
         // Range: 100.64.0.0 - 100.127.255.255
-        // Simplificação: verificar se começa com "100." seguido de número no range
         if (normalizedIp.startsWith('100.')) {
             const parts = normalizedIp.split('.');
             const secondOctet = parseInt(parts[1], 10);
             if (secondOctet >= 64 && secondOctet <= 127) {
-                return { trusted: true, network: 'TAILSCALE' };
+                return { trusted: true, network: 'TAILSCALE', trustLevel: 5 };
             }
         }
 
-        return { trusted: false, network: 'UNKNOWN' };
+        // 4. Rede Externa / Desconhecida (Nível 0 - Zero Trust)
+        // Log attempt? Only if verbose.
+        return { trusted: false, network: 'UNKNOWN', trustLevel: 0 };
     }
 
     /**
@@ -167,9 +307,11 @@ class SecurityKernel {
         // 2. Network Security Policy (Tailscale/Localhost Enforcement)
         // Agentes Críticos (Level >= 8) só aceitam comandos de redes seguras
         if (targetAgent.security_level >= 8) {
-            const isSecure = sourceAgent.network?.secure || false;
-            if (!isSecure) {
-                return { allowed: false, reason: 'UNSECURE_NETWORK_ORIGIN' };
+            const sourceIP = sourceAgent.network?.ip || '0.0.0.0';
+            const originCheck = this.validateNetworkOrigin(sourceIP);
+            
+            if (!originCheck.trusted) {
+                return { allowed: false, reason: `UNSECURE_NETWORK_ORIGIN:${sourceIP}` };
             }
         }
 
@@ -264,6 +406,72 @@ class SecurityKernel {
      */
     resolveProfile(agentType) {
         return this.PROFILES[agentType?.toLowerCase()] || this.PROFILES['standard'];
+    }
+
+    /**
+     * Express Middleware to enforce Security Levels on API Routes
+     */
+    middleware(requiredLevel = 1) {
+        return (req, res, next) => {
+            // 1. Identify Agent/User (via Header or IP)
+            const token = req.headers['x-swarm-token'];
+            const ip = req.ip || req.connection.remoteAddress;
+
+            // 2. Validate Origin (Tailscale/Localhost)
+            const originCheck = this.validateNetworkOrigin(ip);
+            
+            // Critical Operations require Trusted Network
+            if (requiredLevel >= 8 && !originCheck.trusted) {
+                const msg = `🛑 [Security] Blocked untrusted origin: ${ip}`;
+                console.warn(msg);
+                this.logSecurityEvent({
+                    type: 'NETWORK_BLOCK',
+                    severity: 'HIGH',
+                    ip,
+                    reason: 'UNTRUSTED_NETWORK',
+                    details: msg
+                });
+                return res.status(403).json({ error: 'ACCESS_DENIED', reason: 'UNTRUSTED_NETWORK' });
+            }
+
+            // 3. Validate Token (if present)
+            if (token) {
+                const session = this.validateToken(token);
+                if (!session.valid) {
+                    this.logSecurityEvent({
+                        type: 'AUTH_FAIL',
+                        severity: 'MEDIUM',
+                        ip,
+                        token: token.substring(0, 8) + '...',
+                        reason: session.reason
+                    });
+                    return res.status(401).json({ error: 'INVALID_TOKEN', reason: session.reason });
+                }
+                if (session.level < requiredLevel) {
+                    this.logSecurityEvent({
+                        type: 'AUTH_FAIL',
+                        severity: 'LOW',
+                        agentId: session.agentId,
+                        required: requiredLevel,
+                        current: session.level,
+                        reason: 'INSUFFICIENT_PERMISSIONS'
+                    });
+                    return res.status(403).json({ error: 'INSUFFICIENT_PERMISSIONS', required: requiredLevel, current: session.level });
+                }
+                req.agent = { id: session.agentId, level: session.level };
+            } else if (requiredLevel > 5) {
+                // High security requires token
+                this.logSecurityEvent({
+                    type: 'AUTH_FAIL',
+                    severity: 'MEDIUM',
+                    ip,
+                    reason: 'MISSING_TOKEN'
+                });
+                return res.status(401).json({ error: 'MISSING_TOKEN' });
+            }
+
+            next();
+        };
     }
 }
 

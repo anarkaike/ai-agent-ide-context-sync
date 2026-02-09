@@ -4,6 +4,7 @@ const SwarmRegistry = require('./Registry');
 const TaskManager = require('./TaskManager');
 const SwarmMemory = require('../memory/SwarmMemory');
 const SwarmNetwork = require('./SwarmNetwork');
+const SecurityKernel = require('./SecurityKernel');
 
 /**
  * 🛰️ Swarm Node
@@ -25,6 +26,8 @@ class SwarmNode {
         this.registry = new SwarmRegistry();
         this.taskManager = new TaskManager();
         this.memory = new SwarmMemory(this.config.path);
+        // Inject DB Manager from Memory into Security Kernel for persistence
+        this.security = new SecurityKernel(this.memory.dbManager);
         this.network = SwarmNetwork;
         
         this.status = 'IDLE';
@@ -81,13 +84,23 @@ class SwarmNode {
         if (msg.type === 'ALERT') {
             this.trajectory.push(`⚠️ ALERT: ${msg.payload}`);
             this.pulse();
+
+            // Log Security Event
+            this.security.logSecurityEvent({
+                severity: 'HIGH',
+                action: 'THREAT_DETECTED',
+                agent_role: this.config.roles[0] || 'Unknown',
+                resource: 'MODULE_X',
+                details: msg.payload,
+                ip: '100.64.0.1' // Simulation IP
+            }).catch(err => console.error('Failed to log security event:', err));
         }
     }
 
     /**
      * Send heartbeat to Registry
      */
-    pulse() {
+    async pulse() {
         const caps = [
             ...this.config.roles.map(r => `ROLE:${r}`),
             ...this.config.teams.map(t => `TEAM:${t}`)
@@ -96,14 +109,17 @@ class SwarmNode {
         const info = {
             id: this.config.id,
             name: this.config.name,
+            role: this.config.roles[0] || 'Unknown',
+            roles: this.config.roles,
             path: this.config.path,
             security_level: this.config.security_level,
+            teams: this.config.teams,
             capabilities: caps,
             current_task: this.currentTask ? this.currentTask.title : 'IDLE',
             trajectory: this.trajectory
         };
 
-        this.registry.registerAgent(info);
+        await this.registry.registerAgent(info);
     }
 
     /**
@@ -114,10 +130,13 @@ class SwarmNode {
         if (this.currentTask) return;
 
         // 2. Get my tasks (assigned directly to me)
-        const myTasks = this.taskManager.listTasks({ assignee: this.config.id, status: 'PENDING' });
+        const myTasks = await this.taskManager.listTasks({ assignee: this.config.id });
+        const pendingOrInProgress = myTasks.filter(t => t.status === 'PENDING' || t.status === 'IN_PROGRESS');
         
-        if (myTasks.length > 0) {
-            await this.acceptTask(myTasks[0]);
+        if (pendingOrInProgress.length > 0) {
+            // Prioritize IN_PROGRESS (maybe I crashed and restarting?)
+            const next = pendingOrInProgress.find(t => t.status === 'IN_PROGRESS') || pendingOrInProgress[0];
+            await this.acceptTask(next);
             return;
         }
 
@@ -131,14 +150,19 @@ class SwarmNode {
     async acceptTask(task) {
         console.log(`⚡ [${this.config.name}] Accepting task: ${task.title}`);
         
-        // Security Check (Redundant if assignment logic is safe, but good practice)
-        if (this.config.security_level < (task.required_security_level || 1)) {
-            console.log(`🚫 [${this.config.name}] Security Violation! Level ${this.config.security_level} < ${task.required_security_level}`);
+        // Security Check via Kernel
+        const securityCheck = this.security.validateTaskExecution(this.config, task);
+        
+        if (!securityCheck.allowed) {
+            console.log(`🚫 [${this.config.name}] Security Violation! ${securityCheck.reason}`);
+            // Update status to BLOCKED? Or just ignore?
+            // If I picked it up, I should probably release it or mark blocked.
+            // For now, just return.
             return;
         }
 
         this.currentTask = task;
-        this.taskManager.updateStatus(task.id, 'IN_PROGRESS');
+        await this.taskManager.updateStatus(task.id, 'IN_PROGRESS');
         
         // Update trajectory
         this.trajectory = ['Analyzing Requirements', 'Consulting Patterns', 'Executing', 'Verifying'];
@@ -153,9 +177,9 @@ class SwarmNode {
         const role = this.config.roles[0] || 'Generalist';
         const teams = this.config.teams;
         
-        const context = this.memory.recall(role, teams, task.title);
+        const context = await this.memory.recall(role, teams, task.title);
         
-        if (context.patterns.length > 0) {
+        if (context.patterns && context.patterns.length > 0) {
             console.log(`🧠 [${this.config.name}] Recalled pattern: ${context.patterns[0].title}`);
         }
 
@@ -185,14 +209,14 @@ class SwarmNode {
         }
 
         // 3. Complete
-        this.completeTask();
+        await this.completeTask();
     }
 
-    completeTask() {
+    async completeTask() {
         if (!this.currentTask) return;
         
         console.log(`✅ [${this.config.name}] Completed task: ${this.currentTask.title}`);
-        this.taskManager.updateStatus(this.currentTask.id, 'COMPLETED');
+        await this.taskManager.updateStatus(this.currentTask.id, 'COMPLETED');
         
         // 🧠 Memory Persistence: Learn from the task
         const role = this.config.roles[0] || 'Generalist';
@@ -201,7 +225,7 @@ class SwarmNode {
         try {
             const solution = `Executed ${this.currentTask.title} using security protocol L${this.config.security_level}.`;
             
-            this.memory.learnPattern(role, {
+            await this.memory.learnPattern(role, {
                 title: `Auto-Pattern: ${this.currentTask.title}`,
                 description: this.currentTask.description,
                 result: solution,
@@ -209,7 +233,7 @@ class SwarmNode {
                 assignee: this.config.name
             });
 
-            this.memory.recordTeamEvent(team, `Agent ${this.config.name} completed task: ${this.currentTask.title}`, this.config.name);
+            await this.memory.recordTeamEvent(team, `Agent ${this.config.name} completed task: ${this.currentTask.title}`, this.config.name);
             
             // console.log(`🧠 [${this.config.name}] Learned new pattern for ${role}`);
         } catch (e) {
@@ -218,7 +242,7 @@ class SwarmNode {
 
         this.currentTask = null;
         this.trajectory = [];
-        this.pulse();
+        await this.pulse();
     }
 }
 
