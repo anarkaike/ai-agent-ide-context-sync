@@ -1,0 +1,308 @@
+[
+  {
+    "type": "TRANSACTION_BEGIN",
+    "transactionId": "752e55f4-456c-4cde-a253-ce69291705ae",
+    "data": {
+      "id": "752e55f4-456c-4cde-a253-ce69291705ae",
+      "type": "TEST_TRANSACTION",
+      "status": "COMMITTED",
+      "createdAt": "2026-02-09T08:08:39.657Z",
+      "metadata": {
+        "description": "Integration test transaction"
+      },
+      "operations": [
+        {
+          "id": "373cb122-b606-4c90-ae1b-4529b5d8be19",
+          "transactionId": "752e55f4-456c-4cde-a253-ce69291705ae",
+          "type": "TEST_OPERATION",
+          "timestamp": "2026-02-09T08:08:39.657Z",
+          "operation": {
+            "type": "file_write",
+            "path": "test.txt",
+            "content": "test data"
+          }
+        }
+      ],
+      "committedAt": "2026-02-09T08:08:39.657Z"
+    },
+    "id": "edcbeb68-6fb9-48ff-890e-408d878802f5",
+    "timestamp": "2026-02-09T08:08:39.657Z",
+    "sequence": 0
+  },
+  {
+    "type": "OPERATION",
+    "data": {
+      "id": "373cb122-b606-4c90-ae1b-4529b5d8be19",
+      "transactionId": "752e55f4-456c-4cde-a253-ce69291705ae",
+      "type": "TEST_OPERATION",
+      "timestamp": "2026-02-09T08:08:39.657Z",
+      "operation": {
+        "type": "file_write",
+        "path": "test.txt",
+        "content": "test data"
+      }
+    },
+    "id": "f8982be2-07fd-45ba-ae87-505f3d88cfba",
+    "timestamp": "2026-02-09T08:08:39.657Z",
+    "sequence": 1
+  },
+  {
+    "type": "TRANSACTION_COMMIT",
+    "transactionId": "752e55f4-456c-4cde-a253-ce69291705ae",
+    "data": {
+      "id": "752e55f4-456c-4cde-a253-ce69291705ae",
+      "type": "TEST_TRANSACTION",
+      "status": "COMMITTED",
+      "createdAt": "2026-02-09T08:08:39.657Z",
+      "metadata": {
+        "description": "Integration test transaction"
+      },
+      "operations": [
+        {
+          "id": "373cb122-b606-4c90-ae1b-4529b5d8be19",
+          "transactionId": "752e55f4-456c-4cde-a253-ce69291705ae",
+          "type": "TEST_OPERATION",
+          "timestamp": "2026-02-09T08:08:39.657Z",
+          "operation": {
+            "type": "file_write",
+            "path": "test.txt",
+            "content": "test data"
+          }
+        }
+      ],
+      "committedAt": "2026-02-09T08:08:39.657Z"
+    },
+    "id": "6c045247-f2ea-4b54-a753-23e9bb4e6b7e",
+    "timestamp": "2026-02-09T08:08:39.658Z",
+    "sequence": 2
+  },
+  {
+    "type": "TRANSACTION_BEGIN",
+    "transactionId": "95c21426-b48b-480f-98a4-9725012b4714",
+    "data": {
+      "id": "95c21426-b48b-480f-98a4-9725012b4714",
+      "type": "ROLLBACK_TEST",
+      "status": "ROLLED_BACK",
+      "createdAt": "2026-02-09T08:08:39.659Z",
+      "metadata": {},
+      "operations": [
+        {
+          "id": "34ad40a2-90a1-43d8-9dcd-4de5ce21bbd4",
+          "transactionId": "95c21426-b48b-480f-98a4-9725012b4714",
+          "type": "TEST_ROLLBACK",
+          "timestamp": "2026-02-09T08:08:39.659Z",
+          "operation": {
+            "data": "test"
+          }
+        }
+      ],
+      "rolledBackAt": "2026-02-09T08:08:39.659Z",
+      "rollbackReason": "test rollback"
+    },
+    "id": "28022d96-35e9-4bb0-bf15-a41142b940f5",
+    "timestamp": "2026-02-09T08:08:39.659Z",
+    "sequence": 3
+  },
+  {
+    "type": "OPERATION",
+    "data": {
+      "id": "34ad40a2-90a1-43d8-9dcd-4de5ce21bbd4",
+      "transactionId": "95c21426-b48b-480f-98a4-9725012b4714",
+      "type": "TEST_ROLLBACK",
+      "timestamp": "2026-02-09T08:08:39.659Z",
+      "operation": {
+        "data": "test"
+      }
+    },
+    "id": "6a7601e6-546a-4434-b3b8-414052c4a1b8",
+    "timestamp": "2026-02-09T08:08:39.659Z",
+    "sequence": 4
+  },
+  {
+    "type": "TRANSACTION_ROLLBACK",
+    "transactionId": "95c21426-b48b-480f-98a4-9725012b4714",
+    "data": {
+      "id": "95c21426-b48b-480f-98a4-9725012b4714",
+      "type": "ROLLBACK_TEST",
+      "status": "ROLLED_BACK",
+      "createdAt": "2026-02-09T08:08:39.659Z",
+      "metadata": {},
+      "operations": [
+        {
+          "id": "34ad40a2-90a1-43d8-9dcd-4de5ce21bbd4",
+          "transactionId": "95c21426-b48b-480f-98a4-9725012b4714",
+          "type": "TEST_ROLLBACK",
+          "timestamp": "2026-02-09T08:08:39.659Z",
+          "operation": {
+            "data": "test"
+          }
+        }
+      ],
+      "rolledBackAt": "2026-02-09T08:08:39.659Z",
+      "rollbackReason": "test rollback",
+      "rollbackResults": [
+        {
+          "success": false,
+          "error": "Unsupported rollback operation: TEST_ROLLBACK"
+        }
+      ]
+    },
+    "id": "4027e7d1-6157-41e8-81d4-110ac725af99",
+    "timestamp": "2026-02-09T08:08:39.660Z",
+    "sequence": 5
+  },
+  {
+    "type": "TRANSACTION_BEGIN",
+    "transactionId": "d19857ac-99e7-4b04-a8c0-f7379d79ed8f",
+    "data": {
+      "id": "d19857ac-99e7-4b04-a8c0-f7379d79ed8f",
+      "type": "TEST_TRANSACTION",
+      "status": "COMMITTED",
+      "createdAt": "2026-02-09T08:10:00.836Z",
+      "metadata": {
+        "description": "Integration test transaction"
+      },
+      "operations": [
+        {
+          "id": "434ee9e7-db6e-4c36-bdc7-1528a193bf38",
+          "transactionId": "d19857ac-99e7-4b04-a8c0-f7379d79ed8f",
+          "type": "TEST_OPERATION",
+          "timestamp": "2026-02-09T08:10:00.837Z",
+          "operation": {
+            "type": "file_write",
+            "path": "test.txt",
+            "content": "test data"
+          }
+        }
+      ],
+      "committedAt": "2026-02-09T08:10:00.837Z"
+    },
+    "id": "b2337af0-d332-4c19-9426-8e5a3b0d1696",
+    "timestamp": "2026-02-09T08:10:00.836Z",
+    "sequence": 6
+  },
+  {
+    "type": "OPERATION",
+    "data": {
+      "id": "434ee9e7-db6e-4c36-bdc7-1528a193bf38",
+      "transactionId": "d19857ac-99e7-4b04-a8c0-f7379d79ed8f",
+      "type": "TEST_OPERATION",
+      "timestamp": "2026-02-09T08:10:00.837Z",
+      "operation": {
+        "type": "file_write",
+        "path": "test.txt",
+        "content": "test data"
+      }
+    },
+    "id": "2edf216e-7cd0-42f5-b6ca-bcc1e43bec67",
+    "timestamp": "2026-02-09T08:10:00.837Z",
+    "sequence": 7
+  },
+  {
+    "type": "TRANSACTION_COMMIT",
+    "transactionId": "d19857ac-99e7-4b04-a8c0-f7379d79ed8f",
+    "data": {
+      "id": "d19857ac-99e7-4b04-a8c0-f7379d79ed8f",
+      "type": "TEST_TRANSACTION",
+      "status": "COMMITTED",
+      "createdAt": "2026-02-09T08:10:00.836Z",
+      "metadata": {
+        "description": "Integration test transaction"
+      },
+      "operations": [
+        {
+          "id": "434ee9e7-db6e-4c36-bdc7-1528a193bf38",
+          "transactionId": "d19857ac-99e7-4b04-a8c0-f7379d79ed8f",
+          "type": "TEST_OPERATION",
+          "timestamp": "2026-02-09T08:10:00.837Z",
+          "operation": {
+            "type": "file_write",
+            "path": "test.txt",
+            "content": "test data"
+          }
+        }
+      ],
+      "committedAt": "2026-02-09T08:10:00.837Z"
+    },
+    "id": "7cfdb2ba-7473-47ec-993b-111ded003744",
+    "timestamp": "2026-02-09T08:10:00.837Z",
+    "sequence": 8
+  },
+  {
+    "type": "TRANSACTION_BEGIN",
+    "transactionId": "67322d86-7e4f-4f99-a0de-b636e666bb46",
+    "data": {
+      "id": "67322d86-7e4f-4f99-a0de-b636e666bb46",
+      "type": "TEST_TRANSACTION",
+      "status": "COMMITTED",
+      "createdAt": "2026-02-09T08:10:28.607Z",
+      "metadata": {
+        "description": "Integration test transaction"
+      },
+      "operations": [
+        {
+          "id": "476c2c5a-2ae1-4fd7-b878-b9f8e67d83ec",
+          "transactionId": "67322d86-7e4f-4f99-a0de-b636e666bb46",
+          "type": "TEST_OPERATION",
+          "timestamp": "2026-02-09T08:10:28.608Z",
+          "operation": {
+            "type": "file_write",
+            "path": "test.txt",
+            "content": "test data"
+          }
+        }
+      ],
+      "committedAt": "2026-02-09T08:10:28.608Z"
+    },
+    "id": "f1e1eb0b-ed91-4faa-958f-a782b786a803",
+    "timestamp": "2026-02-09T08:10:28.608Z",
+    "sequence": 9
+  },
+  {
+    "type": "OPERATION",
+    "data": {
+      "id": "476c2c5a-2ae1-4fd7-b878-b9f8e67d83ec",
+      "transactionId": "67322d86-7e4f-4f99-a0de-b636e666bb46",
+      "type": "TEST_OPERATION",
+      "timestamp": "2026-02-09T08:10:28.608Z",
+      "operation": {
+        "type": "file_write",
+        "path": "test.txt",
+        "content": "test data"
+      }
+    },
+    "id": "efc51ba1-138d-46e2-ba04-6174a99a2e83",
+    "timestamp": "2026-02-09T08:10:28.608Z",
+    "sequence": 10
+  },
+  {
+    "type": "TRANSACTION_COMMIT",
+    "transactionId": "67322d86-7e4f-4f99-a0de-b636e666bb46",
+    "data": {
+      "id": "67322d86-7e4f-4f99-a0de-b636e666bb46",
+      "type": "TEST_TRANSACTION",
+      "status": "COMMITTED",
+      "createdAt": "2026-02-09T08:10:28.607Z",
+      "metadata": {
+        "description": "Integration test transaction"
+      },
+      "operations": [
+        {
+          "id": "476c2c5a-2ae1-4fd7-b878-b9f8e67d83ec",
+          "transactionId": "67322d86-7e4f-4f99-a0de-b636e666bb46",
+          "type": "TEST_OPERATION",
+          "timestamp": "2026-02-09T08:10:28.608Z",
+          "operation": {
+            "type": "file_write",
+            "path": "test.txt",
+            "content": "test data"
+          }
+        }
+      ],
+      "committedAt": "2026-02-09T08:10:28.608Z"
+    },
+    "id": "6d79b71a-9fd2-4777-873f-fd2bc0ff2384",
+    "timestamp": "2026-02-09T08:10:28.608Z",
+    "sequence": 11
+  }
+]

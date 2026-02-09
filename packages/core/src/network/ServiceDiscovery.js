@@ -4,7 +4,7 @@
  * Sistema de descoberta automática de serviços na rede mesh
  */
 
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 class ServiceDiscovery {
     constructor(meshNetwork) {
@@ -14,13 +14,13 @@ class ServiceDiscovery {
         this.cache = new Map(); // serviceType -> [nodes]
         this.cacheTimeout = 30000; // 30 segundos
         this.discoveryInterval = 10000; // 10 segundos
-        
+
         // Inicia discovery periódico
         this._startDiscovery();
-        
+
         console.log('[ServiceDiscovery] Initialized');
     }
-    
+
     /**
      * Registra um serviço
      */
@@ -35,61 +35,61 @@ class ServiceDiscovery {
             health: 'healthy',
             version: metadata.version || '1.0.0'
         };
-        
+
         this.services.set(serviceId, serviceInfo);
-        
+
         // Registra no mesh
         this.mesh.registerService(serviceType, serviceInfo);
-        
+
         console.log(`[ServiceDiscovery] Service ${serviceType} registered with ID ${serviceId}`);
-        
+
         // Notifica watchers
         this._notifyWatchers(serviceType, 'registered', serviceInfo);
-        
+
         return serviceInfo;
     }
-    
+
     /**
      * Remove registro de serviço
      */
     unregisterService(serviceId) {
         const serviceInfo = this.services.get(serviceId);
         if (!serviceInfo) return false;
-        
+
         this.services.delete(serviceId);
-        
+
         console.log(`[ServiceDiscovery] Service ${serviceId} unregistered`);
-        
+
         // Notifica watchers
         this._notifyWatchers(serviceInfo.type, 'unregistered', serviceInfo);
-        
+
         return true;
     }
-    
+
     /**
      * Descobre nós com um serviço específico
      */
     async discover(serviceType, options = {}) {
         const cacheKey = serviceType;
         const cached = this.cache.get(cacheKey);
-        
+
         // Verifica cache
         if (cached && (Date.now() - cached.timestamp < this.cacheTimeout)) {
             return cached.nodes;
         }
-        
+
         // Descobre na rede
         const nodes = await this._discoverInNetwork(serviceType, options);
-        
+
         // Atualiza cache
         this.cache.set(cacheKey, {
             nodes,
             timestamp: Date.now()
         });
-        
+
         return nodes;
     }
-    
+
     /**
      * Watch para mudanças em um serviço
      */
@@ -97,12 +97,12 @@ class ServiceDiscovery {
         if (!this.watchers.has(serviceType)) {
             this.watchers.set(serviceType, new Set());
         }
-        
+
         const watcherId = this._generateWatcherId();
         this.watchers.get(serviceType).set(watcherId, callback);
-        
+
         console.log(`[ServiceDiscovery] Watching service ${serviceType} with ID ${watcherId}`);
-        
+
         // Retorna função para parar de watching
         return () => {
             const callbacks = this.watchers.get(serviceType);
@@ -114,21 +114,21 @@ class ServiceDiscovery {
             }
         };
     }
-    
+
     /**
      * Obtém todos os serviços registrados localmente
      */
     getLocalServices() {
         return Array.from(this.services.values());
     }
-    
+
     /**
      * Obtém serviços por tipo
      */
     getServicesByType(serviceType) {
         return Array.from(this.services.values()).filter(s => s.type === serviceType);
     }
-    
+
     /**
      * Atualiza health de um serviço
      */
@@ -137,30 +137,30 @@ class ServiceDiscovery {
         if (service) {
             service.health = health;
             service.lastHealthCheck = Date.now();
-            
+
             if (health === 'unhealthy') {
                 this._notifyWatchers(service.type, 'health-changed', service);
             }
         }
     }
-    
+
     /**
      * Descobre serviços na rede mesh
      */
     async _discoverInNetwork(serviceType, options = {}) {
         const nodes = this.mesh.findServiceNodes(serviceType);
         const services = [];
-        
+
         for (const nodeId of nodes) {
             if (nodeId === this.mesh.nodeId) continue; // Pula nó local
-            
+
             try {
                 const response = await this.mesh.sendMessage(nodeId, {
                     type: 'service-discovery',
                     serviceType,
                     requestId: this._generateRequestId()
                 });
-                
+
                 if (response.services) {
                     services.push(...response.services);
                 }
@@ -168,10 +168,10 @@ class ServiceDiscovery {
                 console.warn(`Failed to discover services on node ${nodeId}:`, error.message);
             }
         }
-        
+
         return services;
     }
-    
+
     /**
      * Inicia discovery periódico
      */
@@ -180,7 +180,7 @@ class ServiceDiscovery {
             this._refreshCache();
         }, this.discoveryInterval);
     }
-    
+
     /**
      * Atualiza cache de serviços
      */
@@ -193,7 +193,7 @@ class ServiceDiscovery {
             }
         }
     }
-    
+
     /**
      * Notifica watchers de um serviço
      */
@@ -209,28 +209,28 @@ class ServiceDiscovery {
             }
         }
     }
-    
+
     /**
      * Gera ID único para serviço
      */
     _generateServiceId() {
         return crypto.randomBytes(8).toString('hex');
     }
-    
+
     /**
      * Gera ID único para watcher
      */
     _generateWatcherId() {
         return crypto.randomBytes(8).toString('hex');
     }
-    
+
     /**
      * Gera ID único para requisição
      */
     _generateRequestId() {
         return crypto.randomBytes(16).toString('hex');
     }
-    
+
     /**
      * Limpa recursos
      */
@@ -242,4 +242,4 @@ class ServiceDiscovery {
     }
 }
 
-module.exports = ServiceDiscovery;
+export { ServiceDiscovery };

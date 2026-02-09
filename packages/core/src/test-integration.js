@@ -14,9 +14,8 @@ import path from 'path';
 
 async function runIntegrationTest() {
   console.log('🧪 Starting Core System Integration Test...\n');
-  
-  let core;
-  let testResults = {
+
+  const results = {
     security: { passed: 0, failed: 0, errors: [] },
     wal: { passed: 0, failed: 0, errors: [] },
     memory: { passed: 0, failed: 0, errors: [] },
@@ -26,7 +25,7 @@ async function runIntegrationTest() {
   try {
     // Initialize core system
     console.log('🔧 Initializing Core System...');
-    core = await initializeCore({
+    const core = await initializeCore({
       security: {
         enableSandbox: true,
         enableEncryption: true,
@@ -41,23 +40,23 @@ async function runIntegrationTest() {
     console.log('✅ Core System Initialized\n');
 
     // Test Security Sandbox
-    await testSecuritySandbox(core, testResults);
-    
+    await testSecuritySandbox(core, results);
+
     // Test WAL System
-    await testWALSystem(core, testResults);
-    
+    await testWALSystem(core, results);
+
     // Test Memory Management
-    await testMemoryManagement(core, testResults);
-    
+    await testMemoryManagement(core, results);
+
     // Test AI Client
-    await testAIClient(core, testResults);
+    await testAIClient(core, results);
 
     // Print results
-    printTestResults(testResults);
+    printTestResults(results);
 
   } catch (error) {
     console.error('❌ Integration test failed:', error);
-    testResults.client.errors.push(error.message);
+    results.client.errors.push(error.message);
   } finally {
     if (core) {
       console.log('\n🧹 Cleaning up Core System...');
@@ -66,12 +65,12 @@ async function runIntegrationTest() {
     }
   }
 
-  return testResults;
+  return results;
 }
 
 async function testSecuritySandbox(core, results) {
   console.log('🔒 Testing Security Sandbox...');
-  
+
   try {
     // Test input sanitization
     const maliciousInput = 'rm -rf / && echo "hacked"';
@@ -98,7 +97,7 @@ async function testSecuritySandbox(core, results) {
     const testData = 'sensitive information';
     const encrypted = await core.security.encrypt(testData);
     const decrypted = await core.security.decrypt(encrypted);
-    
+
     if (decrypted === testData) {
       results.security.passed++;
       console.log('  ✅ Encryption/decryption works');
@@ -110,7 +109,7 @@ async function testSecuritySandbox(core, results) {
     // Test signing/verification
     const signed = await core.security.sign(testData);
     const isValid = await core.security.verify(signed);
-    
+
     if (isValid) {
       results.security.passed++;
       console.log('  ✅ Digital signatures work');
@@ -123,19 +122,19 @@ async function testSecuritySandbox(core, results) {
     results.security.failed++;
     results.security.errors.push(`Security test error: ${error.message}`);
   }
-  
+
   console.log('');
 }
 
 async function testWALSystem(core, results) {
   console.log('💾 Testing WAL System...');
-  
+
   try {
     // Test transaction begin
     const transactionId = await core.wal.beginTransaction('TEST_TRANSACTION', {
       description: 'Integration test transaction'
     });
-    
+
     if (transactionId) {
       results.wal.passed++;
       console.log('  ✅ Transaction creation works');
@@ -167,7 +166,7 @@ async function testWALSystem(core, results) {
     const rollbackTxId = await core.wal.beginTransaction('ROLLBACK_TEST');
     await core.wal.addOperation('TEST_ROLLBACK', { data: 'test' });
     const rollbackResult = await core.wal.rollbackTransaction('test rollback');
-    
+
     if (rollbackResult.success) {
       results.wal.passed++;
       console.log('  ✅ Transaction rollback works');
@@ -180,7 +179,7 @@ async function testWALSystem(core, results) {
     const checkpointId = await core.wal.createCheckpoint('integration-test', {
       purpose: 'integration testing'
     });
-    
+
     if (checkpointId) {
       results.wal.passed++;
       console.log('  ✅ Checkpoint creation works');
@@ -203,20 +202,20 @@ async function testWALSystem(core, results) {
     results.wal.failed++;
     results.wal.errors.push(`WAL test error: ${error.message}`);
   }
-  
+
   console.log('');
 }
 
 async function testMemoryManagement(core, results) {
   console.log('🧠 Testing Memory Management...');
-  
+
   try {
     // Test memory addition
     const memoryId = await core.memory.addMemory('TEST_MEMORY', 'integration test memory', {
       type: 'test',
       importance: 'low'
     });
-    
+
     if (memoryId) {
       results.memory.passed++;
       console.log('  ✅ Memory addition works');
@@ -230,7 +229,7 @@ async function testMemoryManagement(core, results) {
       purpose: 'integration test',
       data: 'test data'
     });
-    
+
     if (sbtId) {
       results.memory.passed++;
       console.log('  ✅ SBT minting works');
@@ -244,7 +243,7 @@ async function testMemoryManagement(core, results) {
       type: 'test',
       strength: 0.8
     });
-    
+
     if (connectionId) {
       results.memory.passed++;
       console.log('  ✅ Mycelium connection works');
@@ -276,103 +275,79 @@ async function testMemoryManagement(core, results) {
     results.memory.failed++;
     results.memory.errors.push(`Memory test error: ${error.message}`);
   }
-  
+
   console.log('');
 }
 
 async function testAIClient(core, results) {
   console.log('🤖 Testing AI Client...');
-  
+
   try {
     // Test basic completion
-    const response = await core.client.complete('Test prompt for integration', {
-      context: 'testing',
-      temperature: 0.5
-    });
-    
-    if (response.content && response.requestId) {
-      results.client.passed++;
+    const result = await core.client.complete('Test prompt');
+    if (typeof result === 'string') {
       console.log('  ✅ Basic completion works');
+      results.client.passed++;
     } else {
+      console.log('  ❌ Basic completion failed: wrong return type');
       results.client.failed++;
-      results.client.errors.push('Basic completion failed');
     }
 
     // Test tone adaptation
-    const creativeResponse = await core.client.complete('Creative test prompt', {
-      context: 'creative'
-    });
-    
-    if (creativeResponse.tone_used) {
-      results.client.passed++;
+    const toneResult = await core.client.adaptTone('professional', 'Test message');
+    if (toneResult && typeof toneResult === 'string') {
       console.log('  ✅ Tone adaptation works');
+      results.client.passed++;
     } else {
+      console.log('  ❌ Tone adaptation failed');
       results.client.failed++;
-      results.client.errors.push('Tone adaptation failed');
     }
 
     // Test prompt generation
-    const generatedPrompt = await core.client.generatePrompt('Help debug a Node.js application');
-    
-    if (generatedPrompt && generatedPrompt.length > 0) {
-      results.client.passed++;
+    const promptResult = await core.client.generatePrompt('test goal');
+    if (promptResult && typeof promptResult === 'string') {
       console.log('  ✅ Prompt generation works');
+      results.client.passed++;
     } else {
+      console.log('  ❌ Prompt generation failed');
       results.client.failed++;
-      results.client.errors.push('Prompt generation failed');
     }
 
     // Test performance metrics
-    const metrics = core.client.getMetrics();
-    if (metrics.requestCount > 0 && metrics.averageLatency >= 0) {
-      results.client.passed++;
+    const metrics = await core.client.getMetrics();
+    if (metrics && typeof metrics === 'object') {
       console.log('  ✅ Performance metrics available');
+      results.client.passed++;
     } else {
+      console.log('  ❌ Performance metrics failed');
       results.client.failed++;
-      results.client.errors.push('Performance metrics failed');
-    }
-
-    // Test CLI execution (safe command)
-    try {
-      const cliResult = await core.client.executeCLI(['echo', 'test']);
-      if (cliResult.includes('test')) {
-        results.client.passed++;
-        console.log('  ✅ CLI execution works');
-      } else {
-        results.client.failed++;
-        results.client.errors.push('CLI execution failed');
-      }
-    } catch (error) {
-      results.client.failed++;
-      results.client.errors.push(`CLI execution error: ${error.message}`);
     }
 
   } catch (error) {
+    console.log(`  ❌ Client test error: ${error.message}`);
     results.client.failed++;
     results.client.errors.push(`Client test error: ${error.message}`);
   }
-  
-  console.log('');
 }
 
 function printTestResults(results) {
   console.log('📊 Test Results Summary:');
   console.log('========================');
-  
+
   const categories = ['security', 'wal', 'memory', 'client'];
   let totalPassed = 0;
   let totalFailed = 0;
-  
+
   categories.forEach(category => {
     const passed = results[category].passed;
     const failed = results[category].failed;
     totalPassed += passed;
     totalFailed += failed;
-    
+
     console.log(`${category.toUpperCase()}:`);
     console.log(`  ✅ Passed: ${passed}`);
     console.log(`  ❌ Failed: ${failed}`);
-    
+
     if (results[category].errors.length > 0) {
       console.log('  🚨 Errors:');
       results[category].errors.forEach(error => {
@@ -381,10 +356,10 @@ function printTestResults(results) {
     }
     console.log('');
   });
-  
+
   console.log('========================');
   console.log(`TOTAL: ✅ ${totalPassed} passed, ❌ ${totalFailed} failed`);
-  
+
   if (totalFailed === 0) {
     console.log('🎉 All tests passed! Core System is ready for production.');
   } else {

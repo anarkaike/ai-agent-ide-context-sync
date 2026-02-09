@@ -26,7 +26,7 @@ export class AIClient {
       enableMetrics: true,
       ...options
     };
-    
+
     // Performance metrics
     this.metrics = {
       requestCount: 0,
@@ -34,7 +34,7 @@ export class AIClient {
       errorCount: 0,
       cacheHits: 0
     };
-    
+
     // Request cache
     this.cache = new Map();
     this.cacheMaxSize = 1000;
@@ -47,14 +47,14 @@ export class AIClient {
     if (!this.toneManager) {
       throw new Error('ToneManager is required');
     }
-    
+
     if (!this.security) {
       throw new Error('SecuritySandbox is required');
     }
 
     await this.toneManager.initialize();
     await this.security.initialize();
-    
+
     // Auto-adapt tone based on project context
     await this.toneManager.autoAdapt();
   }
@@ -68,15 +68,15 @@ export class AIClient {
   async complete(prompt, options = {}) {
     const requestId = crypto.randomUUID();
     const startTime = Date.now();
-    
+
     try {
       // Validate and sanitize input
       const sanitizedPrompt = await this.security.sanitizeInput(prompt);
-      
+
       // Get tone configuration
       const context = options.context || 'default';
       const toneConfig = this.toneManager.getToneParameters(context);
-      
+
       // Merge with request options
       const config = {
         ...toneConfig,
@@ -99,18 +99,18 @@ export class AIClient {
 
       // Execute request with retry logic
       const response = await this.executeWithRetry(sanitizedPrompt, config);
-      
+
       // Sanitize output
       const sanitizedResponse = await this.security.sanitizeOutput(response);
-      
+
       // Cache response
       if (this.options.enableCaching) {
         this.cacheResponse(cacheKey, sanitizedResponse);
       }
-      
+
       // Update metrics
       this.updateMetrics(startTime);
-      
+
       return {
         ...sanitizedResponse,
         requestId,
@@ -132,18 +132,19 @@ export class AIClient {
    */
   async executeCLI(args) {
     const startTime = Date.now();
-    
+
     try {
       // Validate command arguments
       await this.security.validateCommand(args);
-      
+
       // Execute command
       const result = await this.executeCommand(args);
-      
-      // Sanitize output
+
+      // Sanitize output and ensure string return
       const sanitized = await this.security.sanitizeOutput(result);
-      
-      return sanitized.stdout || sanitized;
+      const output = sanitized.stdout || sanitized.output || String(sanitized);
+
+      return output;
 
     } catch (error) {
       throw new Error(`CLI execution failed: ${error.message}`);
@@ -163,7 +164,7 @@ export class AIClient {
 
     // Sanitize goal
     const sanitizedGoal = await this.security.sanitizeInput(goal);
-    
+
     // Build prompt generation request
     const promptTemplate = `Generate a structured, intelligent prompt for the following goal:
 Goal: ${sanitizedGoal}
@@ -195,7 +196,7 @@ Output only the generated prompt, no explanations.`;
     // Detect if we should use local CLI or global
     const cliPath = this.detectCLILocation();
     const useLocal = cliPath && await this.security.validatePath(cliPath);
-    
+
     const command = useLocal ? 'node' : 'ai-doc';
     const commandArgs = useLocal ? [cliPath, ...args] : args;
 
@@ -243,26 +244,26 @@ Output only the generated prompt, no explanations.`;
    */
   async executeWithRetry(prompt, config) {
     let lastError;
-    
+
     for (let attempt = 1; attempt <= this.options.maxRetries; attempt++) {
       try {
         // Simulate LLM API call (replace with actual implementation)
         const response = await this.simulateLLMRequest(prompt, config);
         return response;
-        
+
       } catch (error) {
         lastError = error;
-        
+
         if (attempt === this.options.maxRetries) {
           throw error;
         }
-        
+
         // Exponential backoff
         const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
-    
+
     throw lastError;
   }
 
@@ -275,9 +276,9 @@ Output only the generated prompt, no explanations.`;
   async simulateLLMRequest(prompt, config) {
     // This is a mock implementation
     // In production, integrate with OpenAI, Anthropic, or other LLM providers
-    
+
     const response = `[Response generated with temperature=${config.temperature}, model=${config.model}]\n\nProcessed prompt: ${prompt.substring(0, 100)}...`;
-    
+
     return {
       content: response,
       usage: {
@@ -303,7 +304,7 @@ Output only the generated prompt, no explanations.`;
       max_tokens: config.max_tokens,
       model: config.model
     };
-    
+
     return crypto.createHash('sha256')
       .update(JSON.stringify(keyData))
       .digest('hex');
@@ -320,7 +321,7 @@ Output only the generated prompt, no explanations.`;
       const firstKey = this.cache.keys().next().value;
       this.cache.delete(firstKey);
     }
-    
+
     this.cache.set(key, response);
   }
 
@@ -330,7 +331,7 @@ Output only the generated prompt, no explanations.`;
    */
   updateMetrics(startTime) {
     if (!this.options.enableMetrics) return;
-    
+
     this.metrics.requestCount++;
     this.metrics.totalLatency += Date.now() - startTime;
   }
@@ -342,11 +343,11 @@ Output only the generated prompt, no explanations.`;
   getMetrics() {
     return {
       ...this.metrics,
-      averageLatency: this.metrics.requestCount > 0 
-        ? this.metrics.totalLatency / this.metrics.requestCount 
+      averageLatency: this.metrics.requestCount > 0
+        ? this.metrics.totalLatency / this.metrics.requestCount
         : 0,
-      cacheHitRate: this.metrics.requestCount > 0 
-        ? this.metrics.cacheHits / this.metrics.requestCount 
+      cacheHitRate: this.metrics.requestCount > 0
+        ? this.metrics.cacheHits / this.metrics.requestCount
         : 0
     };
   }
@@ -384,11 +385,11 @@ Output only the generated prompt, no explanations.`;
    */
   async cleanup() {
     this.cache.clear();
-    
+
     if (this.toneManager) {
       await this.toneManager.cleanup();
     }
-    
+
     if (this.security) {
       await this.security.cleanup();
     }

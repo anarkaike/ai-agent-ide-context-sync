@@ -1,0 +1,90 @@
+{
+  "name": "swarm-service-manager",
+  "version": "1.0.0",
+  "description": "Gerencia serviços SwarmClient e WebMap em qualquer plataforma com auto-recuperação",
+  "category": "infrastructure",
+  "author": "AI Agent Collective",
+  "license": "MIT",
+  "tags": ["swarm", "services", "cross-platform", "auto-recovery"],
+  "capabilities": [
+    "start_services",
+    "stop_services", 
+    "restart_services",
+    "check_health",
+    "install_service",
+    "uninstall_service",
+    "monitor_services",
+    "auto_recovery"
+  ],
+  "platforms": ["macos", "linux", "windows", "wsl", "gitbash"],
+  "dependencies": {
+    "node": ">=14.0.0",
+    "nanobot": ">=1.0.0"
+  },
+  "parameters": {
+    "action": {
+      "type": "string",
+      "enum": ["start", "stop", "restart", "status", "check", "install", "uninstall", "monitor"],
+      "default": "check",
+      "description": "Ação a ser executada nos serviços"
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["auto", "macos", "linux", "windows", "wsl", "gitbash"],
+      "default": "auto",
+      "description": "Plataforma alvo (auto detecta automaticamente)"
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "webmap_port": {"type": "number", "default": 3456},
+        "mothership_ip": {"type": "string", "default": "100.104.189.106"},
+        "agent_id": {"type": "string", "default": "auto"},
+        "log_level": {"type": "string", "enum": ["debug", "info", "warn", "error"], "default": "info"}
+      }
+    }
+  },
+  "outputs": {
+    "status": {
+      "type": "object",
+      "properties": {
+        "webmap": {"type": "string", "enum": ["running", "stopped", "error"]},
+        "swarmclient": {"type": "string", "enum": ["running", "stopped", "error"]},
+        "platform": {"type": "string"},
+        "agent_id": {"type": "string"},
+        "endpoint": {"type": "string"}
+      }
+    },
+    "logs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Logs da operação"
+    }
+  },
+  "examples": [
+    {
+      "description": "Verificar status dos serviços",
+      "input": {"action": "status"},
+      "output": {
+        "status": {
+          "webmap": "running",
+          "swarmclient": "running", 
+          "platform": "linux",
+          "agent_id": "linux-server-001",
+          "endpoint": "http://localhost:3456"
+        }
+      }
+    },
+    {
+      "description": "Iniciar todos os serviços",
+      "input": {"action": "start"},
+      "output": {
+        "status": {
+          "webmap": "running",
+          "swarmclient": "running"
+        },
+        "logs": ["WebMap iniciado", "SwarmClient iniciado"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "status": {
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "pending": "Pendente",
+    "error": "Erro",
+    "success": "Sucesso",
+    "failed": "Falhou"
+  },
+  "operations": {
+    "create": "Criar",
+    "update": "Atualizar",
+    "delete": "Excluir",
+    "list": "Listar",
+    "show": "Mostrar",
+    "execute": "Executar",
+    "approve": "Aprovar",
+    "reject": "Rejeitar",
+    "revert": "Reverter"
+  },
+  "security": {
+    "zero_trust": "Validação Zero Trust",
+    "unsafe_payload": "Payload inseguro detectado",
+    "invalid_token": "Token inválido",
+    "insufficient_permissions": "Permissões insuficientes",
+    "account_locked": "Conta bloqueada",
+    "approval_required": "Aprovação manual necessária"
+  },
+  "observability": {
+    "trace_started": "Trace iniciado",
+    "trace_completed": "Trace concluído",
+    "event_emitted": "Evento emitido",
+    "metrics_updated": "Métricas atualizadas"
+  },
+  "sync": {
+    "syncing": "Sincronizando...",
+    "synced": "Sincronizado",
+    "offline": "Offline",
+    "reconnecting": "Reconectando...",
+    "conflict_detected": "Conflito detectado",
+    "conflict_resolved": "Conflito resolvido"
+  },
+  "skills": {
+    "installed": "Skill instalada",
+    "uninstalled": "Skill desinstalada",
+    "published": "Skill publicada",
+    "already_installed": "Skill já instalada",
+    "not_found": "Skill não encontrada"
+  },
+  "governance": {
+    "request_pending": "Pedido de aprovação pendente",
+    "request_approved": "Pedido aprovado",
+    "request_rejected": "Pedido rejeitado",
+    "no_pending_requests": "Nenhum pedido pendente"
+  },
+  "budget": {
+    "budget_exhausted": "Orçamento esgotado",
+    "budget_warning": "Aviso de orçamento",
+    "cost_tracking": "Rastreamento de custo ativado",
+    "tokens_used": "Tokens usados"
+  },
+  "common": {
+    "loading": "Carregando...",
+    "saving": "Salvando...",
+    "done": "Concluído",
+    "cancelled": "Cancelado",
+    "unknown": "Desconhecido",
+    "not_available": "Indisponível",
+    "invalid_input": "Entrada inválida",
+    "permission_denied": "Permissão negada"
+  }
+}

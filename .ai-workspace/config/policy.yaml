@@ -1,0 +1,81 @@
+# AI Agent Context Sync - Policy Configuration
+# This file defines security, governance, and operational policies
+# Changes are automatically reloaded (hot-reload enabled)
+
+security:
+  zero_trust: false
+  require_approval_for:
+    - skill.install
+    - policy.change
+    - persona.set_instruction
+    - mesh.connect
+    - budget.reset
+    - canary.enable
+  max_failed_attempts: 3
+  lockout_duration_minutes: 5
+  encryption_enabled: true
+  sanitize_payloads: true
+
+observability:
+  enabled: true
+  sample_rate: 1.0
+  retention_days: 30
+  console_output: true
+
+sync:
+  auto_sync: true
+  sync_interval_seconds: 30
+  max_queue_size: 1000
+  conflict_resolution: manual
+
+budget:
+  enabled: false
+  daily_token_limit: 100000
+  cost_alert_threshold: 0.8
+  auto_approve_under_cost: 100
+
+skills:
+  allow_remote_install: true
+  require_signature: true
+  trusted_sources: []
+  auto_update: false
+
+governance:
+  require_approval:
+    - skill.install
+    - policy.change
+    - persona.set_instruction
+    - mesh.connect
+    - budget.reset
+    - canary.enable
+  auto_approve:
+    risk_level: low
+    trust_score_min: 0.9
+  timeout_hours: 24
+  approval_chain_required_for: []
+
+mesh:
+  enabled: false
+  max_peers: 10
+  heartbeat_interval_seconds: 30
+  discovery_enabled: true
+
+nanobot:
+  enabled: false
+  trust_network_url: https://trust-network.nanobot.ai
+  knowledge_base_url: https://kb.nanobot.ai
+  share_learning: true
+
+i18n:
+  locale: en
+  auto_detect: true
+
+autopruner:
+  enabled: true
+  max_checkpoints: 10
+  max_cache_entries: 1000
+  cleanup_interval_hours: 6
+  retention_days:
+    checkpoints: 7
+    cache: 1
+    journal: 30

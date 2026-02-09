@@ -4,7 +4,7 @@
  * Sistema avançado de resolução de conflitos para sincronização
  */
 
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 class ConflictResolutionEngine {
     constructor(options = {}) {
@@ -17,37 +17,37 @@ class ConflictResolutionEngine {
             'voting': this._voting.bind(this),
             'manual': this._manual.bind(this)
         };
-        
+
         this.defaultStrategy = options.defaultStrategy || 'latest-wins';
         this.conflictHistory = new Map(); // key -> [conflicts]
         this.resolutionRules = new Map(); // pattern -> strategy
-        
+
         // Configurações
         this.maxHistorySize = options.maxHistorySize || 100;
         this.autoResolveThreshold = options.autoResolveThreshold || 0.8;
-        
+
         console.log('[ConflictEngine] Conflict Resolution Engine initialized');
     }
-    
+
     /**
      * Resolve conflito usando estratégia especificada
      */
     async resolveConflict(conflict, strategy = null) {
         const resolutionStrategy = strategy || this._selectBestStrategy(conflict);
         const strategyFunc = this.strategies[resolutionStrategy];
-        
+
         if (!strategyFunc) {
             throw new Error(`Unknown conflict resolution strategy: ${resolutionStrategy}`);
         }
-        
+
         try {
             const result = await strategyFunc(conflict);
-            
+
             // Registra histórico
             this._recordConflict(conflict, resolutionStrategy, result);
-            
+
             console.log(`[ConflictEngine] Resolved conflict using ${resolutionStrategy}`);
-            
+
             return {
                 resolved: true,
                 strategy: resolutionStrategy,
@@ -60,7 +60,7 @@ class ConflictResolutionEngine {
             throw error;
         }
     }
-    
+
     /**
      * Seleciona melhor estratégia baseada no contexto
      */
@@ -71,10 +71,10 @@ class ConflictResolutionEngine {
                 return strategy;
             }
         }
-        
+
         // Analisa tipo de dado
         const dataType = this._analyzeDataType(conflict.local.data, conflict.remote.data);
-        
+
         switch (dataType) {
             case 'primitive':
                 return 'latest-wins';
@@ -88,14 +88,14 @@ class ConflictResolutionEngine {
                 return this.defaultStrategy;
         }
     }
-    
+
     /**
      * Estratégia: Latest Wins
      */
     async _latestWins(conflict) {
-        const winner = conflict.local.timestamp > conflict.remote.timestamp 
+        const winner = conflict.local.timestamp > conflict.remote.timestamp
             ? 'local' : 'remote';
-        
+
         return {
             data: winner === 'local' ? conflict.local.data : conflict.remote.data,
             winner,
@@ -103,7 +103,7 @@ class ConflictResolutionEngine {
             confidence: 0.9
         };
     }
-    
+
     /**
      * Estratégia: Local Wins
      */
@@ -115,7 +115,7 @@ class ConflictResolutionEngine {
             confidence: 1.0
         };
     }
-    
+
     /**
      * Estratégia: Remote Wins
      */
@@ -127,18 +127,18 @@ class ConflictResolutionEngine {
             confidence: 1.0
         };
     }
-    
+
     /**
      * Estratégia: Merge
      */
     async _merge(conflict) {
         const localData = conflict.local.data;
         const remoteData = conflict.remote.data;
-        
+
         // Merge baseado no tipo
         let mergedData;
         let confidence = 0.7;
-        
+
         if (Array.isArray(localData) && Array.isArray(remoteData)) {
             mergedData = this._mergeArrays(localData, remoteData);
             confidence = 0.8;
@@ -152,7 +152,7 @@ class ConflictResolutionEngine {
             // Fallback para latest-wins
             return this._latestWins(conflict);
         }
-        
+
         return {
             data: mergedData,
             winner: 'merged',
@@ -164,20 +164,20 @@ class ConflictResolutionEngine {
             }
         };
     }
-    
+
     /**
      * Estratégia: Semantic Merge
      */
     async _semanticMerge(conflict) {
         const localData = conflict.local.data;
         const remoteData = conflict.remote.data;
-        
+
         // Análise semântica simplificada
         const semanticAnalysis = this._analyzeSemantics(localData, remoteData);
-        
+
         if (semanticAnalysis.canMerge) {
             const mergedData = this._semanticMergeData(localData, remoteData, semanticAnalysis);
-            
+
             return {
                 data: mergedData,
                 winner: 'semantic-merge',
@@ -189,24 +189,24 @@ class ConflictResolutionEngine {
                 }
             };
         }
-        
+
         // Fallback para merge simples
         return this._merge(conflict);
     }
-    
+
     /**
      * Estratégia: Voting
      */
     async _voting(conflict) {
         // Simula votação de outros peers
         const votes = await this._collectVotes(conflict);
-        
+
         const localVotes = votes.filter(v => v.choice === 'local').length;
         const remoteVotes = votes.filter(v => v.choice === 'remote').length;
         const mergeVotes = votes.filter(v => v.choice === 'merge').length;
-        
+
         let winner, data, reason;
-        
+
         if (mergeVotes > localVotes && mergeVotes > remoteVotes) {
             const mergeResult = await this._merge(conflict);
             winner = 'voting-merge';
@@ -221,7 +221,7 @@ class ConflictResolutionEngine {
             data = conflict.remote.data;
             reason = `Remote selected by peer vote (${remoteVotes}/${votes.length})`;
         }
-        
+
         return {
             data,
             winner,
@@ -236,7 +236,7 @@ class ConflictResolutionEngine {
             }
         };
     }
-    
+
     /**
      * Estratégia: Manual
      */
@@ -252,7 +252,7 @@ class ConflictResolutionEngine {
             }
         };
     }
-    
+
     /**
      * Adiciona regra de resolução
      */
@@ -260,7 +260,7 @@ class ConflictResolutionEngine {
         this.resolutionRules.set(pattern, strategy);
         console.log(`[ConflictEngine] Added rule: ${pattern} -> ${strategy}`);
     }
-    
+
     /**
      * Remove regra de resolução
      */
@@ -268,7 +268,7 @@ class ConflictResolutionEngine {
         this.resolutionRules.delete(pattern);
         console.log(`[ConflictEngine] Removed rule: ${pattern}`);
     }
-    
+
     /**
      * Obtém estatísticas de conflitos
      */
@@ -280,18 +280,18 @@ class ConflictResolutionEngine {
             avgConfidence: 0,
             conflictTypes: {}
         };
-        
+
         for (const [key, conflicts] of this.conflictHistory) {
             stats.totalConflicts += conflicts.length;
-            
+
             for (const conflict of conflicts) {
                 if (conflict.resolved) {
                     stats.resolvedConflicts++;
                     stats.avgConfidence += conflict.confidence;
-                    
-                    stats.strategies[conflict.strategy] = 
+
+                    stats.strategies[conflict.strategy] =
                         (stats.strategies[conflict.strategy] || 0) + 1;
-                    
+
                     const type = this._analyzeDataType(
                         conflict.original.local.data,
                         conflict.original.remote.data
@@ -300,35 +300,35 @@ class ConflictResolutionEngine {
                 }
             }
         }
-        
+
         if (stats.resolvedConflicts > 0) {
             stats.avgConfidence /= stats.resolvedConflicts;
         }
-        
+
         return stats;
     }
-    
+
     /**
      * Merge de arrays
      */
     _mergeArrays(local, remote) {
         const merged = [...local];
-        
+
         for (const item of remote) {
             if (!merged.includes(item)) {
                 merged.push(item);
             }
         }
-        
+
         return merged;
     }
-    
+
     /**
      * Merge de objetos
      */
     _mergeObjects(local, remote) {
         const merged = { ...local };
-        
+
         for (const [key, value] of Object.entries(remote)) {
             if (!(key in merged)) {
                 merged[key] = value;
@@ -340,10 +340,10 @@ class ConflictResolutionEngine {
                 merged[key] = this._mergeObjects(merged[key], value);
             }
         }
-        
+
         return merged;
     }
-    
+
     /**
      * Merge de strings
      */
@@ -351,7 +351,7 @@ class ConflictResolutionEngine {
         // Merge simples com marcador
         return `${local}\n\n[MERGED]\n\n${remote}`;
     }
-    
+
     /**
      * Analisa tipo de dado
      */
@@ -359,19 +359,19 @@ class ConflictResolutionEngine {
         if (typeof localData !== typeof remoteData) {
             return 'mixed';
         }
-        
+
         const type = typeof localData;
-        
+
         if (type === 'object') {
             if (Array.isArray(localData)) return 'array';
             if (localData === null) return 'primitive';
             return 'object';
         }
-        
+
         if (type === 'string') return 'text';
         return 'primitive';
     }
-    
+
     /**
      * Analisa semântica dos dados
      */
@@ -382,18 +382,18 @@ class ConflictResolutionEngine {
             confidence: 0.7,
             operations: []
         };
-        
+
         // Verifica se são objetos com estrutura similar
         if (typeof localData === 'object' && typeof remoteData === 'object') {
             const localKeys = Object.keys(localData || {});
             const remoteKeys = Object.keys(remoteData || {});
-            
+
             const commonKeys = localKeys.filter(k => remoteKeys.includes(k));
             const similarity = commonKeys.length / Math.max(localKeys.length, remoteKeys.length);
-            
+
             analysis.confidence = similarity;
             analysis.canMerge = similarity > 0.3;
-            
+
             if (analysis.canMerge) {
                 analysis.operations.push({
                     type: 'object-merge',
@@ -403,10 +403,10 @@ class ConflictResolutionEngine {
                 });
             }
         }
-        
+
         return analysis;
     }
-    
+
     /**
      * Merge semântico de dados
      */
@@ -415,11 +415,11 @@ class ConflictResolutionEngine {
         if (analysis.operations.some(op => op.type === 'object-merge')) {
             return this._mergeObjects(localData, remoteData);
         }
-        
+
         // Fallback
         return this._mergeObjects(localData, remoteData);
     }
-    
+
     /**
      * Coleta votos de outros peers
      */
@@ -427,22 +427,22 @@ class ConflictResolutionEngine {
         // Simulação - em implementação real consultaria outros nós
         const votes = [];
         const numPeers = 3; // Simula 3 peers
-        
+
         for (let i = 0; i < numPeers; i++) {
             // Voto aleatório para simulação
             const choices = ['local', 'remote', 'merge'];
             const choice = choices[Math.floor(Math.random() * choices.length)];
-            
+
             votes.push({
                 peerId: `peer-${i}`,
                 choice,
                 reason: 'Simulated vote'
             });
         }
-        
+
         return votes;
     }
-    
+
     /**
      * Verifica se pattern corresponde à chave
      */
@@ -451,7 +451,7 @@ class ConflictResolutionEngine {
         const regex = new RegExp(pattern.replace(/\*/g, '.*'));
         return regex.test(key);
     }
-    
+
     /**
      * Registra conflito no histórico
      */
@@ -459,7 +459,7 @@ class ConflictResolutionEngine {
         if (!this.conflictHistory.has(conflict.key)) {
             this.conflictHistory.set(conflict.key, []);
         }
-        
+
         const history = this.conflictHistory.get(conflict.key);
         history.push({
             timestamp: Date.now(),
@@ -468,7 +468,7 @@ class ConflictResolutionEngine {
             result,
             resolved: true
         });
-        
+
         // Limita tamanho do histórico
         if (history.length > this.maxHistorySize) {
             history.shift();
@@ -476,4 +476,4 @@ class ConflictResolutionEngine {
     }
 }
 
-module.exports = ConflictResolutionEngine;
+export { ConflictResolutionEngine };

@@ -12,12 +12,18 @@
     "core:dev": "node packages/core/src/index.js",
     "core:test": "node --test packages/core/src/**/*.test.js",
     "core:build": "npm run build --workspace=@ai-agent/core",
-    "install:core": "npm install --workspace=@ai-agent/core"
+    "install:core": "npm install --workspace=@ai-agent/core",
+    "demo": "node demo-final.js",
+    "demo:swarm": "node demo-swarm.js",
+    "ops": "node scripts/operations.js"
   },
   "author": "Junio",
   "license": "MIT",
   "dependencies": {
     "@nanobot-ai/nanobot": "github:nanobot-ai/nanobot",
-    "aws-sdk": "^2.1693.0"
+    "aws-sdk": "^2.1693.0",
+    "chokidar": "^5.0.0",
+    "fs-extra": "^11.3.3",
+    "nanobot": "^0.0.1"
   }
 }

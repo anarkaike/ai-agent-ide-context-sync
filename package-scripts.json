@@ -1,0 +1,45 @@
+{
+  "name": "ai-agent-ide-context-sync",
+  "version": "2.0.32",
+  "type": "module",
+  "scripts": {
+    "start": "node demo-swarm.js",
+    "demo": "node demo-swarm.js",
+    "status": "./scripts/swarm-service-manager.sh status",
+    "services:start": "./scripts/swarm-service-manager.sh start",
+    "services:stop": "./scripts/swarm-service-manager.sh stop",
+    "services:restart": "./scripts/swarm-service-manager.sh restart",
+    "health": "./scripts/health-monitor.sh check",
+    "logs": "tail -f .ai-workspace/logs/webmap.log .ai-workspace/logs/swarmclient.log",
+    "ops": "node scripts/ops.js",
+    "ops:network": "node scripts/ops.js network",
+    "ops:network:connect": "node scripts/ops.js network connect",
+    "ops:network:discover": "node scripts/ops.js network discover",
+    "ops:mesh": "node scripts/ops.js mesh",
+    "ops:mesh:init": "node scripts/ops.js mesh init",
+    "ops:sync": "node scripts/ops.js sync",
+    "ops:sync:start": "node scripts/ops.js sync start",
+    "ops:security": "node scripts/ops.js security",
+    "ops:security:audit": "node scripts/ops.js security audit",
+    "core:test": "node packages/core/src/test-integration.js",
+    "core:init": "node -e \"import('./packages/core/src/index.js').then(m => m.initializeCore()).then(console.log)\"",
+    "skills:test": "cd skills && node -e \"import('./registry.js').then(m => new m.default().diagnose()).then(console.log)\"",
+    "build": "npm run core:test && npm run skills:test",
+    "dev": "npm run services:start && npm run logs",
+    "clean": "rm -rf .ai-workspace/logs/* && rm -f .ai-workspace/*.db",
+    "reset": "npm run clean && npm run services:stop && npm run services:start",
+    "monitor": "node scripts/monitor.js",
+    "deploy": "node scripts/deploy.js"
+  },
+  "keywords": [
+    "ai-agent",
+    "swarm",
+    "mesh-network",
+    "neural-link",
+    "orchestration",
+    "cross-platform"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

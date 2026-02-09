@@ -1,0 +1,84 @@
+{
+  "name": "swarm-health-monitor",
+  "version": "1.0.0",
+  "description": "Monitor avançado de saúde para serviços Swarm com alertas e métricas",
+  "category": "monitoring",
+  "author": "AI Agent Collective",
+  "license": "MIT",
+  "tags": ["health", "monitoring", "alerts", "metrics", "swarm"],
+  "capabilities": [
+    "check_system_health",
+    "monitor_resources",
+    "generate_health_report",
+    "send_alerts",
+    "track_performance",
+    "auto_heal"
+  ],
+  "dependencies": {
+    "swarm-service-manager": "^1.0.0",
+    "nanobot": "^1.0.0"
+  },
+  "parameters": {
+    "mode": {
+      "type": "string",
+      "enum": ["check", "monitor", "report", "continuous"],
+      "default": "check",
+      "description": "Modo de operação"
+    },
+    "interval": {
+      "type": "number",
+      "default": 60,
+      "description": "Intervalo em segundos para monitoramento contínuo"
+    },
+    "alerts": {
+      "type": "object",
+      "properties": {
+        "discord_webhook": {"type": "string"},
+        "slack_webhook": {"type": "string"},
+        "email": {"type": "string"},
+        "threshold_cpu": {"type": "number", "default": 80},
+        "threshold_memory": {"type": "number", "default": 90}
+      }
+    }
+  },
+  "outputs": {
+    "health": {
+      "type": "object",
+      "properties": {
+        "overall_status": {"type": "string", "enum": ["healthy", "warning", "critical"]},
+        "services": {"type": "object"},
+        "resources": {"type": "object"},
+        "connectivity": {"type": "object"},
+        "timestamp": {"type": "string"}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "uptime": {"type": "number"},
+        "response_time": {"type": "number"},
+        "error_rate": {"type": "number"},
+        "resource_usage": {"type": "object"}
+      }
+    }
+  },
+  "examples": [
+    {
+      "description": "Verificar saúde completa",
+      "input": {"mode": "check"},
+      "output": {
+        "health": {
+          "overall_status": "healthy",
+          "services": {
+            "webmap": {"status": "running", "response_time": 45},
+            "swarmclient": {"status": "running", "connected": true}
+          },
+          "resources": {
+            "cpu": 25.5,
+            "memory": 45.2
+          }
+        }
+      }
+    }
+  ]
+}

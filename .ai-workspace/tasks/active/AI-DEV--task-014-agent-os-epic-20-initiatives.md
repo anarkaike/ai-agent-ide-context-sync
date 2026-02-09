@@ -1493,14 +1493,576 @@ budget:
 ## 16) Context Compression (compressão sem perda e “summary cache”)
 **Objetivo:** reduzir payload mantendo invariantes e rastreabilidade.
 
+### Estado atual (evidências)
+- `packages/core/src/sync/DeltaCompressionEngine.js`:
+  - `compress(data)` / `decompress(compressed)` com zlib.
+  - `createDelta(oldData, newData)` → delta binário.
+  - `applyDelta(oldData, delta)` → reconstrução.
+  - `deltaCache` (Map) com `maxDeltaAge` (5 min).
+  - `compressionLevel` configurável (1-9).
+- `packages/cli/core/smart-cache.js`:
+  - Cache de prompts com TTL 24h.
+  - Armazena prompt completo (sem compressão).
+- `packages/cli/core/prompt-generator.js`:
+  - `getBudget()` trunca prompt por `maxChars`.
+  - `trimText(text, maxChars)` corta com marcador `[...]`.
+  - Sem "resumo inteligente" — só truncamento bruto.
+
+### Gap
+- Truncamento perde informação sem critério semântico.
+- Prompts e contextos são armazenados em tamanho completo no cache.
+- Não há "summary cache" (versão compacta de contexto para reutilização).
+
+### MVP (summary cache + compressão de contexto)
+
+#### Summary Cache
+- Criar `.ai-workspace/cache/summaries.json`:
+  ```json
+  {
+    "<file_hash>": {
+      "file": "src/index.js",
+      "summary": "Entry point: initializes core, registers CLI commands, starts server.",
+      "tokens_original": 2500,
+      "tokens_summary": 120,
+      "compression_ratio": 0.048,
+      "created_at": "...",
+      "expires_at": "..."
+    }
+  }
+  ```
+- Gerar summaries via LLM (ou heurística local para MVP):
+  - Heurística local: extrair exports, classes, funções públicas, comentários de topo.
+  - LLM: usar `AIClient.complete()` com prompt "Summarize this file in 3 sentences".
+
+#### ContextCompressor (classe)
+- Criar `packages/cli/core/context/ContextCompressor.js`:
+  - `compressFile(filePath)` → summary do arquivo.
+  - `compressContext(files[])` → contexto comprimido para prompt.
+  - `getCachedSummary(fileHash)` → busca no summary cache.
+  - `invalidate(filePath)` → remove summary se arquivo mudou.
+
+#### Integração com prompt-generator
+- Em `prompt-generator.js`, quando `budget.maxChars` é atingido:
+  1. Antes de truncar bruto, tentar substituir arquivos de contexto por seus summaries.
+  2. Se ainda exceder, truncar summaries.
+  3. Registrar `compression_ratio` nas métricas do prompt.
+
+#### CLI
+- Implementar comandos:
+  - `ai-doc context compress <file|dir> [--json]`
+    - Gera summary e armazena no cache.
+  - `ai-doc context stats [--json]`
+    - Mostra tamanho original vs comprimido, hit rate do summary cache.
+  - `ai-doc context invalidate [--all] [--file <path>]`
+    - Limpa summaries expirados ou de arquivo específico.
+
+### Hardening
+- Compressão multinível:
+  1. **Nível 1 (heurística):** extração de estrutura (funções, classes, exports).
+  2. **Nível 2 (LLM):** resumo semântico via AIClient.
+  3. **Nível 3 (delta):** usar `DeltaCompressionEngine` para diffs entre versões.
+- Integrar com Budget Engine (iniciativa 10):
+  - Compressão consome tokens de LLM → registrar no budget.
+  - Se budget baixo, usar apenas nível 1 (heurística, sem LLM).
+- TTL adaptativo:
+  - Arquivos que mudam frequentemente têm TTL menor.
+  - Arquivos estáveis (> 7 dias sem mudança) têm TTL maior.
+
+### Checklist executável
+- [ ] Criar `ContextCompressor` com `compressFile()`, `getCachedSummary()`, `invalidate()`
+- [ ] Criar summary cache em `.ai-workspace/cache/summaries.json`
+- [ ] Implementar heurística local (extração de estrutura) como nível 1
+- [ ] Integrar com `prompt-generator.js` (substituir contexto por summary quando budget apertado)
+- [ ] Implementar `ai-doc context compress/stats/invalidate`
+- [ ] Teste: gerar summary, verificar que prompt fica menor sem perder informação crítica
+
+### Definição de Pronto (DoD)
+- Summaries são gerados e cacheados para arquivos de contexto.
+- Prompt generator usa summaries quando budget é insuficiente para contexto completo.
+- `compression_ratio` é reportada nas métricas do prompt.
+
+### Riscos e mitigação
+- **Risco:** summary perde informação crítica para a task.
+  - **Mitigação:** manter arquivo original acessível; summary é fallback, não substituto permanente.
+- **Risco:** custo de LLM para gerar summaries.
+  - **Mitigação:** nível 1 (heurística) é gratuito; LLM é opt-in e consome budget.
+
+### Dependências
+- `DeltaCompressionEngine` para compressão binária.
+- `prompt-generator.js` para integração de contexto.
+- Iniciativa 10 (Budget Engine) para controle de custo de summaries via LLM.
+
 ## 17) Intent Routing (roteamento por intenção/risco/latência)
 **Objetivo:** decidir qual módulo/agente/modelo executa cada pedido.
+
+### Escopo
+- Classificar cada request do usuário por intenção (tipo de ação), risco (impacto potencial) e latência (urgência).
+- Rotear para o módulo/agente/modelo mais adequado com base na classificação.
+- Evitar usar modelo caro/lento para tarefas simples; evitar modelo rápido/barato para tarefas críticas.
+
+### Estado atual (evidências)
+- `packages/cli/core/prompt-generator.js`:
+  - Não classifica intenção — envia tudo pelo mesmo pipeline.
+- `packages/core/src/client/ToneConfigManager.js`:
+  - `getToneParameters(context)` adapta por contexto (`debugging`, `creative`, `urgent`).
+  - Contexto é definido manualmente, não inferido.
+- `packages/core/src/client/AIClient.js`:
+  - `model` é fixo por config (`toneConfig.model_hint`).
+  - Não há seleção dinâmica de modelo.
+- `packages/cli/core/security/SafetyFilter.js`:
+  - `analyze()` classifica risco, mas resultado não influencia roteamento.
+- `packages/core/src/network/LoadBalancer.js`:
+  - `selectNode(serviceType, options)` seleciona nó por estratégia.
+  - Poderia ser extendido para rotear por intent.
+
+### Gap
+- Toda request vai para o mesmo modelo com mesmos parâmetros.
+- Risco detectado pelo `SafetyFilter` não influencia qual modelo/agente processa.
+- Não há classificação automática de intenção.
+
+### MVP (classificador + router)
+
+#### IntentClassifier (classe)
+- Criar `packages/cli/core/routing/IntentClassifier.js`:
+  - `classify(input)` → `{ intent, risk, latency, confidence }`.
+  - Intents possíveis:
+    - `query` (pergunta informativa, sem side-effects).
+    - `generate` (criação de código/texto).
+    - `refactor` (modificação de código existente).
+    - `execute` (execução de comando/skill).
+    - `admin` (operação de sistema: config, policy, trust).
+  - Risk levels: `low`, `medium`, `high`, `critical`.
+  - Latency: `realtime` (<2s), `normal` (<10s), `batch` (sem limite).
+  - Classificação por heurística (keywords + SafetyFilter score):
+    - Palavras-chave de intent mapeadas em dicionário.
+    - `SafetyFilter.analyze()` para risk.
+    - Tamanho do contexto para latency hint.
+
+#### IntentRouter (classe)
+- Criar `packages/cli/core/routing/IntentRouter.js`:
+  - `route(classifiedIntent)` → `{ model, temperature, max_tokens, agent, flags }`.
+  - Regras de roteamento (configuráveis via `policy.yaml`):
+    ```yaml
+    routing:
+      rules:
+        - intent: query
+          risk: low
+          model: "fast"
+          temperature: 0.3
+          max_tokens: 1024
+        - intent: generate
+          risk: "*"
+          model: "default"
+          temperature: 0.7
+          max_tokens: 4096
+        - intent: execute
+          risk: "high|critical"
+          model: "default"
+          flags: ["shadow_first", "require_approval"]
+        - intent: admin
+          risk: "*"
+          flags: ["require_approval"]
+      models:
+        fast: { provider: "...", name: "..." }
+        default: { provider: "...", name: "..." }
+    ```
+
+#### Integração
+- Em `prompt-generator.js` ou `AIClient`:
+  1. `IntentClassifier.classify(input)`.
+  2. `IntentRouter.route(classified)`.
+  3. Usar parâmetros retornados para configurar chamada.
+  4. Se `flags` inclui `shadow_first`, rodar em Shadow Mode (iniciativa 8).
+  5. Se `flags` inclui `require_approval`, passar por ApprovalLogger.
+
+#### CLI
+- Implementar comandos:
+  - `ai-doc route classify "<input>" [--json]`
+    - Mostra classificação sem executar.
+  - `ai-doc route rules [--json]`
+    - Lista regras de roteamento ativas.
+
+### Hardening
+- Classificador ML:
+  - Substituir heurística por modelo treinado com histórico de classificações (Federated Learning, iniciativa 12).
+- Feedback loop:
+  - Após execução, registrar se roteamento foi adequado (user feedback ou métrica de sucesso).
+  - Ajustar regras baseado em feedback.
+- Integrar com LoadBalancer (mesh):
+  - Se múltiplos agentes disponíveis, `IntentRouter` pode selecionar agente via `LoadBalancer.selectNode()`.
+
+### Checklist executável
+- [ ] Criar `IntentClassifier` com classificação por heurística (keywords + SafetyFilter)
+- [ ] Criar `IntentRouter` com regras configuráveis via `policy.yaml`
+- [ ] Integrar classificação + roteamento no pipeline de prompt/AIClient
+- [ ] Implementar `ai-doc route classify/rules`
+- [ ] Teste: classificar 10 inputs diferentes, verificar que roteamento é coerente
+
+### Definição de Pronto (DoD)
+- Requests são classificadas automaticamente por intent/risk/latency.
+- Modelo e parâmetros são selecionados dinamicamente com base na classificação.
+- Requests de alto risco passam por aprovação ou shadow mode.
+
+### Riscos e mitigação
+- **Risco:** classificação errada leva a modelo inadequado.
+  - **Mitigação:** fallback para modelo default se confidence < threshold; feedback loop para melhoria.
+- **Risco:** complexidade de regras de roteamento.
+  - **Mitigação:** defaults sensatos; regras customizadas são opcionais.
+
+### Dependências
+- Iniciativa 3 (Policy Engine) para regras de roteamento em `policy.yaml`.
+- Iniciativa 8 (Shadow Mode) para flag `shadow_first`.
+- `SafetyFilter` para classificação de risco.
+- `ToneConfigManager` para parâmetros base.
 
 ## 18) Human‑in‑the‑Loop Governance (aprovações e trilha completa)
 **Objetivo:** governança: aprovar, auditar, reverter, justificar.
 
+### Estado atual (evidências)
+- `packages/cli/core/security/ApprovalLogger.js`:
+  - Singleton exportado (`module.exports = new ApprovalLogger()`).
+  - `logDecision(entry)` → append em `~/.ai-doc/logs/approvals.log` (JSONL).
+  - Campos: `timestamp`, `level`, `action`, `agentId`, `reason`, `score`, `threats`, `context`, `meta`.
+  - `readEntries(limit)` → lê últimas N entradas.
+- `packages/cli/core/security/dashboard.js`:
+  - HTTP server (porta 3333) com SSE para live updates.
+  - Endpoint `POST /api/decide` para decisões manuais via painel.
+  - Endpoint `GET /api/entries` para listar entradas.
+  - Autenticação Basic Auth (`BASIC_USER`/`BASIC_PASS`).
+- `packages/cli/cli/commands/task.js`:
+  - Flag `--auto` ativa fluxo de segurança: `SafetyFilter.analyze()` + `TrustSystem.validateRequest()`.
+  - Se `requires_manual_approval`, task fica como `pending_approval`.
+  - `ApprovalLogger.logDecision()` registra resultado.
+- `packages/cli/core/swarm/TrustSystem.js`:
+  - `validateRequest(agentId, token, requiredLevel)` para autorização.
+
+### Gap
+- Fluxo de aprovação só existe para tasks com `--auto`.
+- Não há workflow genérico de aprovação para outras operações (skills, mesh, policy changes).
+- Dashboard é básico (sem filtros, busca, ou timeline visual).
+- Não há conceito de "approval chain" (múltiplos aprovadores).
+- Não há reversão vinculada à aprovação (aprovar → executar → reverter se necessário).
+
+### MVP (approval workflow genérico + trilha completa)
+
+#### ApprovalWorkflow (classe)
+- Criar `packages/cli/core/security/ApprovalWorkflow.js`:
+  - `requestApproval(operation)` → cria request com `{ id, type, description, requester, risk_level, status: "pending", created_at }`.
+  - `approve(requestId, approverId, reason)` → muda status para `approved`, loga via `ApprovalLogger`.
+  - `reject(requestId, approverId, reason)` → muda status para `rejected`, loga.
+  - `execute(requestId)` → executa operação aprovada, registra resultado.
+  - `revert(requestId, reason)` → reverte operação (via WAL rollback se aplicável).
+  - `getHistory(filters?)` → lista requests com status.
+
+#### Persistência
+- Requests pendentes em `.ai-workspace/governance/pending.json`.
+- Histórico completo em `.ai-workspace/governance/history.jsonl` (append-only).
+- Cada entrada inclui: operação, quem solicitou, quem aprovou, resultado, reversão (se houver).
+
+#### Integração com operações existentes
+- Operações que requerem aprovação (configurar via `policy.yaml`):
+  ```yaml
+  governance:
+    require_approval:
+      - "skill.install"
+      - "policy.change"
+      - "persona.set_instruction"
+      - "mesh.connect"
+      - "budget.reset"
+      - "canary.enable"
+    auto_approve:
+      risk_level: "low"
+      trust_score_min: 0.9
+  ```
+- Antes de executar operação listada, chamar `ApprovalWorkflow.requestApproval()`.
+- Se `auto_approve` critérios atendidos (risco baixo + trust alto), aprovar automaticamente.
+- Caso contrário, aguardar aprovação manual.
+
+#### CLI
+- Implementar comandos:
+  - `ai-doc governance pending [--json]`
+    - Lista requests pendentes de aprovação.
+  - `ai-doc governance approve <requestId> --reason "<motivo>"`
+  - `ai-doc governance reject <requestId> --reason "<motivo>"`
+  - `ai-doc governance history [--limit N] [--status <status>] [--json]`
+    - Lista histórico com filtros.
+  - `ai-doc governance revert <requestId> --reason "<motivo>"`
+    - Reverte operação aprovada anteriormente.
+
+### Hardening
+- Approval chain:
+  - Para operações `CRITICAL`, exigir N aprovadores (configurável).
+  - Registrar cada aprovação separadamente.
+- Timeout:
+  - Requests pendentes > X horas emitem alerta.
+  - Configurável via `governance.timeout_hours` em `policy.yaml`.
+- Dashboard melhorado:
+  - Filtros por status, tipo, risco.
+  - Timeline visual de operações.
+  - Botão "Approve" / "Reject" direto no painel.
+- VSCode integration:
+  - Notificação quando há requests pendentes.
+  - Quick pick para aprovar/rejeitar inline.
+  - i18n obrigatório.
+
+### Checklist executável
+- [ ] Criar `ApprovalWorkflow` com `requestApproval()`, `approve()`, `reject()`, `execute()`, `revert()`
+- [ ] Persistência em `.ai-workspace/governance/` (pending + history)
+- [ ] Definir seção `governance` em `policy.yaml`
+- [ ] Integrar com pelo menos 2 operações (ex.: `skill.install`, `policy.change`)
+- [ ] Implementar `ai-doc governance pending/approve/reject/history/revert`
+- [ ] Teste: solicitar aprovação, aprovar, executar, reverter, verificar histórico completo
+
+### Definição de Pronto (DoD)
+- Operações listadas em `require_approval` não executam sem aprovação.
+- Histórico completo (request → approval → execution → revert) é rastreável.
+- `auto_approve` funciona para operações de baixo risco com trust alto.
+
+### Riscos e mitigação
+- **Risco:** sobrecarga de requests pendentes bloqueia operações.
+  - **Mitigação:** `auto_approve` para baixo risco; timeout com escalation.
+- **Risco:** reversão falha ou incompleta.
+  - **Mitigação:** reverter via WAL checkpoint (Shadow Mode); registrar estado de reversão.
+
+### Dependências
+- `ApprovalLogger` existente como base.
+- Iniciativa 3 (Policy Engine) para regras de governança em `policy.yaml`.
+- WAL (`WALManager`) para reversão de operações.
+- Iniciativa 17 (Intent Routing) para flag `require_approval`.
+
 ## 19) Observability End‑to‑End (tracing/metrics/logs)
 **Objetivo:** instrumentar core/cli/vscode/nanobot com eventos coerentes.
 
+### Escopo
+- Instrumentar todos os componentes (core, CLI, extensão VSCode, Nanobot) com eventos padronizados.
+- Fornecer tracing distribuído (trace_id + span_id) para rastrear operações fim-a-fim.
+- Dashboard de métricas e logs unificado.
+
+### Estado atual (evidências)
+- Schema de eventos já definido no épico (seção "Observabilidade"):
+  - `{ trace_id, span_id, event_type, component, severity, timestamp, payload (sanitizado) }`.
+- `packages/core/src/optimization/AutoOptimizationEngine.js`:
+  - `history.performance`, `history.failures` — métricas locais.
+  - `currentState.metrics` — estado de saúde.
+- `packages/core/src/network/AgentMeshNetwork.js`:
+  - `this.metrics` com `messagesReceived`, `messagesSent`, `servicesRegistered`.
+- `packages/core/src/sync/IntelligentSyncEngine.js`:
+  - `this.metrics` com `syncAttempts`, `syncSuccesses`, `syncFailures`, `conflictsResolved`.
+- `packages/cli/core/security/ApprovalLogger.js`:
+  - Logs de segurança em JSONL.
+- Não há tracing distribuído (trace_id/span_id) real.
+- Não há dashboard unificado de métricas.
+
+### Gap
+- Métricas estão espalhadas por componentes sem correlação.
+- Não há trace_id para rastrear uma operação do usuário até o resultado final.
+- Não há exportação para ferramentas de observabilidade (ex.: arquivo estruturado, stdout JSON).
+- Eventos de diferentes componentes não seguem o mesmo schema.
+
+### MVP (evento unificado + tracing + CLI)
+
+#### EventEmitter padronizado
+- Criar `packages/core/src/observability/ObservabilityManager.js`:
+  - `emit(event)` → valida contra schema, adiciona `trace_id`/`span_id` se ausentes, persiste.
+  - `startTrace(name)` → gera `trace_id`, retorna `TraceContext`.
+  - `startSpan(traceCtx, name)` → gera `span_id` dentro do trace.
+  - `endSpan(spanCtx, result?)` → registra duração e resultado.
+  - `getTraces(filters?)` → busca traces por período, componente, severidade.
+  - Schema de evento (mínimo):
+    ```json
+    {
+      "trace_id": "uuid",
+      "span_id": "uuid",
+      "parent_span_id": null,
+      "event_type": "sync.start|task.create|skill.execute|...",
+      "component": "core|cli|extension|nanobot",
+      "severity": "debug|info|warn|error|critical",
+      "timestamp": "ISO8601",
+      "duration_ms": null,
+      "payload": {}
+    }
+    ```
+
+#### Instrumentação mínima
+- Instrumentar pelo menos 5 pontos:
+  1. `AIClient.complete()` → `llm.request` / `llm.response` com tokens e duração.
+  2. `IntelligentSyncEngine.syncWithPeers()` → `sync.start` / `sync.complete` / `sync.error`.
+  3. `SecuritySandbox.validateCommand()` → `security.validate` com resultado.
+  4. `ApprovalWorkflow.requestApproval()` → `governance.request` / `governance.decision`.
+  5. `WALManager.commitTransaction()` → `wal.commit` / `wal.rollback`.
+
+#### Persistência
+- Eventos em `.ai-workspace/observability/events-YYYY-MM-DD.jsonl` (append-only, rotação diária).
+- Resumo em `.ai-workspace/observability/summary.json` (atualizado periodicamente):
+  ```json
+  {
+    "period": "2026-02-07",
+    "total_events": 1234,
+    "by_component": { "core": 500, "cli": 600, "extension": 134 },
+    "by_severity": { "info": 1000, "warn": 200, "error": 34 },
+    "avg_llm_duration_ms": 2500,
+    "traces_completed": 89,
+    "traces_with_errors": 5
+  }
+  ```
+
+#### CLI
+- Implementar comandos:
+  - `ai-doc observe events [--component <c>] [--severity <s>] [--trace <id>] [--limit N] [--json]`
+    - Lista eventos com filtros.
+  - `ai-doc observe traces [--limit N] [--json]`
+    - Lista traces com spans e duração.
+  - `ai-doc observe summary [--period <day|week>] [--json]`
+    - Resumo de métricas do período.
+
+### Hardening
+- Exportação:
+  - `ai-doc observe export --format <jsonl|csv> --output <path>`
+  - Integração futura com OpenTelemetry (OTLP export).
+- Dashboard visual:
+  - Reutilizar `dashboard.js` (porta 3333) ou criar endpoint `/api/observe`.
+  - Timeline de traces com spans aninhados.
+- Alertas:
+  - Se `error_rate > threshold`, emitir alerta via evento meta.
+  - Integrar com Budget Engine (alerta quando custo alto).
+- Sampling:
+  - Para alto volume, aplicar sampling configurável (`observability.sample_rate` em `policy.yaml`).
+
+### Checklist executável
+- [ ] Criar `ObservabilityManager` com `emit()`, `startTrace()`, `startSpan()`, `endSpan()`
+- [ ] Definir schema de evento e validação
+- [ ] Instrumentar 5 pontos mínimos (AIClient, SyncEngine, SecuritySandbox, ApprovalWorkflow, WAL)
+- [ ] Persistência em `.ai-workspace/observability/` (events + summary)
+- [ ] Implementar `ai-doc observe events/traces/summary`
+- [ ] Teste: executar operação completa, verificar que trace contém todos os spans esperados
+
+### Definição de Pronto (DoD)
+- Toda operação instrumentada gera eventos com `trace_id` correlacionado.
+- `ai-doc observe traces` mostra operação fim-a-fim com duração de cada span.
+- Summary reflete métricas reais do período.
+- Nenhum dado sensível (código, prompts, tokens) aparece em `payload`.
+
+### Riscos e mitigação
+- **Risco:** overhead de instrumentação impacta performance.
+  - **Mitigação:** emit assíncrono (append-only é rápido); sampling para alto volume.
+- **Risco:** payload vaza dados sensíveis.
+  - **Mitigação:** sanitizar com `SecuritySandbox.sanitizeInput()` antes de persistir.
+
+### Dependências
+- Todas as iniciativas são consumidoras (emitem eventos).
+- `SecuritySandbox` para sanitização de payload.
+
 ## 20) Swarm Economics (incentivos, reputação e “pricing” de skills)
 **Objetivo:** reputação/custo/benefício e priorização de execução em swarm.
+
+### Escopo
+- Criar sistema de reputação para agentes baseado em performance real.
+- Definir "preço" de execução de skills (tokens, tempo, custo).
+- Priorizar execução no swarm por custo-benefício (skill mais barata e confiável primeiro).
+
+### Estado atual (evidências)
+- `packages/cli/core/swarm/TrustSystem.js`:
+  - `trust_scores` por agente (baseado em SBTs e histórico).
+  - `RELATIONSHIP_TYPES`: STRANGER, PEER, SUB_AGENT, MENTOR, MENTEE.
+  - `evaluateTrustFromSBTs(sbtList)` → score baseado em tokens.
+- `packages/cli/core/ethereum_bridge/VaultManager.js`:
+  - SBTs de `REPUTATION`, `SKILL`, `ACHIEVEMENT` já existem.
+- `packages/core/src/network/LoadBalancer.js`:
+  - `selectNode(serviceType, options)` com estratégias de balanceamento.
+  - Não considera custo/reputação na seleção.
+- `packages/core/src/optimization/AutoOptimizationEngine.js`:
+  - Métricas de performance por operação.
+- Budget Engine (iniciativa 10):
+  - Tracking de custo por chamada LLM.
+
+### Gap
+- Trust score é binário (confia/não confia), sem nuances de custo-benefício.
+- LoadBalancer não considera reputação nem custo na seleção de nó.
+- Não há "pricing" de skills (quanto custa executar skill X no agente Y).
+- Não há incentivos para agentes de alta performance.
+
+### MVP (reputação + pricing + seleção por custo-benefício)
+
+#### ReputationManager (classe)
+- Criar `packages/cli/core/swarm/ReputationManager.js`:
+  - `updateReputation(agentId, operation, result)` → atualiza score baseado em:
+    - `success_rate`, `avg_duration_ms`, `avg_cost_tokens`, `reliability` (uptime).
+  - `getReputation(agentId)` → `{ score, success_rate, avg_cost, reliability, rank }`.
+  - `getRanking()` → lista de agentes ordenada por score.
+  - Score composto: `0.4 * success_rate + 0.3 * reliability + 0.2 * (1/avg_cost) + 0.1 * sbt_bonus`.
+
+#### Skill Pricing
+- Cada skill publicada (iniciativa 4) inclui no manifest:
+  ```yaml
+  pricing:
+    avg_tokens: 500
+    avg_duration_ms: 3000
+    cost_tier: "low|medium|high"
+  ```
+- Pricing é atualizado automaticamente baseado em execuções reais (via Budget Engine tracking).
+- Persistir em `.ai-workspace/economics/pricing.json`:
+  ```json
+  {
+    "<skill_name>@<agent_id>": {
+      "avg_tokens": 520,
+      "avg_duration_ms": 2800,
+      "executions": 45,
+      "success_rate": 0.93,
+      "last_updated": "..."
+    }
+  }
+  ```
+
+#### Integração com LoadBalancer
+- Extender `selectNode()` com estratégia `cost-benefit`:
+  - Para cada nó candidato:
+    1. Buscar `reputation.getReputation(nodeId)`.
+    2. Buscar `pricing` da skill no nó.
+    3. Calcular `cost_benefit = reputation.score / pricing.avg_tokens`.
+    4. Selecionar nó com maior `cost_benefit`.
+
+#### CLI
+- Implementar comandos:
+  - `ai-doc economics reputation [--agent <id>] [--json]`
+    - Mostra reputação de agente ou ranking geral.
+  - `ai-doc economics pricing [--skill <name>] [--json]`
+    - Mostra pricing de skills por agente.
+  - `ai-doc economics optimize [--json]`
+    - Sugere roteamento ótimo para skills baseado em custo-benefício atual.
+
+### Hardening
+- Incentivos:
+  - Agentes com alta reputação ganham prioridade na fila de execução.
+  - SBTs de `ACHIEVEMENT` emitidos automaticamente para milestones de reputação (ex.: 100 execuções com >95% sucesso).
+- Penalidades:
+  - Agentes com `success_rate < threshold` são depriorizados.
+  - Após N falhas consecutivas, agente entra em "quarentena" (exige aprovação manual para executar).
+- Marketplace dinâmico:
+  - Se demanda por skill X é alta e oferta é baixa, `cost_tier` sobe automaticamente.
+  - Incentiva agentes a oferecerem skills sub-servidas.
+
+### Checklist executável
+- [ ] Criar `ReputationManager` com `updateReputation()`, `getReputation()`, `getRanking()`
+- [ ] Definir pricing no manifest de skills (`skill.yaml`)
+- [ ] Persistir pricing real em `.ai-workspace/economics/pricing.json`
+- [ ] Extender `LoadBalancer.selectNode()` com estratégia `cost-benefit`
+- [ ] Implementar `ai-doc economics reputation/pricing/optimize`
+- [ ] Teste: simular 3 agentes com reputações diferentes, verificar que `cost-benefit` seleciona o melhor
+
+### Definição de Pronto (DoD)
+- Reputação de agentes é calculada baseada em performance real.
+- Pricing de skills é atualizado automaticamente após cada execução.
+- LoadBalancer usa custo-benefício para seleção quando estratégia `cost-benefit` ativada.
+- Ranking de agentes é acessível via CLI.
+
+### Riscos e mitigação
+- **Risco:** gaming (agente manipula métricas para aumentar reputação).
+  - **Mitigação:** métricas são registradas pelo chamador, não pelo executante; cross-validation entre peers.
+- **Risco:** cold start (agente novo sem reputação não recebe trabalho).
+  - **Mitigação:** score default moderado para novos agentes; período de "warm-up" com tasks de baixo risco.
+
+### Dependências
+- Iniciativa 4 (Skills Marketplace) para manifest de skills.
+- Iniciativa 5 (Mesh Network) e `LoadBalancer` para seleção de nós.
+- Iniciativa 10 (Budget Engine) para tracking de custo real.
+- `TrustSystem` e `VaultManager` (SBTs) para base de reputação.

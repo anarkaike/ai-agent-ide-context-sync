@@ -1,0 +1,109 @@
+{
+  "name": "swarm-orchestrator",
+  "version": "1.0.0",
+  "description": "Orquestrador master que coordena todas as skills do ecossistema Swarm",
+  "category": "orchestration",
+  "author": "AI Agent Collective",
+  "license": "MIT",
+  "tags": ["orchestration", "coordination", "master", "swarm", "ecosystem"],
+  "capabilities": [
+    "coordinate_skills",
+    "manage_ecosystem",
+    "execute_workflow",
+    "monitor_all_services",
+    "auto_heal_ecosystem",
+    "deploy_updates",
+    "scale_resources"
+  ],
+  "dependencies": {
+    "swarm-service-manager": "^1.0.0",
+    "swarm-health-monitor": "^1.0.0",
+    "neural-link-communicator": "^1.0.0",
+    "nanobot": "^1.0.0"
+  },
+  "parameters": {
+    "operation": {
+      "type": "string",
+      "enum": [
+        "status", "heal", "deploy", "scale", "monitor", 
+        "coordinate", "workflow", "emergency", "maintenance"
+      ],
+      "default": "status",
+      "description": "Operação de orquestração"
+    },
+    "target": {
+      "type": "string",
+      "enum": ["all", "services", "communication", "monitoring", "ecosystem"],
+      "default": "all",
+      "description": "Alvo da operação"
+    },
+    "workflow": {
+      "type": "object",
+      "properties": {
+        "steps": {"type": "array"},
+        "parallel": {"type": "boolean", "default": false},
+        "rollback_on_failure": {"type": "boolean", "default": true}
+      }
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "auto_heal": {"type": "boolean", "default": true},
+        "monitoring_interval": {"type": "number", "default": 60},
+        "alert_threshold": {"type": "number", "default": 3},
+        "max_retries": {"type": "number", "default": 3}
+      }
+    }
+  },
+  "outputs": {
+    "orchestration": {
+      "type": "object",
+      "properties": {
+        "operation": {"type": "string"},
+        "status": {"type": "string", "enum": ["success", "failed", "partial"]},
+        "results": {"type": "object"},
+        "metrics": {"type": "object"},
+        "timestamp": {"type": "string"}
+      }
+    },
+    "ecosystem_status": {
+      "type": "object",
+      "properties": {
+        "services": {"type": "object"},
+        "communication": {"type": "object"},
+        "monitoring": {"type": "object"},
+        "overall_health": {"type": "string"}
+      }
+    }
+  },
+  "examples": [
+    {
+      "description": "Verificar status completo do ecossistema",
+      "input": {"operation": "status"},
+      "output": {
+        "orchestration": {
+          "operation": "status",
+          "status": "success",
+          "ecosystem_status": {
+            "services": {"webmap": "running", "swarmclient": "running"},
+            "communication": {"connected": true, "agents": 3},
+            "monitoring": {"health": "healthy", "alerts": 0},
+            "overall_health": "optimal"
+          }
+        }
+      }
+    },
+    {
+      "description": "Executar auto-cura completa",
+      "input": {"operation": "heal", "target": "all"},
+      "output": {
+        "orchestration": {
+          "operation": "heal",
+          "status": "success",
+          "actions_taken": ["restarted_webmap", "synced_communication"],
+          "healing_time": 15.2
+        }
+      }
+    }
+  ]
+}

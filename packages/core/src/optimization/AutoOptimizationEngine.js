@@ -5,26 +5,27 @@
  * predição de falhas e ajuste adaptativo de parâmetros.
  */
 
-const EventEmitter = require('events');
-const fs = require('fs').promises;
-const path = require('path');
+import { EventEmitter } from 'events';
+import fs from 'fs/promises';
+import path from 'path';
+import crypto from 'crypto';
 
 class AutoOptimizationEngine extends EventEmitter {
     constructor(options = {}) {
         super();
-        
+
         // Configurações
         this.learningRate = options.learningRate || 0.01;
         this.predictionWindow = options.predictionWindow || 300000; // 5 minutos
         this.optimizationInterval = options.optimizationInterval || 60000; // 1 minuto
         this.modelUpdateInterval = options.modelUpdateInterval || 300000; // 5 minutos
         this.maxHistorySize = options.maxHistorySize || 10000;
-        
+
         // Estado
         this.isRunning = false;
         this.optimizationTimer = null;
         this.modelUpdateTimer = null;
-        
+
         // Modelos de ML
         this.models = {
             performance: new PerformanceModel(),
@@ -32,7 +33,7 @@ class AutoOptimizationEngine extends EventEmitter {
             resource: new ResourceOptimizationModel(),
             network: new NetworkOptimizationModel()
         };
-        
+
         // Histórico de dados
         this.history = {
             performance: [],
@@ -41,7 +42,7 @@ class AutoOptimizationEngine extends EventEmitter {
             network: [],
             optimizations: []
         };
-        
+
         // Estado atual
         this.currentState = {
             metrics: {},
@@ -49,7 +50,7 @@ class AutoOptimizationEngine extends EventEmitter {
             lastOptimization: null,
             optimizationCount: 0
         };
-        
+
         // Parâmetros otimizáveis
         this.optimizableParams = {
             syncInterval: { min: 1000, max: 30000, current: 5000 },
@@ -58,10 +59,10 @@ class AutoOptimizationEngine extends EventEmitter {
             networkTimeout: { min: 5000, max: 60000, current: 30000 },
             maxRetries: { min: 1, max: 10, current: 3 }
         };
-        
+
         console.log('[AutoOptimization] Auto-optimization Engine initialized');
     }
-    
+
     /**
      * Inicia a engine de auto-otimização
      */
@@ -69,32 +70,32 @@ class AutoOptimizationEngine extends EventEmitter {
         if (this.isRunning) {
             throw new Error('Auto-optimization engine is already running');
         }
-        
+
         try {
             // Carrega modelos existentes
             await this._loadModels();
-            
+
             // Inicia timers
             this._startOptimizationTimer();
             this._startModelUpdateTimer();
-            
+
             this.isRunning = true;
             console.log('[AutoOptimization] Started');
             this.emit('started');
-            
+
             return true;
         } catch (error) {
             console.error('[AutoOptimization] Failed to start:', error);
             throw error;
         }
     }
-    
+
     /**
      * Para a engine de auto-otimização
      */
     async stop() {
         if (!this.isRunning) return;
-        
+
         try {
             // Para timers
             if (this.optimizationTimer) {
@@ -103,51 +104,51 @@ class AutoOptimizationEngine extends EventEmitter {
             if (this.modelUpdateTimer) {
                 clearInterval(this.modelUpdateTimer);
             }
-            
+
             // Salva modelos
             await this._saveModels();
-            
+
             this.isRunning = false;
             console.log('[AutoOptimization] Stopped');
             this.emit('stopped');
-            
+
             return true;
         } catch (error) {
             console.error('[AutoOptimization] Failed to stop:', error);
             throw error;
         }
     }
-    
+
     /**
      * Registra métricas para análise
      */
     recordMetrics(metrics) {
         const timestamp = Date.now();
-        
+
         // Adiciona ao histórico
         this.history.performance.push({
             timestamp,
             ...metrics
         });
-        
+
         // Atualiza estado atual
         this.currentState.metrics = metrics;
-        
+
         // Limita tamanho do histórico
         this._trimHistory();
-        
+
         // Detecta anomalias
         this._detectAnomalies(metrics);
-        
+
         this.emit('metricsRecorded', { timestamp, metrics });
     }
-    
+
     /**
      * Registra falha para aprendizado
      */
     recordFailure(failure) {
         const timestamp = Date.now();
-        
+
         const failureRecord = {
             timestamp,
             type: failure.type,
@@ -156,32 +157,32 @@ class AutoOptimizationEngine extends EventEmitter {
             resolved: false,
             resolutionTime: null
         };
-        
+
         this.history.failures.push(failureRecord);
-        
+
         // Atualiza modelo de predição
         this.models.failure.addSample(failureRecord);
-        
+
         console.warn(`[AutoOptimization] Failure recorded: ${failure.type}`);
         this.emit('failureRecorded', failureRecord);
     }
-    
+
     /**
      * Executa ciclo de otimização
      */
     async optimize() {
         const startTime = Date.now();
-        
+
         try {
             // Coleta métricas atuais
             const metrics = this._collectCurrentMetrics();
-            
+
             // Gera recomendações
             const recommendations = await this._generateRecommendations(metrics);
-            
+
             // Aplica otimizações
             const applied = await this._applyOptimizations(recommendations);
-            
+
             // Registra otimização
             const optimization = {
                 timestamp: startTime,
@@ -190,14 +191,14 @@ class AutoOptimizationEngine extends EventEmitter {
                 applied,
                 impact: await this._measureImpact(applied)
             };
-            
+
             this.history.optimizations.push(optimization);
             this.currentState.lastOptimization = optimization;
             this.currentState.optimizationCount++;
-            
+
             console.log(`[AutoOptimization] Optimization completed in ${optimization.duration}ms`);
             this.emit('optimizationCompleted', optimization);
-            
+
             return optimization;
         } catch (error) {
             console.error('[AutoOptimization] Optimization failed:', error);
@@ -205,28 +206,28 @@ class AutoOptimizationEngine extends EventEmitter {
             throw error;
         }
     }
-    
+
     /**
      * Prediz falhas futuras
      */
     async predictFailures(timeWindow = this.predictionWindow) {
         try {
             const predictions = await this.models.failure.predict(timeWindow);
-            
+
             // Classifica por severidade
             const critical = predictions.filter(p => p.probability > 0.8);
             const warning = predictions.filter(p => p.probability > 0.5 && p.probability <= 0.8);
-            
+
             if (critical.length > 0) {
                 console.warn(`[AutoOptimization] ${critical.length} critical failures predicted`);
                 this.emit('criticalFailuresPredicted', critical);
             }
-            
+
             if (warning.length > 0) {
                 console.log(`[AutoOptimization] ${warning.length} failures predicted`);
                 this.emit('failuresPredicted', warning);
             }
-            
+
             return {
                 critical,
                 warning,
@@ -238,7 +239,7 @@ class AutoOptimizationEngine extends EventEmitter {
             return { critical: [], warning: [], total: 0, timeWindow };
         }
     }
-    
+
     /**
      * Otimiza parâmetros automaticamente
      */
@@ -246,27 +247,27 @@ class AutoOptimizationEngine extends EventEmitter {
         try {
             const currentMetrics = this._collectCurrentMetrics();
             const currentParams = this._getCurrentParameters();
-            
+
             // Usa modelo para encontrar melhores parâmetros
             const optimization = await this.models[targetMetric].optimize(currentParams, currentMetrics);
-            
+
             if (optimization.improvement > 0.05) { // 5% de melhoria mínima
                 // Aplica novos parâmetros
                 await this._applyParameters(optimization.parameters);
-                
+
                 console.log(`[AutoOptimization] Parameters optimized: ${optimization.improvement * 100}% improvement`);
                 this.emit('parametersOptimized', optimization);
-                
+
                 return optimization;
             }
-            
+
             return { improvement: 0, reason: 'No significant improvement possible' };
         } catch (error) {
             console.error('[AutoOptimization] Failed to optimize parameters:', error);
             throw error;
         }
     }
-    
+
     /**
      * Realiza self-healing automático
      */
@@ -277,33 +278,33 @@ class AutoOptimizationEngine extends EventEmitter {
             actions: [],
             resolved: []
         };
-        
+
         try {
             // Detecta problemas
             const issues = await this._detectIssues();
             healing.issues = issues;
-            
+
             for (const issue of issues) {
                 const action = await this._healIssue(issue);
                 healing.actions.push(action);
-                
+
                 if (action.resolved) {
                     healing.resolved.push(issue);
                 }
             }
-            
+
             if (healing.resolved.length > 0) {
                 console.log(`[AutoOptimization] Self-healed ${healing.resolved.length} issues`);
                 this.emit('selfHealed', healing);
             }
-            
+
             return healing;
         } catch (error) {
             console.error('[AutoOptimization] Self-healing failed:', error);
             throw error;
         }
     }
-    
+
     /**
      * Obtém estatísticas da engine
      */
@@ -328,13 +329,13 @@ class AutoOptimizationEngine extends EventEmitter {
             currentParameters: this._getCurrentParameters()
         };
     }
-    
+
     /**
      * Gera recomendações de otimização
      */
     async _generateRecommendations(metrics) {
         const recommendations = [];
-        
+
         // Análise de performance
         if (metrics.avgResponseTime > 1000) {
             recommendations.push({
@@ -345,7 +346,7 @@ class AutoOptimizationEngine extends EventEmitter {
                 expectedImpact: 0.15
             });
         }
-        
+
         // Análise de recursos
         if (metrics.memoryUsage > 0.8) {
             recommendations.push({
@@ -356,7 +357,7 @@ class AutoOptimizationEngine extends EventEmitter {
                 expectedImpact: 0.10
             });
         }
-        
+
         // Análise de rede
         if (metrics.packetLoss > 0.05) {
             recommendations.push({
@@ -367,11 +368,11 @@ class AutoOptimizationEngine extends EventEmitter {
                 expectedImpact: 0.20
             });
         }
-        
+
         // Usa ML para recomendações avançadas
         const mlRecommendations = await this._generateMLRecommendations(metrics);
         recommendations.push(...mlRecommendations);
-        
+
         // Ordena por prioridade e impacto esperado
         return recommendations.sort((a, b) => {
             const priorityWeight = { critical: 3, high: 2, medium: 1, low: 0 };
@@ -380,13 +381,13 @@ class AutoOptimizationEngine extends EventEmitter {
             return bWeight - aWeight;
         });
     }
-    
+
     /**
      * Aplica otimizações recomendadas
      */
     async _applyOptimizations(recommendations) {
         const applied = [];
-        
+
         for (const rec of recommendations) {
             try {
                 const result = await this._applyRecommendation(rec);
@@ -396,67 +397,67 @@ class AutoOptimizationEngine extends EventEmitter {
                 applied.push({ ...rec, error: error.message });
             }
         }
-        
+
         return applied;
     }
-    
+
     /**
      * Aplica recomendação específica
      */
     async _applyRecommendation(recommendation) {
         switch (recommendation.action) {
             case 'increase_network_timeout':
-                this.optimizableParams.networkTimeout.current = 
-                    Math.min(this.optimizableParams.networkTimeout.current * 1.5, 
-                            this.optimizableParams.networkTimeout.max);
+                this.optimizableParams.networkTimeout.current =
+                    Math.min(this.optimizableParams.networkTimeout.current * 1.5,
+                        this.optimizableParams.networkTimeout.max);
                 return { success: true, newValue: this.optimizableParams.networkTimeout.current };
-                
+
             case 'reduce_delta_cache':
                 // Implementar redução de cache
                 return { success: true, action: 'cache_reduced' };
-                
+
             case 'increase_retries':
-                this.optimizableParams.maxRetries.current = 
-                    Math.min(this.optimizableParams.maxRetries.current + 1, 
-                            this.optimizableParams.maxRetries.max);
+                this.optimizableParams.maxRetries.current =
+                    Math.min(this.optimizableParams.maxRetries.current + 1,
+                        this.optimizableParams.maxRetries.max);
                 return { success: true, newValue: this.optimizableParams.maxRetries.current };
-                
+
             default:
                 return { success: false, reason: 'Unknown action' };
         }
     }
-    
+
     /**
      * Med impacto das otimizações
      */
     async _measureImpact(applied) {
         // Aguarda um pouco para medir impacto
         await new Promise(resolve => setTimeout(resolve, 5000));
-        
+
         const newMetrics = this._collectCurrentMetrics();
         const oldMetrics = this.currentState.metrics;
-        
+
         const impact = {
             performance: this._calculatePerformanceChange(oldMetrics, newMetrics),
             resources: this._calculateResourceChange(oldMetrics, newMetrics),
             network: this._calculateNetworkChange(oldMetrics, newMetrics)
         };
-        
+
         return impact;
     }
-    
+
     /**
      * Detecta anomalias nas métricas
      */
     _detectAnomalies(metrics) {
         // Implementação simplificada de detecção de anomalias
         const recentHistory = this.history.performance.slice(-10);
-        
+
         if (recentHistory.length < 5) return;
-        
+
         const avgResponseTime = recentHistory.reduce((sum, h) => sum + (h.avgResponseTime || 0), 0) / recentHistory.length;
         const currentResponseTime = metrics.avgResponseTime || 0;
-        
+
         if (currentResponseTime > avgResponseTime * 2) {
             console.warn('[AutoOptimization] Anomaly detected: High response time');
             this.emit('anomalyDetected', {
@@ -466,7 +467,7 @@ class AutoOptimizationEngine extends EventEmitter {
             });
         }
     }
-    
+
     /**
      * Coleta métricas atuais do sistema
      */
@@ -482,7 +483,7 @@ class AutoOptimizationEngine extends EventEmitter {
             errorRate: Math.random() * 0.05
         };
     }
-    
+
     /**
      * Obtém parâmetros atuais
      */
@@ -493,20 +494,20 @@ class AutoOptimizationEngine extends EventEmitter {
         }
         return params;
     }
-    
+
     /**
      * Aplica novos parâmetros
      */
     async _applyParameters(newParams) {
         for (const [key, value] of Object.entries(newParams)) {
             if (this.optimizableParams[key]) {
-                this.optimizableParams[key].current = 
-                    Math.max(this.optimizableParams[key].min, 
-                            Math.min(value, this.optimizableParams[key].max));
+                this.optimizableParams[key].current =
+                    Math.max(this.optimizableParams[key].min,
+                        Math.min(value, this.optimizableParams[key].max));
             }
         }
     }
-    
+
     /**
      * Inicia timer de otimização
      */
@@ -520,7 +521,7 @@ class AutoOptimizationEngine extends EventEmitter {
             }
         }, this.optimizationInterval);
     }
-    
+
     /**
      * Inicia timer de atualização de modelos
      */
@@ -533,7 +534,7 @@ class AutoOptimizationEngine extends EventEmitter {
             }
         }, this.modelUpdateInterval);
     }
-    
+
     /**
      * Atualiza modelos de ML
      */
@@ -547,7 +548,7 @@ class AutoOptimizationEngine extends EventEmitter {
             }
         }
     }
-    
+
     /**
      * Carrega modelos salvos
      */
@@ -559,7 +560,7 @@ class AutoOptimizationEngine extends EventEmitter {
             console.warn('[AutoOptimization] No existing models found, starting fresh');
         }
     }
-    
+
     /**
      * Salva modelos em disco
      */
@@ -571,7 +572,7 @@ class AutoOptimizationEngine extends EventEmitter {
             console.error('[AutoOptimization] Failed to save models:', error);
         }
     }
-    
+
     /**
      * Limita tamanho do histórico
      */
@@ -582,7 +583,7 @@ class AutoOptimizationEngine extends EventEmitter {
             }
         }
     }
-    
+
     /**
      * Calcula mudança de performance
      */
@@ -590,7 +591,7 @@ class AutoOptimizationEngine extends EventEmitter {
         if (!old || !new_) return 0;
         return (new_.avgResponseTime - old.avgResponseTime) / old.avgResponseTime;
     }
-    
+
     /**
      * Calcula mudança de recursos
      */
@@ -598,7 +599,7 @@ class AutoOptimizationEngine extends EventEmitter {
         if (!old || !new_) return 0;
         return (new_.memoryUsage - old.memoryUsage) / old.memoryUsage;
     }
-    
+
     /**
      * Calcula mudança de rede
      */
@@ -616,16 +617,16 @@ class PerformanceModel {
         this.weights = {};
         this.accuracy = 0.8;
     }
-    
+
     train(data) {
         // Implementação simplificada de treinamento
         this.accuracy = Math.min(0.95, this.accuracy + 0.01);
     }
-    
+
     optimize(params, metrics) {
         // Implementação simplificada de otimização
         const improvement = Math.random() * 0.2; // 0-20% de melhoria
-        
+
         return {
             parameters: {
                 syncInterval: params.syncInterval * (1 - improvement * 0.1),
@@ -634,7 +635,7 @@ class PerformanceModel {
             improvement
         };
     }
-    
+
     getAccuracy() {
         return this.accuracy;
     }
@@ -648,15 +649,15 @@ class FailurePredictionModel {
         this.samples = [];
         this.accuracy = 0.75;
     }
-    
+
     addSample(sample) {
         this.samples.push(sample);
     }
-    
+
     predict(timeWindow) {
         // Implementação simplificada de predição
         const predictions = [];
-        
+
         // Simula predição de falhas
         if (Math.random() > 0.7) {
             predictions.push({
@@ -665,14 +666,14 @@ class FailurePredictionModel {
                 estimatedTime: Date.now() + Math.random() * timeWindow
             });
         }
-        
+
         return predictions;
     }
-    
+
     train(data) {
         this.accuracy = Math.min(0.9, this.accuracy + 0.02);
     }
-    
+
     getAccuracy() {
         return this.accuracy;
     }
@@ -685,11 +686,11 @@ class ResourceOptimizationModel {
     constructor() {
         this.accuracy = 0.8;
     }
-    
+
     train(data) {
         this.accuracy = Math.min(0.92, this.accuracy + 0.01);
     }
-    
+
     getAccuracy() {
         return this.accuracy;
     }
@@ -702,14 +703,14 @@ class NetworkOptimizationModel {
     constructor() {
         this.accuracy = 0.85;
     }
-    
+
     train(data) {
         this.accuracy = Math.min(0.94, this.accuracy + 0.01);
     }
-    
+
     getAccuracy() {
         return this.accuracy;
     }
 }
 
-module.exports = AutoOptimizationEngine;
+export { AutoOptimizationEngine };
