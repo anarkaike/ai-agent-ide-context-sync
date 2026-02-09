@@ -13,6 +13,8 @@ class SecurityKernel {
         this.baseDir = path.join(os.homedir(), '.ai-doc', 'swarm', 'security');
         this.tokensFile = path.join(this.baseDir, 'tokens.json');
         this.dbManager = dbManager; // Optional persistence layer
+        this.secretFile = path.join(this.baseDir, 'kernel.key');
+        this.tokenLifetimeMs = 60 * 60 * 1000; // 1 hour window by default
         
         // Definição de Níveis de Segurança
         this.LEVELS = {
@@ -170,6 +172,7 @@ class SecurityKernel {
         if (!fs.existsSync(this.tokensFile)) {
             fs.writeFileSync(this.tokensFile, JSON.stringify({}, null, 2));
         }
+        this.masterSecret = this.loadOrCreateSecret();
     }
 
     /**
@@ -182,15 +185,22 @@ class SecurityKernel {
     /**
      * Gera um Token de Acesso para um agente com validade.
      */
-    issueToken(agentId, level = 1) {
+    issueToken(agentId, level = 1, options = {}) {
         const token = crypto.randomBytes(32).toString('hex');
+        const tokenHash = this.hashToken(token);
         const data = this.loadTokens();
-        
-        data[token] = {
+
+        data[tokenHash] = {
+            tokenHash,
             agent_id: agentId,
             level: level,
             issued_at: Date.now(),
-            expires_at: Date.now() + (24 * 60 * 60 * 1000) // 24h
+            expires_at: Date.now() + this.tokenLifetimeMs,
+            bound_ip: options.boundIp || null,
+            bound_network: options.boundNetwork || null,
+            origin: options.origin || 'kernel',
+            metadata: options.metadata || null,
+            context: options.context || null
         };
 
         this.saveTokens(data);
@@ -200,12 +210,43 @@ class SecurityKernel {
     /**
      * Valida um token e retorna as credenciais.
      */
-    validateToken(token) {
+    validateToken(token, options = {}) {
         const data = this.loadTokens();
-        const session = data[token];
+        const tokenHash = this.hashToken(token);
+        let session = data[tokenHash];
+
+        if (!session) {
+            const rawKey = Object.keys(data).find(key => data[key].token === token);
+            if (rawKey) {
+                session = { ...data[rawKey] };
+                session.tokenHash = this.hashToken(token);
+                delete session.token;
+                delete data[rawKey];
+                data[session.tokenHash] = session;
+                this.saveTokens(data);
+            }
+        }
 
         if (!session) return { valid: false, reason: 'TOKEN_NOT_FOUND' };
         if (Date.now() > session.expires_at) return { valid: false, reason: 'TOKEN_EXPIRED' };
+
+        if (session.bound_ip) {
+            if (!options.boundIp) {
+                return { valid: false, reason: 'BOUND_IP_REQUIRED' };
+            }
+            if (options.boundIp !== session.bound_ip) {
+                return { valid: false, reason: 'BOUND_IP_MISMATCH' };
+            }
+        }
+
+        if (session.bound_network) {
+            if (!options.boundNetwork) {
+                return { valid: false, reason: 'BOUND_NETWORK_REQUIRED' };
+            }
+            if (options.boundNetwork !== session.bound_network) {
+                return { valid: false, reason: 'BOUND_NETWORK_MISMATCH' };
+            }
+        }
 
         return { valid: true, agentId: session.agent_id, level: session.level };
     }
@@ -285,8 +326,75 @@ class SecurityKernel {
 
     loadTokens() {
         try {
-            return JSON.parse(fs.readFileSync(this.tokensFile, 'utf8'));
+            const raw = JSON.parse(fs.readFileSync(this.tokensFile, 'utf8'));
+            const normalized = {};
+            let mutated = false;
+
+            for (const key of Object.keys(raw)) {
+                const item = { ...raw[key] };
+                if (item.tokenHash) {
+                    normalized[item.tokenHash] = item;
+                    continue;
+                }
+                if (item.token) {
+                    const hash = this.hashToken(item.token);
+                    item.tokenHash = hash;
+                    delete item.token;
+                    normalized[hash] = item;
+                    mutated = true;
+                    continue;
+                }
+                normalized[key] = item;
+            }
+
+            const pruned = this.pruneExpiredTokens(normalized);
+            if (pruned.modified) {
+                this.saveTokens(pruned.data);
+                return pruned.data;
+            }
+            if (mutated) {
+                this.saveTokens(normalized);
+            }
+
+            return normalized;
         } catch (e) { return {}; }
+    }
+
+    pruneExpiredTokens(tokens = {}) {
+        const now = Date.now();
+        let modified = false;
+        for (const key of Object.keys(tokens)) {
+            const session = tokens[key];
+            if (session.expires_at && session.expires_at < now) {
+                delete tokens[key];
+                modified = true;
+            }
+        }
+        return { data: tokens, modified };
+    }
+
+    hashToken(token) {
+        if (!this.masterSecret) {
+            this.masterSecret = this.loadOrCreateSecret();
+        }
+        return crypto
+            .createHmac('sha256', this.masterSecret)
+            .update(token)
+            .digest('hex');
+    }
+
+    loadOrCreateSecret() {
+        try {
+            if (fs.existsSync(this.secretFile)) {
+                return fs.readFileSync(this.secretFile, 'utf8');
+            }
+            const secret = crypto.randomBytes(32).toString('hex');
+            fs.writeFileSync(this.secretFile, secret, { mode: 0o600 });
+            return secret;
+        } catch (e) {
+            console.error('Falha ao gerar o segredo do kernel:', e.message);
+            return crypto.randomBytes(32).toString('hex');
+        }
     }
 
     saveTokens(data) {

@@ -1,0 +1,14 @@
+[
+  {
+    "name": "automation-workflows",
+    "description": "Capacidade de criar, gerenciar e executar workflows de automação para desenvolvimento",
+    "capabilities": [
+      "workflow-creation",
+      "workflow-execution",
+      "workflow-scheduling",
+      "workflow-monitoring",
+      "trigger-management",
+      "action-chaining"
+    ]
+  }
+]

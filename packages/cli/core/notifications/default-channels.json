@@ -1,0 +1,16 @@
+{
+  "whatsapp": {
+    "name": "WhatsApp via OpenClaw",
+    "executor": "openclaw",
+    "description": "Dispara mensagem WhatsApp usando a skill openclaw-whatsapp.",
+    "command": "openclaw skill run whatsapp-status --message \"${message}\" --target \"${target}\"",
+    "template": "✅ ${agentId} » ${status}\\n${summary}\\nLink: ${reference}"
+  },
+  "nanobot": {
+    "name": "Webhook Nanobot",
+    "executor": "nanobot",
+    "description": "Publica webhook em um canal interno do Nanobot.",
+    "command": "nanobot notify --channel ${channel} --payload '${message}'",
+    "template": "Agent ${agentId} = ${status}\\n${summary}"
+  }
+}

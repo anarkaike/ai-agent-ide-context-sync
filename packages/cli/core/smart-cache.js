@@ -40,7 +40,7 @@ class SmartCache {
      * Gera chave de cache para uma query de prompt
      */
     generateKey(query, contextFiles, extra = {}) {
-        const payload = JSON.stringify({ query, files: contextFiles.sort(), extra });
+        const payload = JSON.stringify({ query, files: [...contextFiles].sort(), extra });
         return crypto.createHash('md5').update(payload).digest('hex');
     }
 

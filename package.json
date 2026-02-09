@@ -6,9 +6,10 @@
         "packages/*"
     ],
     "scripts": {
-        "cli:dev": "node packages/cli/cli/ai-doc.js",
-        "build": "npm run build --workspaces"
-    },
+    "cli:dev": "node packages/cli/cli/ai-doc.js",
+    "sync-notification-channels": "node scripts/sync-notification-channels.js",
+  "build": "npm run build --workspaces"
+  },
     "author": "Junio",
     "license": "MIT"
 }

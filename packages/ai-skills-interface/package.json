@@ -1,0 +1,50 @@
+{
+  "name": "@ai-agent-ide-context-sync/ai-skills-interface",
+  "version": "1.0.0",
+  "description": "AI Skills Interface - Transform all interaction resources into learnable AI skills",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./skills": "./skills/index.js",
+    "./adapters": "./adapters/index.js",
+    "./trainers": "./trainers/index.js"
+  },
+  "keywords": [
+    "ai",
+    "skills",
+    "interface",
+    "learning",
+    "training",
+    "ide",
+    "context",
+    "cursor",
+    "windsurf",
+    "claude",
+    "copilot"
+  ],
+  "dependencies": {
+    "fs-extra": "^11.1.1",
+    "path": "^0.12.7",
+    "glob": "^10.3.10",
+    "yaml": "^2.3.4",
+    "chalk": "^5.3.0",
+    "ora": "^7.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "scripts": {
+    "test": "jest",
+    "dev": "node index.js",
+    "build": "node scripts/build-skills.js",
+    "validate": "node scripts/validate-skills.js",
+    "export": "node scripts/export-skills.js"
+  },
+  "author": "Junio de Almeida Vitorino",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anarkaike/ai-agent-ide-context-sync.git"
+  }
+}
