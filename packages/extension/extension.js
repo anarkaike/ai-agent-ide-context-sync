@@ -2,11 +2,12 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const LegacyAIClient = require('./ai-client-core');
+const { AIClient: CoreAIClient, MemoryManager, WALManager, SecuritySandbox } = require('@ai-agent/core');
+const MigrationAIClient = require('./ai-client-migration');
 const Logger = require('./modules/Logger');
 const { I18n, SmartNotifications } = require('./modules');
 const { KanbanManager, AdvancedAnalytics, ThemeManager, CloudSyncManager } = require('./advanced-modules');
-const { AutomationTreeProvider, handleGeneratePrompt, handleRunWorkflow, handleLaravelAnalyze, handleLaravelCreateLayer, handleLaravelListEntities, handleReactCreateComponent, handleReactCreateHook, handleGenerateCommitMessage, handleGeneratePRDescription, handleGitCodeReview, handleContextSnap, setAutomationI18n, setAutomationLogger } = require('./automation-modules');
+const { AutomationTreeDataProvider, handleGeneratePrompt, handleRunWorkflow, handleLaravelAnalyze, handleLaravelCreateLayer, handleLaravelListEntities, handleReactCreateComponent, handleReactCreateHook, handleGenerateCommitMessage, handleGeneratePRDescription, handleGitCodeReview, handleContextSnap, setAutomationI18n, setAutomationLogger } = require('./automation-modules');
 const { SwarmTreeDataProvider, handleSwarmConnect } = require('./swarm-modules');
 const { SoulTreeDataProvider, handleSoulMint, handleSoulResonate } = require('./soul-modules');
 const { SecurityTreeDataProvider, handleApproveTask, handleRejectTask } = require('./security-modules');
@@ -437,7 +438,7 @@ class StatusTreeProvider {
             items.push(actionsItem);
 
             // 3. Kernel & Workspace Status
-            const client = new AIClient();
+            const client = new MigrationAIClient();
             let kernelStatus = 'Unknown';
             try {
                 const output = await client.getKernelStatus();
@@ -961,8 +962,44 @@ function activate(context) {
     context.subscriptions.push(logger);
     logger.log('AI Agent IDE Context Sync extension activated!');
 
-    // Set Logger for AIClient
-    AIClient.setLogger(logger);
+    // Initialize Core System
+    const projectRoot = vscode.workspace.rootPath;
+
+    // Initialize Core Components
+    try {
+        // Inicializa o Core System unificado
+        coreSystem = {
+            aiClient: new CoreAIClient({
+                basePath: projectRoot,
+                logger: logger
+            }),
+            memoryManager: new MemoryManager({
+                workspacePath: projectRoot,
+                logger: logger
+            }),
+            walManager: new WALManager({
+                workspacePath: projectRoot,
+                logger: logger
+            }),
+            securitySandbox: new SecuritySandbox({
+                logger: logger
+            })
+        };
+
+        // Inicializa o MigrationAIClient para compatibilidade
+        aiClient = new MigrationAIClient(projectRoot);
+        aiClient.setLogger(logger);
+
+        logger.log('✅ Core System initialized successfully');
+        logger.log('✅ MigrationAIClient ready for legacy compatibility');
+    } catch (error) {
+        logger.error('❌ Failed to initialize Core System:', error);
+        vscode.window.showErrorMessage(`Failed to initialize AI Agent Core: ${error.message}`);
+        return;
+    }
+
+    // Set Logger for MigrationAIClient
+    MigrationAIClient.setLogger(logger);
 
     // Initialize i18n
     i18n = new I18n(context.extensionPath);
@@ -1050,7 +1087,7 @@ function activate(context) {
 
         // 🛡️ Auto-Audit on Boot (Self-Healing Check)
         setTimeout(async () => {
-            const client = new AIClient();
+            const client = new MigrationAIClient();
             try {
                 logger.log('🛡️ Running Auto-Audit...');
                 const output = await client.execute(['task', 'audit']);
@@ -1163,7 +1200,7 @@ function registerCommands(context) {
         }),
 
         vscode.commands.registerCommand('ai-agent-sync.scanDocs', async () => {
-            const client = new AIClient();
+            const client = new MigrationAIClient();
             try {
                 await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
@@ -1182,7 +1219,7 @@ function registerCommands(context) {
             }
         }),
         vscode.commands.registerCommand('ai-agent-sync.ritual', async () => {
-            const client = new AIClient();
+            const client = new MigrationAIClient();
             try {
                 await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
@@ -1203,7 +1240,7 @@ function registerCommands(context) {
             }
         }),
         vscode.commands.registerCommand('ai-agent-sync.evolve', async () => {
-            const client = new AIClient();
+            const client = new MigrationAIClient();
             try {
                 await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
@@ -1223,7 +1260,7 @@ function registerCommands(context) {
         }),
         // Immunity Commands
         vscode.commands.registerCommand('ai-agent-sync.agentHeal', async () => {
-            const client = new AIClient();
+            const client = new MigrationAIClient();
             try {
                 await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
@@ -1239,7 +1276,7 @@ function registerCommands(context) {
             }
         }),
         vscode.commands.registerCommand('ai-agent-sync.agentEvolve', async () => {
-            const client = new AIClient();
+            const client = new MigrationAIClient();
             try {
                 await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
@@ -1297,7 +1334,7 @@ function registerCommands(context) {
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.init', async () => {
             try {
-                const client = new AIClient();
+                const client = new MigrationAIClient();
                 await client.initWorkspace();
                 vscode.window.showInformationMessage(i18n.t('messages.workspaceInitialized'));
 
@@ -1334,7 +1371,7 @@ function registerCommands(context) {
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.showKernelInfo', async () => {
             try {
-                const client = new AIClient();
+                const client = new MigrationAIClient();
                 const output = await client.getKernelStatus();
                 const statusOutput = output.replace(/\x1b\[[0-9;]*m/g, '');
 
@@ -1410,7 +1447,7 @@ Fonte: ai-doc status + leitura da pasta .ai-workspace do projeto atual.
             }, async (progress) => {
                 try {
                     progress.report({ increment: 0, message: i18n.t('messages.compilingModules') });
-                    const client = new AIClient();
+                    const client = new MigrationAIClient();
                     await client.buildContext();
                     progress.report({ increment: 100, message: i18n.t('messages.buildDone') });
                     vscode.window.showInformationMessage(i18n.t('messages.contextBuilt'));
@@ -1547,7 +1584,7 @@ Fonte: ai-doc status + leitura da pasta .ai-workspace do projeto atual.
 
                     try {
                         if (mode === 'create') {
-                            const client = new AIClient();
+                            const client = new MigrationAIClient();
                             await client.createIdentity(name);
                             ensureWorkspacePersonas(aiWorkspacePath);
 
@@ -2294,7 +2331,7 @@ status: active
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.status', async () => {
             try {
-                const client = new AIClient();
+                const client = new MigrationAIClient();
                 const output = await client.getStatus();
                 const outputChannel = vscode.window.createOutputChannel(i18n.t('messages.outputChannelTitle'));
                 outputChannel.clear();
@@ -2431,7 +2468,7 @@ status: active
 
                 let kernelStatus = 'Not Checked';
                 try {
-                    const client = new AIClient();
+                    const client = new MigrationAIClient();
                     kernelStatus = await client.getKernelStatus();
                     kernelStatus = kernelStatus.replace(/\x1b\[[0-9;]*m/g, ''); // Clean ANSI
                 } catch (e) {
@@ -2868,7 +2905,7 @@ status: active
 
                 let kernelStatus = 'Not Checked';
                 try {
-                    const client = new AIClient();
+                    const client = new MigrationAIClient();
                     kernelStatus = await client.getKernelStatus();
                     kernelStatus = kernelStatus.replace(/\x1b\[[0-9;]*m/g, ''); // Clean ANSI
                 } catch (e) {
@@ -3202,7 +3239,7 @@ Apenas tarefas ativas em \`.ai-workspace/tasks/active/\` são consideradas.
     context.subscriptions.push(
         vscode.commands.registerCommand('ai-agent-sync.showHeuristics', async () => {
             try {
-                const client = new AIClient();
+                const client = new MigrationAIClient();
                 const output = await client.listHeuristics();
 
                 const lines = output.split('\n').map(l => l.replace(/\x1b\[[0-9;]*m/g, ''));

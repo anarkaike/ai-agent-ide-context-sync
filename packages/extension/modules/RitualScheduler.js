@@ -1,5 +1,5 @@
 const vscode = require('vscode');
-const AIClient = require('../ai-client');
+const MigrationAIClient = require('../ai-client-migration');
 
 class RitualScheduler {
     constructor(context, i18n, intervalMs = 60 * 60 * 1000) {
@@ -7,7 +7,7 @@ class RitualScheduler {
         this.i18n = i18n;
         this.intervalMs = intervalMs;
         this.timer = null;
-        this.client = new AIClient();
+        this.client = new MigrationAIClient();
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 90);
         this.statusBarItem.text = this.i18n ? this.i18n.t('ritualScheduler.statusText') : "$(pulse) AI Kernel";
         this.statusBarItem.tooltip = this.i18n ? this.i18n.t('ritualScheduler.statusTooltip') : "AI Kernel Monitor Active";
@@ -16,10 +16,10 @@ class RitualScheduler {
 
     start() {
         if (this.timer) return;
-        
+
         this.statusBarItem.show();
         console.log('[RitualScheduler] Started monitoring.');
-        
+
         // Initial check after 1 minute (let workspace load)
         setTimeout(() => this.check(), 60 * 1000);
 
@@ -42,7 +42,7 @@ class RitualScheduler {
         try {
             // Run evolution check (lightweight)
             const output = await this.client.evolveRules();
-            
+
             // Analyze output for drift signals
             // CLI output usually contains "Drift Detected" or low scores
             if (output.includes('Drift detectado') || output.includes('Score baixo')) {
@@ -62,7 +62,7 @@ class RitualScheduler {
     async notifyDrift(details) {
         const runRitualLabel = this.i18n ? this.i18n.t('ritualScheduler.runRitual') : 'Rodar Ritual';
         const ignoreLabel = this.i18n ? this.i18n.t('ritualScheduler.ignore') : 'Ignorar';
-        
+
         const action = await vscode.window.showWarningMessage(
             this.i18n ? this.i18n.t('ritualScheduler.driftDetected') : 'AI Kernel: Drift detectado nas regras. O contexto pode estar desatualizado.',
             runRitualLabel,

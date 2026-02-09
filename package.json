@@ -15,5 +15,8 @@
     "install:core": "npm install --workspace=@ai-agent/core"
   },
   "author": "Junio",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@nanobot-ai/nanobot": "github:nanobot-ai/nanobot"
+  }
 }

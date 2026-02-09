@@ -2,7 +2,7 @@ const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
-const AIClient = require('./ai-client');
+const MigrationAIClient = require('./ai-client-migration');
 const ExecutionJournal = require('../cli/core/reliability/ExecutionJournal');
 
 let i18nRef = null;
@@ -17,7 +17,7 @@ class AutomationTreeProvider {
     constructor(i18n) {
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
-        this.client = new AIClient();
+        this.client = new MigrationAIClient();
         i18nRef = i18n || i18nRef;
     }
 
@@ -100,13 +100,13 @@ class AutomationTreeProvider {
 
         if (element.contextValue === 'evolution-section') {
             const items = [];
-            
+
             // Heartbeat
             items.push(this.createActionItem("🫀 Trigger Heartbeat", "ai-agent-sync.agent.heartbeat", [], "Run a life cycle beat"));
-            
+
             // Nucleus
             items.push(this.createActionItem("🧠 Open Nucleus", "ai-agent-sync.agent.nucleus", [], "View Memory Core"));
-            
+
             // Soul / SBT
             const mintItem = new vscode.TreeItem("Cunhar SBT (Mint)", vscode.TreeItemCollapsibleState.None);
             mintItem.command = { command: 'ai-doc.soul.mint', title: 'Cunhar SBT' };
@@ -123,7 +123,7 @@ class AutomationTreeProvider {
 
         if (element.contextValue === 'context-section') {
             const items = [];
-            
+
             items.push(this.createActionItem(
                 t('automation.contextSnapLabel'),
                 'ai-agent-sync.context.snap',
@@ -143,25 +143,25 @@ class AutomationTreeProvider {
 
         if (element.contextValue === 'maintenance-section') {
             const items = [];
-            
+
             items.push(this.createActionItem(
-                t('automation.scanDocsLabel'), 
-                'ai-agent-sync.scanDocs', 
-                [], 
+                t('automation.scanDocsLabel'),
+                'ai-agent-sync.scanDocs',
+                [],
                 t('automation.scanDocsTooltip')
             ));
 
             items.push(this.createActionItem(
-                t('automation.runRitualLabel'), 
-                'ai-agent-sync.ritual', 
-                [], 
+                t('automation.runRitualLabel'),
+                'ai-agent-sync.ritual',
+                [],
                 t('automation.runRitualTooltip')
             ));
 
             items.push(this.createActionItem(
-                t('automation.evolveRulesLabel'), 
-                'ai-agent-sync.evolve', 
-                [], 
+                t('automation.evolveRulesLabel'),
+                'ai-agent-sync.evolve',
+                [],
                 t('automation.evolveRulesTooltip')
             ));
 
@@ -175,7 +175,7 @@ class AutomationTreeProvider {
                 const cleanOutput = output.replace(/\x1b\[[0-9;]*m/g, '');
                 const lines = cleanOutput.split('\n');
                 const rules = [];
-                
+
                 lines.forEach(line => {
                     const trimmed = line.trim();
                     // Captura linhas que parecem regras (começam com traço ou bullet)
@@ -185,9 +185,9 @@ class AutomationTreeProvider {
                         rules.push(ruleItem);
                     }
                 });
-                
+
                 if (rules.length === 0) {
-                     return [new vscode.TreeItem('No active rules found')];
+                    return [new vscode.TreeItem('No active rules found')];
                 }
                 return rules;
             } catch (e) {
@@ -341,7 +341,7 @@ async function handleGeneratePrompt() {
 
     if (!goal) return;
 
-    const client = new AIClient(); // Re-instantiate to adapt to workspace root if needed
+    const client = new MigrationAIClient(); // Re-instantiate to adapt to workspace root if needed
 
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
@@ -395,7 +395,7 @@ async function handleRunWorkflow(workflowId, workflowParams) {
                 placeHolder: param.default || '',
                 value: param.default || ''
             });
-            
+
             if (val === undefined) return; // Cancelled
             params[param.name] = val;
         }
@@ -433,13 +433,13 @@ async function handleRunWorkflow(workflowId, workflowParams) {
                 });
             }
 
-            const client = new AIClient();
+            const client = new MigrationAIClient();
             await client.runWorkflow(targetWorkflow, params, { opId });
-            
+
             if (journal && opId) {
                 journal.completeOperation(opId, { status: 'success' });
             }
-            
+
             vscode.window.showInformationMessage(t('automation.workflowCompleted', targetWorkflow));
         } catch (e) {
             if (journal && opId) {
@@ -459,7 +459,7 @@ async function handleRunWorkflow(workflowId, workflowParams) {
  * Laravel Handlers
  */
 async function handleLaravelAnalyze() {
-    const client = new AIClient();
+    const client = new MigrationAIClient();
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
         title: "Generating Analysis Prompt...",
@@ -487,7 +487,7 @@ async function handleLaravelCreateLayer() {
     });
     if (!entityName) return;
 
-    const client = new AIClient();
+    const client = new MigrationAIClient();
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
         title: "Generating Creation Prompt...",
@@ -509,7 +509,7 @@ async function handleLaravelCreateLayer() {
 }
 
 async function handleLaravelListEntities() {
-    const client = new AIClient();
+    const client = new MigrationAIClient();
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
         title: "Generating List Prompt...",
@@ -540,7 +540,7 @@ async function handleReactCreateComponent() {
     });
     if (!componentName) return;
 
-    const client = new AIClient();
+    const client = new MigrationAIClient();
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
         title: "Generating Component Prompt...",
@@ -568,7 +568,7 @@ async function handleReactCreateHook() {
     });
     if (!hookName) return;
 
-    const client = new AIClient();
+    const client = new MigrationAIClient();
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
         title: "Generating Hook Prompt...",
@@ -617,14 +617,14 @@ async function handleGenerateCommitMessage() {
                 return;
             }
 
-            const client = new AIClient();
+            const client = new MigrationAIClient();
             // Truncate if too long (CLI limit safety)
             const maxLength = 8000;
             const truncatedDiff = diff.length > maxLength ? diff.substring(0, maxLength) + "\n...[truncated]" : diff;
 
             const goal = `Generate a Conventional Commit message for these changes:\n\n${truncatedDiff}`;
             const prompt = await client.generatePrompt(goal);
-            
+
             const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
             await vscode.window.showTextDocument(doc);
 
@@ -671,13 +671,13 @@ async function handleGeneratePRDescription() {
                 return;
             }
 
-            const client = new AIClient();
+            const client = new MigrationAIClient();
             const maxLength = 8000;
             const truncatedDiff = diff.length > maxLength ? diff.substring(0, maxLength) + "\n...[truncated]" : diff;
 
             const goal = `Generate a Pull Request description (Title, Summary, Changes, Impact) for these changes against ${targetBranch}:\n\n${truncatedDiff}`;
             const prompt = await client.generatePrompt(goal);
-            
+
             const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
             await vscode.window.showTextDocument(doc);
 
@@ -716,13 +716,13 @@ async function handleGitCodeReview() {
                 return;
             }
 
-            const client = new AIClient();
+            const client = new MigrationAIClient();
             const maxLength = 8000;
             const truncatedDiff = diff.length > maxLength ? diff.substring(0, maxLength) + "\n...[truncated]" : diff;
 
             const goal = `Perform a Code Review on these changes. Focus on:\n1. Potential Bugs\n2. Security Issues\n3. Performance Improvements\n4. Best Practices\n\nChanges:\n${truncatedDiff}`;
             const prompt = await client.generatePrompt(goal);
-            
+
             const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
             await vscode.window.showTextDocument(doc);
 
@@ -856,7 +856,7 @@ async function handleSoulMint() {
     });
     if (!type) return;
 
-    const client = new AIClient();
+    const client = new MigrationAIClient();
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
         title: `Cunhando SBT: ${title}...`,
@@ -865,13 +865,13 @@ async function handleSoulMint() {
         try {
             // Note: Quotes around title to handle spaces
             const output = await client.execute(['soul', 'mint', `"${title}"`, `--type=${type}`]);
-            
+
             if (output.includes('✅')) {
-                 vscode.window.showInformationMessage(`SBT Cunhado: ${title}`);
+                vscode.window.showInformationMessage(`SBT Cunhado: ${title}`);
             } else {
-                 vscode.window.showErrorMessage(`Falha: ${output}`);
+                vscode.window.showErrorMessage(`Falha: ${output}`);
             }
-            
+
             if (loggerRef) loggerRef.log(output);
         } catch (e) {
             vscode.window.showErrorMessage(`Erro ao cunhar SBT: ${e.message}`);
@@ -880,7 +880,7 @@ async function handleSoulMint() {
 }
 
 async function handleSoulResonate() {
-    const client = new AIClient();
+    const client = new MigrationAIClient();
     vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
         title: "Ressonando SBTs...",
