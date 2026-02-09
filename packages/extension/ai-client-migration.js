@@ -12,13 +12,13 @@ const path = require('path');
 class MigrationAIClient {
     constructor(projectRoot) {
         this.projectRoot = projectRoot || vscode.workspace.rootPath;
-        
+
         // Inicializa o Core AIClient
         this.coreClient = new CoreAIClient({
             basePath: this.projectRoot,
             logger: console
         });
-        
+
         // Mantém compatibilidade com interface legada
         this.logger = null;
     }
@@ -54,13 +54,14 @@ class MigrationAIClient {
         const [command, ...restArgs] = args;
 
         switch (command) {
-            case 'build':
+            case 'build': {
                 // Usa o MemoryManager do core
                 const memory = this.coreClient.memoryManager;
                 const context = await memory.buildContext();
                 return JSON.stringify(context, null, 2);
+            }
 
-            case 'init':
+            case 'init': {
                 // Usa o WAL do core
                 const wal = this.coreClient.walManager;
                 await wal.beginTransaction();
@@ -71,13 +72,15 @@ class MigrationAIClient {
                 });
                 await wal.commit();
                 return 'Workspace initialized with Core WAL';
+            }
 
-            case 'status':
+            case 'status': {
                 // Usa o MemoryManager para status
                 const status = await this.coreClient.memoryManager.getStatus();
                 return JSON.stringify(status, null, 2);
+            }
 
-            case 'create':
+            case 'create': {
                 if (restArgs[0] === 'persona') {
                     // Cria persona através do MemoryManager
                     const personaData = JSON.parse(restArgs[1] || '{}');
@@ -85,14 +88,16 @@ class MigrationAIClient {
                     return JSON.stringify(result, null, 2);
                 }
                 break;
+            }
 
-            case 'list':
+            case 'list': {
                 if (restArgs[0] === 'personas') {
                     // Lista personas através do MemoryManager
                     const personas = await this.coreClient.memoryManager.listPersonas();
                     return JSON.stringify(personas, null, 2);
                 }
                 break;
+            }
 
             default:
                 // Para comandos não mapeados, usa o execute do core
