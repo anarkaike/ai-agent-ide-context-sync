@@ -1,6 +1,7 @@
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
+const WebSocket = require('ws');
 const SwarmRegistry = require('../../core/swarm/Registry');
 const TaskManager = require('./TaskManager');
 const SecurityKernel = require('./SecurityKernel');
@@ -23,6 +24,9 @@ const startServer = async () => {
 
     // Initial Sync
     await neuralLink.sync();
+
+    // WebSocket Broadcast Placeholder (Initialized after server creation)
+    let broadcast = (type, data) => {};
 
     const server = http.createServer(async (req, res) => {
         // Security Check
@@ -73,6 +77,7 @@ const startServer = async () => {
                     );
 
                     console.log(`[TaskQueue] Task created: ${newTask.id}`);
+                    broadcast('TASK_UPDATE', newTask);
 
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ success: true, task: newTask }));
@@ -123,6 +128,7 @@ const startServer = async () => {
                     const registered = await registry.registerAgent(data);
                     
                     console.log(`[Swarm] External Agent Registered via HTTP: ${registered.name} (${registered.id}) from ${netStatus.network}`);
+                    broadcast('AGENT_UPDATE', registered);
 
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ success: true, agent: registered }));
@@ -154,6 +160,7 @@ const startServer = async () => {
                     };
 
                     await neuralLink.sendMessage(msg);
+                    broadcast('COMMS_UPDATE', msg);
                     
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ success: true, messageId: msg.id }));
@@ -250,13 +257,24 @@ const startServer = async () => {
 
                     /* Header */
                     header {
-                        padding: 12px 24px;
+                        padding: 6px 16px;
                         border-bottom: 1px solid var(--border);
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
                         background: var(--sidebar-bg);
                         z-index: 100;
+                        height: 40px; /* Force compact height */
+                    }
+
+                    header h1 {
+                        margin: 0;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 1rem;
+                        font-weight: 600;
+                        color: var(--text-primary);
                     }
 
                     /* Layout */
@@ -479,17 +497,15 @@ const startServer = async () => {
             <body>
                 <header>
                     <h1>
-                        <span style="font-size: 1.5rem;">🌌</span> 
-                        <div>
-                            Swarm Existential Map
-                            <div style="font-size: 0.65rem; color: var(--text-secondary); letter-spacing: 1px;">COCKPIT DE ORQUESTRAÇÃO</div>
-                        </div>
+                        <span style="font-size: 1.2rem;">🌌</span> 
+                        <span>Swarm Existential Map</span>
+                        <span style="font-size: 0.7rem; color: var(--text-secondary); opacity: 0.7; border-left: 1px solid var(--border); padding-left: 8px; margin-left: 0px; letter-spacing: 0.5px;">COCKPIT</span>
                     </h1>
-                    <div style="display:flex; gap:12px; align-items:center;">
-                        <input type="text" id="global-search" class="cmd-input-lg" style="padding: 6px 12px; font-size: 0.75rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px;" placeholder="🔍 Filtrar Agentes...">
-                        <button class="cmd-btn-lg" style="padding: 6px 12px; font-size: 0.75rem; background: var(--success); color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="openRequestModal()">➕ Nova Tarefa</button>
-                        <div class="tag" style="border: 1px solid var(--border); color: var(--text-secondary)">
-                            🛡️ <span id="security-status-text">Proteção Ativa</span>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="text" id="global-search" style="padding: 4px 8px; font-size: 0.7rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; width: 150px;" placeholder="🔍 Filtrar...">
+                        <button style="padding: 4px 8px; font-size: 0.7rem; background: var(--success); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="openRequestModal()">➕ Tarefa</button>
+                        <div class="tag" style="border: 1px solid var(--border); color: var(--text-secondary); font-size: 0.65rem; padding: 2px 6px;">
+                            🛡️ <span id="security-status-text">Ativo</span>
                         </div>
                     </div>
                 </header>
@@ -502,6 +518,20 @@ const startServer = async () => {
 
                     <!-- Sidebar: System Health & Queue -->
                     <div class="sidebar-area">
+                        
+                        <!-- 0. Network Uplink Status (NEW) -->
+                        <div class="widget" style="flex: 0 0 auto; border-bottom: 1px solid var(--border); background: rgba(0, 255, 136, 0.05);">
+                            <div class="widget-header">
+                                <div>
+                                    <span>👽 Borg Link (Uplink)</span>
+                                    <div style="font-size:0.6em; color:var(--text-secondary); margin-top:2px;">
+                                        <span style="color:#0f0;">●</span> Listening on Tailscale
+                                    </div>
+                                </div>
+                                <span class="tag" style="background:var(--accent); color:#fff; font-family:monospace;">100.104.189.106:3456</span>
+                            </div>
+                        </div>
+
                         <!-- 1. Protection Log (Previously Network Grid) -->
                         <div class="widget" style="flex: 1;">
                             <div class="widget-header">
@@ -597,11 +627,59 @@ const startServer = async () => {
                         tasks: [],
                         logs: [],
                         securityLogs: [],
+                        comms: [],
                         filter: '',
                         ui: {
                             activeTabs: {} // agentId -> tabName
                         }
                     };
+
+                    // WebSocket Connection
+                    function connectWebSocket() {
+                        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                        const ws = new WebSocket(protocol + '//' + window.location.host);
+
+                        ws.onopen = () => {
+                            console.log('✅ [WebSocket] Connected');
+                            const status = document.getElementById('security-status-text');
+                            if (status && !status.innerHTML.includes('⚡')) status.innerHTML += ' <span style="color:var(--success)">⚡</span>';
+                        };
+
+                        ws.onmessage = (event) => {
+                            try {
+                                const msg = JSON.parse(event.data);
+                                
+                                if (msg.type === 'WELCOME') {
+                                    console.log('🌌 [Swarm]', msg.message);
+                                }
+                                else if (msg.type === 'COMMS_UPDATE') {
+                                    // Avoid duplicates
+                                    if (!state.comms.find(c => c.id === msg.data.id)) {
+                                        state.comms.unshift(msg.data);
+                                        renderCommsFeed();
+                                    }
+                                }
+                                else if (msg.type === 'TASK_UPDATE') {
+                                    if (!state.tasks.find(t => t.id === msg.data.id)) {
+                                        state.tasks.unshift(msg.data);
+                                        renderGlobalQueue();
+                                    }
+                                }
+                                else if (msg.type === 'AGENT_UPDATE') {
+                                    updateData(); // Trigger full sync
+                                }
+                            } catch (e) {
+                                console.error('WS Error', e);
+                            }
+                        };
+
+                        ws.onclose = () => {
+                            console.log('❌ [WebSocket] Disconnected. Reconnecting in 5s...');
+                            setTimeout(connectWebSocket, 5000);
+                        };
+                    }
+
+                    connectWebSocket();
 
                     // Listeners
                     document.getElementById('global-search').addEventListener('input', (e) => {
@@ -1215,6 +1293,36 @@ const startServer = async () => {
         res.writeHead(404);
         res.end('Not Found');
     });
+
+    // WebSocket Initialization
+    const wss = new WebSocket.Server({ noServer: true });
+    
+    server.on('upgrade', (request, socket, head) => {
+        // Security: Validate origin if needed (though we want remote access)
+        // const origin = request.headers['origin'];
+        // if (!securityKernel.validateOrigin(origin)) { ... }
+
+        wss.handleUpgrade(request, socket, head, (ws) => {
+            wss.emit('connection', ws, request);
+        });
+    });
+    
+    wss.on('connection', (ws, req) => {
+        const ip = req.socket.remoteAddress;
+        console.log(`⚡ [WebSocket] New connection from ${ip}`);
+        ws.send(JSON.stringify({ type: 'WELCOME', message: 'Connected to Swarm Neural Link' }));
+        
+        ws.on('error', console.error);
+    });
+
+    broadcast = (type, data) => {
+        const payload = JSON.stringify({ type, data });
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(payload);
+            }
+        });
+    };
 
     server.listen(PORT, '0.0.0.0', () => {
         console.log(`🌌 Swarm Existential Map running at http://localhost:${PORT} (Accessible via Tailscale/LAN)`);
