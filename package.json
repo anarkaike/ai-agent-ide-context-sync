@@ -17,6 +17,7 @@
   "author": "Junio",
   "license": "MIT",
   "dependencies": {
-    "@nanobot-ai/nanobot": "github:nanobot-ai/nanobot"
+    "@nanobot-ai/nanobot": "github:nanobot-ai/nanobot",
+    "aws-sdk": "^2.1693.0"
   }
 }
