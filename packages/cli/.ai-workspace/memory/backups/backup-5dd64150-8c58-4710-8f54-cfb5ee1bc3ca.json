@@ -1,0 +1,20 @@
+{
+  "id": "5dd64150-8c58-4710-8f54-cfb5ee1bc3ca",
+  "timestamp": "2026-02-09T03:12:04.561Z",
+  "nucleus": {
+    "identity": {
+      "Nome": "Agente-Core",
+      "Papel": "Gestor de Memória",
+      "Status": "Inicializando"
+    },
+    "consciousness": "LEVEL_1",
+    "state": "ACTIVE",
+    "memories": [],
+    "connections": [],
+    "lastUpdate": "2026-02-09T03:02:04.549Z",
+    "version": "2.0.0"
+  },
+  "sbtRegistry": [],
+  "mycelium": [],
+  "version": "2.0.0"
+}

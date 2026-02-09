@@ -1,0 +1,10 @@
+{
+  "id": "c2756b3a-c66c-4b47-aee6-0f4f0985c5a2",
+  "name": "periodic",
+  "createdAt": "2026-02-09T03:48:04.676Z",
+  "journalSize": 0,
+  "metadata": {
+    "reason": "Periodic checkpoint",
+    "interval": 60000
+  }
+}

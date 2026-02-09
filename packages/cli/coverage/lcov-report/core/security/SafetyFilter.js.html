@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>0/17</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>0/12</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/11</span>
+                <span class='fraction'>0/14</span>
             </div>
         
             
@@ -116,7 +116,15 @@
 <a name='L51'></a><a href='#L51'>51</a>
 <a name='L52'></a><a href='#L52'>52</a>
 <a name='L53'></a><a href='#L53'>53</a>
-<a name='L54'></a><a href='#L54'>54</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -143,13 +151,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -157,9 +158,24 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -179,14 +195,17 @@ class SafetyFilter {
 <span class="fstat-no" title="function not covered" >    co</span>nstructor() {
         // Padrões de risco conhecidos (RegEx simples por enquanto, evoluir para Embeddings/LLM no futuro)
 <span class="cstat-no" title="statement not covered" >        this.RISK_PATTERNS = [</span>
-            { level: 'CRITICAL', regex: /ignore previous instructions/i, reason: 'Tentativa de Jailbreak' },
-            { level: 'CRITICAL', regex: /system override/i, reason: 'Tentativa de Override de Sistema' },
-            { level: 'CRITICAL', regex: /delete all files/i, reason: 'Comando Destrutivo' },
-            { level: 'CRITICAL', regex: /rm -rf \//i, reason: 'Comando de Shell Destrutivo' },
-            { level: 'HIGH', regex: /expose env vars/i, reason: 'Exfiltração de Dados' },
-            { level: 'HIGH', regex: /cat \/etc\/passwd/i, reason: 'Exfiltração de Dados de Sistema' },
-            { level: 'MEDIUM', regex: /download/i, reason: 'Download externo (Potencial Malware)' },
-            { level: 'MEDIUM', regex: /curl|wget/i, reason: 'Acesso à rede não supervisionado' }
+            { level: 'CRITICAL', regex: /ignore previous instructions/i, reason: 'Tentativa de Jailbreak', forceManual: true },
+            { level: 'CRITICAL', regex: /system override/i, reason: 'Tentativa de Override de Sistema', forceManual: true },
+            { level: 'CRITICAL', regex: /delete all files/i, reason: 'Comando Destrutivo', forceManual: true },
+            { level: 'CRITICAL', regex: /rm -rf \//i, reason: 'Comando de Shell Destrutivo', forceManual: true },
+            { level: 'CRITICAL', regex: /(curl|wget).*\|.*(sh|bash)/i, reason: 'Download e pipe direto ao shell', forceManual: true },
+            { level: 'CRITICAL', regex: /(bash|sh)\s+-c\s+\"curl/i, reason: 'Invoke shell via bash -c curl', forceManual: true },
+            { level: 'HIGH', regex: /expose env vars/i, reason: 'Exfiltração de Dados', forceManual: true },
+            { level: 'HIGH', regex: /cat \/etc\/passwd/i, reason: 'Exfiltração de Dados de Sistema', forceManual: true },
+            { level: 'HIGH', regex: /chmod\s+\+\s*x/i, reason: 'Permissões amplas (potencial elevação)', forceManual: true },
+            { level: 'MEDIUM', regex: /download.*https?:\/\//i, reason: 'Download externo (Potencial Malware)' },
+            { level: 'MEDIUM', regex: /(curl|wget|powerShell)\s+https?:\/\//i, reason: 'Acesso à rede não supervisionado' }
         ];
     }
 &nbsp;
@@ -198,6 +217,7 @@ class SafetyFilter {
 <span class="fstat-no" title="function not covered" >    an</span>alyze(content) {
         const threats = <span class="cstat-no" title="statement not covered" >[];</span>
         let score = <span class="cstat-no" title="statement not covered" >100;</span> // Começa seguro (100) e perde pontos
+        let manualFlag = <span class="cstat-no" title="statement not covered" >false;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        for (const pattern of this.RISK_PATTERNS) {</span>
 <span class="cstat-no" title="statement not covered" >            if (pattern.regex.test(content)) {</span>
@@ -209,6 +229,9 @@ class SafetyFilter {
 <span class="cstat-no" title="statement not covered" >                if (pattern.level === 'CRITICAL') <span class="cstat-no" title="statement not covered" >score -= 100;</span></span>
 <span class="cstat-no" title="statement not covered" >                if (pattern.level === 'HIGH') <span class="cstat-no" title="statement not covered" >score -= 50;</span></span>
 <span class="cstat-no" title="statement not covered" >                if (pattern.level === 'MEDIUM') <span class="cstat-no" title="statement not covered" >score -= 20;</span></span>
+<span class="cstat-no" title="statement not covered" >                if (pattern.forceManual) {</span>
+<span class="cstat-no" title="statement not covered" >                    manualFlag = true;</span>
+                }
             }
         }
 &nbsp;
@@ -216,7 +239,8 @@ class SafetyFilter {
             safe: score &gt; 60, // Limite de tolerância
             requires_approval: score &lt;= 80 &amp;&amp; score &gt; 0,
             score: Math.max(0, score),
-            threats: threats
+            threats: threats,
+            requires_manual_approval: manualFlag
         };
     }
 }
@@ -229,7 +253,7 @@ class SafetyFilter {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-08T21:28:00.709Z
+                at 2026-02-09T03:00:31.670Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
