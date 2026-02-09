@@ -5,19 +5,15 @@
  * e o novo @ai-agent/core unificado.
  */
 
-const { AIClient: CoreAIClient } = require('@ai-agent/core');
+const { initializeCore } = require('@ai-agent/core');
 const vscode = require('vscode');
 const path = require('path');
 
 class MigrationAIClient {
     constructor(projectRoot) {
         this.projectRoot = projectRoot || vscode.workspace.rootPath;
-
-        // Inicializa o Core AIClient
-        this.coreClient = new CoreAIClient({
-            basePath: this.projectRoot,
-            logger: console
-        });
+        this.initialized = false;
+        this.coreComponents = null;
 
         // Mantém compatibilidade com interface legada
         this.logger = null;
@@ -28,12 +24,49 @@ class MigrationAIClient {
     }
 
     /**
+     * Inicializa os componentes do Core (lazy initialization)
+     */
+    async _ensureInitialized() {
+        if (this.initialized) return;
+
+        try {
+            // Inicializa o Core System
+            this.coreComponents = await initializeCore({
+                security: {
+                    enableSandbox: true,
+                    enableEncryption: true,
+                    enableSigning: true
+                },
+                memory: {
+                    enableWAL: true,
+                    checkpointInterval: 60000,
+                    workspacePath: this.projectRoot
+                },
+                basePath: this.projectRoot
+            });
+
+            this.initialized = true;
+            if (MigrationAIClient.logger) {
+                MigrationAIClient.logger.log('✅ Core System initialized successfully in Extension');
+            }
+        } catch (error) {
+            if (MigrationAIClient.logger) {
+                MigrationAIClient.logger.error('❌ Failed to initialize Core System in Extension:', error);
+            }
+            throw error;
+        }
+    }
+
+    /**
      * Executa qualquer comando do CLI (interface legada)
      * @param {string[]} args 
      * @returns {Promise<string>}
      */
     async execute(args) {
         try {
+            // Garante inicialização
+            await this._ensureInitialized();
+
             // Mapeia comandos legados para o Core AIClient
             const result = await this._mapLegacyCommand(args);
             return result;
@@ -56,52 +89,48 @@ class MigrationAIClient {
         switch (command) {
             case 'build': {
                 // Usa o MemoryManager do core
-                const memory = this.coreClient.memoryManager;
-                const context = await memory.buildContext();
+                const context = await this.coreComponents.memory.buildContext();
                 return JSON.stringify(context, null, 2);
             }
 
             case 'init': {
                 // Usa o WAL do core
-                const wal = this.coreClient.walManager;
-                await wal.beginTransaction();
-                await wal.addOperation({
+                await this.coreComponents.wal.beginTransaction();
+                await this.coreComponents.wal.addOperation({
                     type: 'init',
                     timestamp: new Date().toISOString(),
                     data: { workspace: this.projectRoot }
                 });
-                await wal.commit();
+                await this.coreComponents.wal.commit();
                 return 'Workspace initialized with Core WAL';
             }
 
             case 'status': {
                 // Usa o MemoryManager para status
-                const status = await this.coreClient.memoryManager.getStatus();
+                const status = await this.coreComponents.memory.getStatus();
                 return JSON.stringify(status, null, 2);
             }
 
-            case 'create': {
+            case 'create':
                 if (restArgs[0] === 'persona') {
                     // Cria persona através do MemoryManager
                     const personaData = JSON.parse(restArgs[1] || '{}');
-                    const result = await this.coreClient.memoryManager.createPersona(personaData);
+                    const result = await this.coreComponents.memory.createPersona(personaData);
                     return JSON.stringify(result, null, 2);
                 }
                 break;
-            }
 
-            case 'list': {
+            case 'list':
                 if (restArgs[0] === 'personas') {
                     // Lista personas através do MemoryManager
-                    const personas = await this.coreClient.memoryManager.listPersonas();
+                    const personas = await this.coreComponents.memory.listPersonas();
                     return JSON.stringify(personas, null, 2);
                 }
                 break;
-            }
 
             default:
                 // Para comandos não mapeados, usa o execute do core
-                return await this.coreClient.execute(args);
+                return await this.coreComponents.client.execute(args);
         }
 
         throw new Error(`Command not supported: ${command}`);
@@ -126,28 +155,28 @@ class MigrationAIClient {
      * Acesso direto ao Core AIClient para funcionalidades avançadas
      */
     getCoreClient() {
-        return this.coreClient;
+        return this.coreComponents?.client;
     }
 
     /**
      * Acesso ao MemoryManager
      */
     getMemoryManager() {
-        return this.coreClient.memoryManager;
+        return this.coreComponents?.memory;
     }
 
     /**
      * Acesso ao WALManager
      */
     getWALManager() {
-        return this.coreClient.walManager;
+        return this.coreComponents?.wal;
     }
 
     /**
      * Acesso ao SecuritySandbox
      */
     getSecuritySandbox() {
-        return this.coreClient.securitySandbox;
+        return this.coreComponents?.security;
     }
 }
 

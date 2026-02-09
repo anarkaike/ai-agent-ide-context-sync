@@ -6,6 +6,7 @@
  * - Resilient memory system with WAL rollback
  * - Security sandbox and cryptographic primitives
  * - Agent mesh network foundation
+ * - Intelligent sync engine with delta compression
  */
 
 export { AIClient } from './client/AIClient.js';
@@ -13,6 +14,16 @@ export { MemoryManager } from './memory/MemoryManager.js';
 export { SecuritySandbox } from './security/SecuritySandbox.js';
 export { WALManager } from './memory/WALManager.js';
 export { ToneConfigManager } from './client/ToneConfigManager.js';
+
+// Network Components
+export { AgentMeshNetwork } from './network/AgentMeshNetwork.js';
+export { ServiceDiscovery } from './network/ServiceDiscovery.js';
+export { LoadBalancer } from './network/LoadBalancer.js';
+
+// Sync Components
+export { IntelligentSyncEngine } from './sync/IntelligentSyncEngine.js';
+export { ConflictResolutionEngine } from './sync/ConflictResolutionEngine.js';
+export { DeltaCompressionEngine } from './sync/DeltaCompressionEngine.js';
 
 // Core configuration
 export const CoreConfig = {
@@ -28,6 +39,19 @@ export const CoreConfig = {
     enableWAL: true,
     checkpointInterval: 60000, // 1 minute
     maxJournalSize: 1000
+  },
+  network: {
+    port: 8080,
+    heartbeatInterval: 30000,
+    discoveryInterval: 10000,
+    healthCheckInterval: 30000
+  },
+  sync: {
+    compressionLevel: 6,
+    deltaThreshold: 1024,
+    conflictResolution: 'semantic-merge',
+    syncInterval: 5000,
+    maxRetries: 3
   }
 };
 
@@ -45,6 +69,12 @@ export async function initializeCore(options = {}) {
   const { MemoryManager } = await import('./memory/MemoryManager.js');
   const { ToneConfigManager } = await import('./client/ToneConfigManager.js');
   const { AIClient } = await import('./client/AIClient.js');
+  const { AgentMeshNetwork } = await import('./network/AgentMeshNetwork.js');
+  const { ServiceDiscovery } = await import('./network/ServiceDiscovery.js');
+  const { LoadBalancer } = await import('./network/LoadBalancer.js');
+  const { IntelligentSyncEngine } = await import('./sync/IntelligentSyncEngine.js');
+  const { ConflictResolutionEngine } = await import('./sync/ConflictResolutionEngine.js');
+  const { DeltaCompressionEngine } = await import('./sync/DeltaCompressionEngine.js');
 
   // Initialize security first
   const security = new SecuritySandbox(config.security);
@@ -61,16 +91,34 @@ export async function initializeCore(options = {}) {
   const toneManager = new ToneConfigManager();
   const client = new AIClient(toneManager, security);
 
+  // Initialize network components
+  const network = new AgentMeshNetwork(config.network);
+  const serviceDiscovery = new ServiceDiscovery(network);
+  const loadBalancer = new LoadBalancer(network, config.network);
+
+  // Initialize sync components
+  const syncEngine = new IntelligentSyncEngine(config.sync);
+  const conflictEngine = new ConflictResolutionEngine(config.sync);
+  const compressionEngine = new DeltaCompressionEngine(config.sync);
+
   return {
     client,
     memory,
     security,
     wal,
+    network,
+    serviceDiscovery,
+    loadBalancer,
+    syncEngine,
+    conflictEngine,
+    compressionEngine,
     config,
     // Utility methods
     shutdown: async () => {
       await wal.close();
       await security.cleanup();
+      await network.stop();
+      await syncEngine.stop();
     }
   };
 }

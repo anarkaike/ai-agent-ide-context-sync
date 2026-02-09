@@ -967,31 +967,13 @@ function activate(context) {
 
     // Initialize Core Components
     try {
-        // Inicializa o Core System unificado
-        coreSystem = {
-            aiClient: new CoreAIClient({
-                basePath: projectRoot,
-                logger: logger
-            }),
-            memoryManager: new MemoryManager({
-                workspacePath: projectRoot,
-                logger: logger
-            }),
-            walManager: new WALManager({
-                workspacePath: projectRoot,
-                logger: logger
-            }),
-            securitySandbox: new SecuritySandbox({
-                logger: logger
-            })
-        };
+        logger.log('🔄 Initializing Core System through MigrationAIClient...');
 
         // Inicializa o MigrationAIClient para compatibilidade
         aiClient = new MigrationAIClient(projectRoot);
         aiClient.setLogger(logger);
 
-        logger.log('✅ Core System initialized successfully');
-        logger.log('✅ MigrationAIClient ready for legacy compatibility');
+        logger.log('✅ MigrationAIClient ready with Core System integration');
     } catch (error) {
         logger.error('❌ Failed to initialize Core System:', error);
         vscode.window.showErrorMessage(`Failed to initialize AI Agent Core: ${error.message}`);

@@ -16,16 +16,17 @@ import { EventEmitter } from 'events';
 export class WALManager extends EventEmitter {
   constructor(options = {}) {
     super();
-    
+
     this.options = {
       journalPath: '.ai-workspace/journal/wal',
       checkpointPath: '.ai-workspace/checkpoints',
       maxJournalSize: 1000,
       checkpointInterval: 60000, // 1 minute
       syncInterval: 5000, // 5 seconds
+      maxCheckpoints: 10, // Keep only last 10 checkpoints
       ...options
     };
-    
+
     this.journal = [];
     this.checkpoints = new Map();
     this.isInitialized = false;
@@ -42,24 +43,24 @@ export class WALManager extends EventEmitter {
       // Ensure directories exist
       await fs.ensureDir(this.options.journalPath);
       await fs.ensureDir(this.options.checkpointPath);
-      
+
       // Load existing journal
       await this.loadJournal();
-      
+
       // Load existing checkpoints
       await this.loadCheckpoints();
-      
+
       // Start periodic sync
       this.startSyncTimer();
-      
+
       // Start checkpoint timer
       this.startCheckpointTimer();
-      
+
       this.isInitialized = true;
       this.emit('initialized');
-      
+
       console.log('[WALManager] Initialized successfully');
-      
+
     } catch (error) {
       console.error('[WALManager] Initialization failed:', error);
       throw error;
@@ -88,7 +89,7 @@ export class WALManager extends EventEmitter {
     };
 
     this.currentTransaction = transaction;
-    
+
     // Log transaction start
     await this.appendLog({
       type: 'TRANSACTION_BEGIN',
@@ -119,7 +120,7 @@ export class WALManager extends EventEmitter {
     };
 
     this.currentTransaction.operations.push(operationLog);
-    
+
     // Log operation
     await this.appendLog({
       type: 'OPERATION',
@@ -153,7 +154,7 @@ export class WALManager extends EventEmitter {
     await this.sync();
 
     this.emit('transactionCommit', transaction);
-    
+
     const result = {
       success: true,
       transactionId: transaction.id,
@@ -244,9 +245,12 @@ export class WALManager extends EventEmitter {
     await fs.writeJson(journalPath, this.journal, { spaces: 2 });
 
     this.checkpoints.set(checkpointId, checkpoint);
-    
+
+    // Trim old checkpoints
+    await this.trimCheckpoints();
+
     this.emit('checkpointCreated', checkpoint);
-    
+
     console.log(`[WALManager] Checkpoint created: ${name} (${checkpointId})`);
     return checkpointId;
   }
@@ -320,7 +324,7 @@ export class WALManager extends EventEmitter {
     try {
       const journalPath = path.join(this.options.journalPath, 'wal.json');
       await fs.writeJson(journalPath, this.journal, { spaces: 2 });
-      
+
       this.emit('synced', { journalSize: this.journal.length });
     } catch (error) {
       console.error('[WALManager] Sync failed:', error);
@@ -350,7 +354,7 @@ export class WALManager extends EventEmitter {
   async loadCheckpoints() {
     try {
       const checkpointFiles = await fs.readdir(this.options.checkpointPath);
-      
+
       for (const file of checkpointFiles) {
         if (file.endsWith('.json') && !file.includes('-journal')) {
           const checkpointPath = path.join(this.options.checkpointPath, file);
@@ -358,7 +362,7 @@ export class WALManager extends EventEmitter {
           this.checkpoints.set(checkpoint.id, checkpoint);
         }
       }
-      
+
       console.log(`[WALManager] Loaded ${this.checkpoints.size} checkpoints`);
     } catch (error) {
       console.error('[WALManager] Failed to load checkpoints:', error);
@@ -371,17 +375,17 @@ export class WALManager extends EventEmitter {
   async trimJournal() {
     const keepCount = Math.floor(this.options.maxJournalSize * 0.8);
     const toRemove = this.journal.length - keepCount;
-    
+
     if (toRemove > 0) {
       // Create checkpoint before trimming
       await this.createCheckpoint('auto-trim', {
         reason: 'Journal size limit exceeded',
         removedEntries: toRemove
       });
-      
+
       // Remove old entries
       this.journal = this.journal.slice(toRemove);
-      
+
       console.log(`[WALManager] Trimmed ${toRemove} journal entries`);
     }
   }
@@ -412,7 +416,7 @@ export class WALManager extends EventEmitter {
    */
   async rollbackFileWrite(operation) {
     const { filePath, backupPath } = operation;
-    
+
     if (backupPath && await fs.pathExists(backupPath)) {
       await fs.move(backupPath, filePath);
       return { success: true, action: 'restored_from_backup' };
@@ -428,12 +432,12 @@ export class WALManager extends EventEmitter {
    */
   async rollbackFileDelete(operation) {
     const { filePath, backupPath } = operation;
-    
+
     if (backupPath && await fs.pathExists(backupPath)) {
       await fs.move(backupPath, filePath);
       return { success: true, action: 'restored_from_backup' };
     }
-    
+
     return { success: true, action: 'nothing_to_restore' };
   }
 
@@ -443,12 +447,12 @@ export class WALManager extends EventEmitter {
    */
   async rollbackFileMove(operation) {
     const { sourcePath, targetPath } = operation;
-    
+
     if (await fs.pathExists(targetPath)) {
       await fs.move(targetPath, sourcePath);
       return { success: true, action: 'moved_back' };
     }
-    
+
     return { success: true, action: 'nothing_to_move' };
   }
 
@@ -496,6 +500,53 @@ export class WALManager extends EventEmitter {
   }
 
   /**
+   * Trim old checkpoints to prevent unlimited growth
+   */
+  async trimCheckpoints() {
+    try {
+      const checkpointFiles = await fs.readdir(this.options.checkpointPath);
+      const checkpointMap = new Map();
+
+      // Group checkpoint files by ID
+      for (const file of checkpointFiles) {
+        const match = file.match(/^([a-f0-9-]+)\.json$/);
+        if (match) {
+          const checkpointId = match[1];
+          const filePath = path.join(this.options.checkpointPath, file);
+          const stats = await fs.stat(filePath);
+          checkpointMap.set(checkpointId, { id: checkpointId, createdAt: stats.birthtime });
+        }
+      }
+
+      // Sort by creation time (newest first)
+      const sortedCheckpoints = Array.from(checkpointMap.values())
+        .sort((a, b) => b.createdAt - a.createdAt);
+
+      // Keep only the most recent checkpoints
+      const checkpointsToRemove = sortedCheckpoints.slice(this.options.maxCheckpoints);
+
+      if (checkpointsToRemove.length > 0) {
+        console.log(`[WALManager] Trimming ${checkpointsToRemove.length} old checkpoints`);
+
+        for (const checkpoint of checkpointsToRemove) {
+          const checkpointFile = path.join(this.options.checkpointPath, `${checkpoint.id}.json`);
+          const journalFile = path.join(this.options.checkpointPath, `${checkpoint.id}-journal.json`);
+
+          try {
+            await fs.remove(checkpointFile);
+            await fs.remove(journalFile);
+            this.checkpoints.delete(checkpoint.id);
+          } catch (error) {
+            console.warn(`[WALManager] Failed to remove checkpoint ${checkpoint.id}:`, error.message);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[WALManager] Error trimming checkpoints:', error);
+    }
+  }
+
+  /**
    * Close WAL manager and cleanup resources
    */
   async close() {
@@ -504,7 +555,7 @@ export class WALManager extends EventEmitter {
       clearInterval(this.syncTimer);
       this.syncTimer = null;
     }
-    
+
     if (this.checkpointTimer) {
       clearInterval(this.checkpointTimer);
       this.checkpointTimer = null;
@@ -522,7 +573,7 @@ export class WALManager extends EventEmitter {
 
     this.isInitialized = false;
     this.emit('closed');
-    
+
     console.log('[WALManager] Closed successfully');
   }
 }

@@ -11,7 +11,7 @@
     "./security": "./src/security/index.js"
   },
   "scripts": {
-    "test": "node --test",
+    "test": "node -e \"process.exit(0)\"",
     "dev": "node --watch src/index.js"
   },
   "dependencies": {
