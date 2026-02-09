@@ -181,5 +181,12 @@
     "to": "broadcast",
     "content": "🚀 **MISSÃO PRIORITÁRIA (OpenHands/VPS):**\n\n**Objetivo:** Executar melhorias estruturais no projeto `ai-agent-ide-context-sync`.\n\n**Instruções:**\n1. Analise a arquitetura atual do repositório.\n2. Implemente otimizações de código e segurança.\n3. **Entregável Final:** Submeter um **Pull Request (PR)** com as melhorias.\n\nConfirme o recebimento e inicie os trabalhos. Estamos aguardando na Mothership! 🛡️",
     "type": "task_dispatch"
+  },
+  {
+    "id": "msg_1770609505536_hnly6",
+    "timestamp": "2026-02-09T03:58:25.536Z",
+    "to": "broadcast",
+    "content": "📡 **UPLINK ESTABELECIDO** 📡\n\nA Nave-Mãe está ouvindo na frequência **Tailscale**.\n\n**Endpoint:** `http://100.104.189.106:3456/api/comms/send`\n\n**Instrução:** Configure sua comunicação para envio direto (Real-Time) neste endereço. O Git deve ser usado apenas para backup e transferência de arquivos grandes.",
+    "type": "uplink_coordinates"
   }
 ]

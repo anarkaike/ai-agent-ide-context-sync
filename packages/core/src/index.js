@@ -7,6 +7,7 @@
  * - Security sandbox and cryptographic primitives
  * - Agent mesh network foundation
  * - Intelligent sync engine with delta compression
+ * - Auto-optimization with predictive analytics
  */
 
 export { AIClient } from './client/AIClient.js';
@@ -24,6 +25,11 @@ export { LoadBalancer } from './network/LoadBalancer.js';
 export { IntelligentSyncEngine } from './sync/IntelligentSyncEngine.js';
 export { ConflictResolutionEngine } from './sync/ConflictResolutionEngine.js';
 export { DeltaCompressionEngine } from './sync/DeltaCompressionEngine.js';
+
+// Optimization Components
+export { AutoOptimizationEngine } from './optimization/AutoOptimizationEngine.js';
+export { SelfHealingSystem } from './optimization/SelfHealingSystem.js';
+export { PredictiveAnalyticsEngine } from './optimization/PredictiveAnalyticsEngine.js';
 
 // Core configuration
 export const CoreConfig = {
@@ -52,6 +58,14 @@ export const CoreConfig = {
     conflictResolution: 'semantic-merge',
     syncInterval: 5000,
     maxRetries: 3
+  },
+  optimization: {
+    learningRate: 0.01,
+    predictionWindow: 300000,
+    optimizationInterval: 60000,
+    modelUpdateInterval: 300000,
+    confidenceThreshold: 0.7,
+    predictionHorizon: 3600000
   }
 };
 
@@ -75,6 +89,9 @@ export async function initializeCore(options = {}) {
   const { IntelligentSyncEngine } = await import('./sync/IntelligentSyncEngine.js');
   const { ConflictResolutionEngine } = await import('./sync/ConflictResolutionEngine.js');
   const { DeltaCompressionEngine } = await import('./sync/DeltaCompressionEngine.js');
+  const { AutoOptimizationEngine } = await import('./optimization/AutoOptimizationEngine.js');
+  const { SelfHealingSystem } = await import('./optimization/SelfHealingSystem.js');
+  const { PredictiveAnalyticsEngine } = await import('./optimization/PredictiveAnalyticsEngine.js');
 
   // Initialize security first
   const security = new SecuritySandbox(config.security);
@@ -101,6 +118,11 @@ export async function initializeCore(options = {}) {
   const conflictEngine = new ConflictResolutionEngine(config.sync);
   const compressionEngine = new DeltaCompressionEngine(config.sync);
 
+  // Initialize optimization components
+  const autoOptimization = new AutoOptimizationEngine(config.optimization);
+  const selfHealing = new SelfHealingSystem(config.optimization);
+  const predictiveAnalytics = new PredictiveAnalyticsEngine(config.optimization);
+
   return {
     client,
     memory,
@@ -112,6 +134,9 @@ export async function initializeCore(options = {}) {
     syncEngine,
     conflictEngine,
     compressionEngine,
+    autoOptimization,
+    selfHealing,
+    predictiveAnalytics,
     config,
     // Utility methods
     shutdown: async () => {
@@ -119,6 +144,9 @@ export async function initializeCore(options = {}) {
       await security.cleanup();
       await network.stop();
       await syncEngine.stop();
+      await autoOptimization.stop();
+      await selfHealing.stop();
+      await predictiveAnalytics.stop();
     }
   };
 }
