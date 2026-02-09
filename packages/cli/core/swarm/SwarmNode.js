@@ -83,6 +83,7 @@ class SwarmNode {
         // React to messages (e.g., requests, alerts)
         if (msg.type === 'ALERT') {
             this.trajectory.push(`⚠️ ALERT: ${msg.payload}`);
+            if (this.trajectory.length > 50) this.trajectory.shift(); // Keep only last 50
             this.pulse();
 
             // Log Security Event

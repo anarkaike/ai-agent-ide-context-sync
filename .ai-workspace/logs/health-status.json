@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-02-09T07:33:37Z",
+  "webmap": {
+    "status": "unhealthy",
+    "details": "Processo não encontrado"
+  },
+  "swarmclient": {
+    "status": "unhealthy",
+    "details": "Processo não encontrado"
+  },
+  "mothership": {
+    "status": "unhealthy",
+    "details": "Não foi possível conectar ao Mothership"
+  },
+  "resources": {
+    "status": "healthy",
+    "details": "CPU: 40.96%, Mem: 0%"
+  }
+}

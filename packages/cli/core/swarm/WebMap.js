@@ -10,7 +10,7 @@ const DatabaseManager = require('./DatabaseManager');
 const SwarmAnalyst = require('./SwarmAnalyst');
 const NeuralLink = require('./NeuralLink');
 
-const PORT = 3456; // Swarm Map Port
+const PORT = 3000; // Swarm Map Port (Changed from 3456 due to Windsurf conflict)
 
 const startServer = async () => {
     const dbManager = new DatabaseManager();
@@ -492,15 +492,70 @@ const startServer = async () => {
                     ::-webkit-scrollbar { width: 6px; }
                     ::-webkit-scrollbar-track { background: transparent; }
                     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+                    /* Nav Tabs */
+                    .nav-tab {
+                        background: none;
+                        border: none;
+                        color: var(--text-secondary);
+                        padding: 6px 12px;
+                        font-size: 0.8rem;
+                        cursor: pointer;
+                        border-radius: 4px;
+                        font-weight: 500;
+                        transition: all 0.2s;
+                    }
+                    .nav-tab.active {
+                        background: var(--accent);
+                        color: white;
+                    }
+                    .nav-tab:hover:not(.active) {
+                        background: rgba(255,255,255,0.1);
+                        color: var(--text-primary);
+                    }
+                    
+                    /* Full Comms View */
+                    .comms-container {
+                        display: flex;
+                        flex-direction: column;
+                        height: 100%;
+                        background: var(--bg);
+                    }
+                    .msg-bubble {
+                        margin-bottom: 12px;
+                        padding: 10px 15px;
+                        border-radius: 8px;
+                        max-width: 80%;
+                        line-height: 1.5;
+                        font-size: 0.9rem;
+                    }
+                    .msg-bubble.out {
+                        align-self: flex-end;
+                        background: rgba(88, 166, 255, 0.15);
+                        border: 1px solid rgba(88, 166, 255, 0.3);
+                        color: #e6edf3;
+                    }
+                    .msg-bubble.in {
+                        align-self: flex-start;
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid var(--border);
+                    }
                 </style>
             </head>
             <body>
                 <header>
-                    <h1>
-                        <span style="font-size: 1.2rem;">🌌</span> 
-                        <span>Swarm Existential Map</span>
-                        <span style="font-size: 0.7rem; color: var(--text-secondary); opacity: 0.7; border-left: 1px solid var(--border); padding-left: 8px; margin-left: 0px; letter-spacing: 0.5px;">COCKPIT</span>
-                    </h1>
+                    <div style="display:flex; align-items:center; gap: 20px;">
+                        <h1>
+                            <span style="font-size: 1.2rem;">🌌</span> 
+                            <span>Swarm Existential Map</span>
+                            <span style="font-size: 0.7rem; color: var(--text-secondary); opacity: 0.7; border-left: 1px solid var(--border); padding-left: 8px; margin-left: 0px; letter-spacing: 0.5px;">COCKPIT</span>
+                        </h1>
+                        <div style="display:flex; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 2px;">
+                            <button class="nav-tab active" onclick="switchMainView('dashboard')" id="nav-dashboard">📡 Monitoramento</button>
+                            <button class="nav-tab" onclick="switchMainView('comms')" id="nav-comms">💬 Central de Comunicações</button>
+                        </div>
+                    </div>
+
                     <div style="display:flex; gap:8px; align-items:center;">
                         <input type="text" id="global-search" style="padding: 4px 8px; font-size: 0.7rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text-primary); border-radius: 4px; width: 150px;" placeholder="🔍 Filtrar...">
                         <button style="padding: 4px 8px; font-size: 0.7rem; background: var(--success); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="openRequestModal()">➕ Tarefa</button>
@@ -510,7 +565,7 @@ const startServer = async () => {
                     </div>
                 </header>
                 
-                <div class="main-layout">
+                <div class="main-layout" id="view-dashboard">
                     <!-- Main Area: Agent Grid -->
                     <div class="agent-grid-area" id="agent-grid">
                         <!-- Cards injected by JS -->
@@ -564,6 +619,37 @@ const startServer = async () => {
                             </div>
                             <div class="widget-content" id="comms-feed" style="padding: 0;">
                                 <!-- Chat Messages -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View: Central de Comunicações -->
+                <div class="main-layout" id="view-comms" style="display:none; grid-template-columns: 250px 1fr;">
+                    <!-- Sidebar: Channels/Contacts -->
+                    <div class="sidebar-area">
+                        <div class="widget" style="flex:1">
+                            <div class="widget-header">
+                                <span>👥 Agentes & Canais</span>
+                            </div>
+                            <div class="widget-content" id="comms-sidebar-list" style="padding:10px;">
+                                <!-- Agents List -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Main Chat Area -->
+                    <div class="comms-container">
+                        <div id="comms-main-feed" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column-reverse;">
+                            <!-- Full Chat History -->
+                        </div>
+                        <div style="padding:20px; border-top:1px solid var(--border); background: var(--sidebar-bg);">
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" id="comms-input" placeholder="Enviar mensagem para a rede..." style="flex:1; padding:12px; background:var(--bg); border:1px solid var(--border); color:var(--text-primary); border-radius:4px; outline:none;" onkeypress="handleCommsInput(event)">
+                                <button onclick="sendCommsMessage()" style="background:var(--accent); color:white; border:none; padding:0 20px; border-radius:4px; cursor:pointer; font-weight:600;">ENVIAR</button>
+                            </div>
+                            <div style="font-size:0.7rem; color:var(--text-secondary); margin-top:5px;">
+                                Pressione Enter para enviar. Mensagens são transmitidas via Neural Link para todos os agentes conectados (Local & Tailscale).
                             </div>
                         </div>
                     </div>
@@ -920,6 +1006,132 @@ const startServer = async () => {
                     }
                     window.switchTab = switchTab; // Expose to global scope
 
+                    // --- View Switching ---
+                    window.switchMainView = function(view) {
+                        document.getElementById('view-dashboard').style.display = view === 'dashboard' ? 'grid' : 'none';
+                        document.getElementById('view-comms').style.display = view === 'comms' ? 'grid' : 'none';
+                        
+                        document.getElementById('nav-dashboard').classList.toggle('active', view === 'dashboard');
+                        document.getElementById('nav-comms').classList.toggle('active', view === 'comms');
+
+                        if (view === 'comms') {
+                            renderFullCommsFeed();
+                            renderCommsSidebar();
+                            // Scroll adjustment (if needed)
+                        }
+                    }
+
+                    // --- Comms Feature ---
+                    function renderFullCommsFeed() {
+                        const container = document.getElementById('comms-main-feed');
+                        // Only render if visible to save resources
+                        if (document.getElementById('view-comms').style.display === 'none') return;
+
+                        const messages = state.comms || [];
+
+                        if (messages.length === 0) {
+                            container.innerHTML = '<div style="color:var(--text-secondary); text-align:center; margin-top: auto; padding:20px;">Nenhuma mensagem na rede Neural Link.</div>';
+                            return;
+                        }
+
+                        // Flex-direction: column-reverse means first child is at bottom.
+                        // state.comms has newest first (unshift).
+                        // So mapping state.comms directly puts newest at bottom. Correct.
+                        
+                        const html = messages.map(msg => {
+                            const isMe = msg.from === 'MOTHERSHIP' || msg.from === 'User' || msg.from === 'Admin'; 
+                            const direction = isMe ? 'out' : 'in';
+                            const time = new Date(msg.timestamp).toLocaleTimeString();
+                            
+                            // Markdown-ish
+                            let content = msg.content || '';
+                            content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                            // Fix for backticks
+                            content = content.replace(/\\x60(.*?)\\x60/g, '<code>$1</code>');
+                            content = content.replace(/\\x60/g, '');
+                            content = content.replace(/\\n/g, '<br>');
+
+                            const color = isMe ? 'var(--accent)' : 'var(--card-bg)';
+                            const align = isMe ? 'flex-end' : 'flex-start';
+                            const sender = isMe ? 'MOTHERSHIP (Você)' : (msg.from_agent || msg.from);
+                            const borderColor = isMe ? 'transparent' : 'var(--border)';
+
+                            return \`
+                                <div style="display:flex; flex-direction:column; align-items:\${align}; margin-bottom:15px; max-width:85%; align-self:\${align};">
+                                    <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px; padding:0 4px;">
+                                        \${sender} • \${time}
+                                    </div>
+                                    <div style="background:\${color}; color:\${isMe ? 'white' : 'var(--text-primary)'}; padding:12px 16px; border-radius:12px; border-\${isMe ? 'bottom-right' : 'bottom-left'}-radius:2px; box-shadow:0 2px 5px rgba(0,0,0,0.1); border:1px solid \${borderColor}; line-height:1.5; word-wrap: break-word;">
+                                        \${content}
+                                    </div>
+                                </div>
+                            \`;
+                        }).join('');
+
+                        if (container.innerHTML !== html) container.innerHTML = html;
+                    }
+
+                    function renderCommsSidebar() {
+                        const container = document.getElementById('comms-sidebar-list');
+                        if (document.getElementById('view-comms').style.display === 'none') return;
+                        
+                        const html = state.agents.map(agent => {
+                            const isOnline = agent.status !== 'OFFLINE';
+                            return \`
+                                <div style="display:flex; align-items:center; padding:10px; border-bottom:1px solid var(--border); cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background='transparent'">
+                                    <div style="position:relative; margin-right:10px;">
+                                        <div style="width:32px; height:32px; background:var(--bg); border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); font-size: 1.2rem;">
+                                            \${getAvatarEmoji(agent.role)}
+                                        </div>
+                                        <div style="width:10px; height:10px; background:\${isOnline ? 'var(--success)' : 'var(--text-secondary)'}; border-radius:50%; position:absolute; bottom:-2px; right:-2px; border:2px solid var(--sidebar-bg);"></div>
+                                    </div>
+                                    <div style="overflow:hidden;">
+                                        <div style="font-weight:600; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color: var(--text-primary);">\${agent.name}</div>
+                                        <div style="font-size:0.7rem; color:var(--text-secondary);">\${agent.role}</div>
+                                    </div>
+                                </div>
+                            \`;
+                        }).join('');
+
+                        if (container.innerHTML !== html) container.innerHTML = html;
+                    }
+
+                    window.handleCommsInput = function(e) {
+                        if (e.key === 'Enter') sendCommsMessage();
+                    }
+
+                    window.sendCommsMessage = async function() {
+                        const input = document.getElementById('comms-input');
+                        const content = input.value.trim();
+                        if (!content) return;
+
+                        try {
+                            const res = await fetch('/api/comms/send', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    from: 'MOTHERSHIP',
+                                    to: 'BROADCAST',
+                                    content: content,
+                                    type: 'text'
+                                })
+                            });
+                            
+                            const data = await res.json();
+                            if (data.success) {
+                                input.value = '';
+                                // Optimistic update will handle it via WebSocket or next poll
+                                updateData();
+                            } else {
+                                alert('Erro ao enviar: ' + data.error);
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            alert('Erro de conexão');
+                        }
+                    }
+
                     function renderProtectionFeed() {
                         const container = document.getElementById('protection-feed');
                         const blockedCount = document.getElementById('blocked-count');
@@ -1130,6 +1342,10 @@ const startServer = async () => {
                             renderProtectionFeed();
                             renderGlobalQueue();
                             renderCommsFeed();
+                            
+                            // Update Full Comms View components
+                            renderFullCommsFeed();
+                            renderCommsSidebar();
                         } catch (e) {
                             console.error('Update failed', e);
                         }
