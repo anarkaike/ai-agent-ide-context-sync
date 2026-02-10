@@ -10,7 +10,7 @@ const DatabaseManager = require('./DatabaseManager');
 const SwarmAnalyst = require('./SwarmAnalyst');
 const NeuralLink = require('./NeuralLink');
 
-const PORT = 3000; // Swarm Map Port (Changed from 3456 due to Windsurf conflict)
+const PORT = 3001; // Swarm Map Port (Changed to 3001 to avoid conflict with Windsurf on 3000)
 
 const startServer = async () => {
     const dbManager = new DatabaseManager();
@@ -640,6 +640,10 @@ const startServer = async () => {
                     
                     <!-- Main Chat Area -->
                     <div class="comms-container">
+                        <div id="comms-debug-info" style="font-size:0.7rem; color:var(--text-secondary); padding:5px 20px; background:rgba(0,0,0,0.2); border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
+                             <span>Status: Monitorando</span>
+                             <span>Iniciando...</span>
+                        </div>
                         <div id="comms-main-feed" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column-reverse;">
                             <!-- Full Chat History -->
                         </div>
@@ -715,10 +719,29 @@ const startServer = async () => {
                         securityLogs: [],
                         comms: [],
                         filter: '',
+                        selectedAgent: null,
+                        agentTab: 'info',
                         ui: {
                             activeTabs: {} // agentId -> tabName
                         }
                     };
+
+                    // --- Agent Selection Helpers ---
+                    window.selectAgent = function(name) {
+                        state.selectedAgent = name;
+                        state.agentTab = 'info';
+                        renderFullCommsFeed();
+                    }
+
+                    window.clearAgentSelection = function() {
+                        state.selectedAgent = null;
+                        renderFullCommsFeed();
+                    }
+
+                    window.setAgentTab = function(tab) {
+                        state.agentTab = tab;
+                        renderFullCommsFeed();
+                    }
 
                     // WebSocket Connection
                     function connectWebSocket() {
@@ -950,16 +973,69 @@ const startServer = async () => {
                     }
 
                     function renderAgentLogs(agentId) {
-                        // Filter logs for this agent
-                        const logs = state.logs.filter(l => l.from === agentId || l.to === agentId).slice(0, 10);
-                        if (logs.length === 0) return '<div style="color:var(--text-secondary); text-align:center; padding:20px;">Sem logs recentes</div>';
-                        return logs.map(l => 
-                            '<div class="mini-log">' +
-                                '<div class="log-dir">' + (l.from === agentId ? 'OUT' : 'IN') + '</div>' +
-                                '<div style="flex:1">' + l.type + '</div>' +
-                                '<div style="color:var(--text-secondary)">' + new Date(l.timestamp).toLocaleTimeString() + '</div>' +
-                            '</div>'
-                        ).join('');
+                        // Filter network logs
+                        const logs = state.logs.filter(l => l.from === agentId || l.to === agentId);
+                        // Filter comms messages
+                        const msgs = (state.comms || []).filter(m => m.from === agentId || m.to === agentId || m.from_agent === agentId || m.to_agent === agentId);
+                        
+                        // Unify and sort
+                        const combined = [
+                            ...logs.map(l => ({ ...l, _kind: 'NET' })), 
+                            ...msgs.map(m => ({ 
+                                id: m.id,
+                                timestamp: m.timestamp,
+                                from: m.from_agent || m.from,
+                                to: m.to_agent || m.to,
+                                type: m.type === 'text' ? 'MSG' : m.type,
+                                _kind: 'COMM',
+                                content: m.content
+                            }))
+                        ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 15);
+
+                        if (combined.length === 0) return '<div style="color:var(--text-secondary); text-align:center; padding:20px;">Sem atividade recente</div>';
+                        
+                        return combined.map(item => {
+                            const isOut = item.from === agentId;
+                            const kindColor = item._kind === 'COMM' ? 'var(--accent)' : 'var(--text-secondary)';
+                            const title = item._kind === 'COMM' ? (item.content ? item.content.substring(0, 30) + (item.content.length > 30 ? '...' : '') : 'Message') : item.type;
+                            
+                            return \`
+                            <div class="mini-log" style="cursor:pointer;" onclick="showLogDetails('\${item.id}', '\${item._kind}')">
+                                <div class="log-dir" style="background:\${isOut ? 'rgba(255,255,255,0.1)' : 'rgba(100,255,100,0.1)'}; color:\${isOut ? 'inherit' : 'var(--success)'}">\${isOut ? 'OUT' : 'IN'}</div>
+                                <div style="flex:1; overflow:hidden;">
+                                    <span style="font-size:0.7rem; font-weight:bold; color:\${kindColor}; margin-right:5px;">[\${item._kind}]</span>
+                                    \${title}
+                                </div>
+                                <div style="color:var(--text-secondary); font-size:0.7rem;">\${new Date(item.timestamp).toLocaleTimeString()}</div>
+                            </div>
+                            \`;
+                        }).join('');
+                    }
+
+                    function showLogDetails(id, kind) {
+                        if (kind === 'COMM') {
+                            const msg = state.comms.find(m => m.id === id);
+                            if (!msg) return;
+                            const html = \`
+                                <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:6px; margin-bottom:15px;">
+                                    <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:5px;">ID: \${msg.id}</div>
+                                    <div style="display:grid; grid-template-columns: auto 1fr; gap:10px; font-size:0.9rem;">
+                                        <strong>De:</strong> <span>\${msg.from_agent || msg.from}</span>
+                                        <strong>Para:</strong> <span>\${msg.to_agent || msg.to}</span>
+                                        <strong>Data:</strong> <span>\${new Date(msg.timestamp).toLocaleString()}</span>
+                                        <strong>Tipo:</strong> <span>\${msg.type}</span>
+                                    </div>
+                                </div>
+                                <div style="margin-top:10px;">
+                                    <h4 style="margin:0 0 10px 0; color:var(--accent);">Conteúdo</h4>
+                                    <pre style="background:var(--bg); padding:10px; border-radius:4px; overflow-x:auto; white-space:pre-wrap;">\${msg.content}</pre>
+                                </div>
+                            \`;
+                            openInfoModal('Detalhes da Mensagem', html);
+                        } else {
+                            // Network/Security Log
+                            showEventDetails(id);
+                        }
                     }
 
                     function renderAgentDetails(agent) {
@@ -1015,61 +1091,179 @@ const startServer = async () => {
                         document.getElementById('nav-comms').classList.toggle('active', view === 'comms');
 
                         if (view === 'comms') {
-                            renderFullCommsFeed();
-                            renderCommsSidebar();
-                            // Scroll adjustment (if needed)
+                            // Fetch latest messages if empty or stale
+                            fetchMessages().then(() => {
+                                renderFullCommsFeed();
+                                renderCommsSidebar();
+                                // Scroll to bottom
+                                const container = document.getElementById('comms-main-feed');
+                                if (container) container.scrollTop = container.scrollHeight;
+                            });
+                        }
+                    }
+
+                    async function fetchMessages() {
+                        try {
+                            const res = await fetch('/api/comms/messages');
+                            const data = await res.json();
+                            if (data.messages) {
+                                state.comms = data.messages; // Replace/Sync state
+                                renderFullCommsFeed();
+                            }
+                        } catch (e) {
+                            console.error('Failed to fetch messages', e);
                         }
                     }
 
                     // --- Comms Feature ---
                     function renderFullCommsFeed() {
-                        const container = document.getElementById('comms-main-feed');
-                        // Only render if visible to save resources
-                        if (document.getElementById('view-comms').style.display === 'none') return;
+                        try {
+                            const container = document.getElementById('comms-main-feed');
+                            if (!container) return;
 
-                        const messages = state.comms || [];
+                            // Debug log
+                            console.log('[Comms] Rendering feed. Msgs:', state.comms ? state.comms.length : 0);
 
-                        if (messages.length === 0) {
-                            container.innerHTML = '<div style="color:var(--text-secondary); text-align:center; margin-top: auto; padding:20px;">Nenhuma mensagem na rede Neural Link.</div>';
-                            return;
-                        }
+                            // --- AGENT DETAIL VIEW ---
+                            if (state.selectedAgent) {
+                                const agent = state.agents.find(a => a.name === state.selectedAgent) || { name: state.selectedAgent, role: 'Unknown', status: 'OFFLINE' };
+                                const isOnline = agent.status !== 'OFFLINE';
+                                
+                                let contentHtml = '';
+                                
+                                if (state.agentTab === 'info') {
+                                    contentHtml = \`
+                                        <div style="padding:20px; background:rgba(255,255,255,0.03); border-radius:8px; margin:20px;">
+                                            <h3 style="color:var(--accent); margin-top:0;">Informações do Agente</h3>
+                                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:15px; font-size:0.9rem;">
+                                                <div><strong>Nome:</strong> <br><span style="color:var(--text-secondary);">\${agent.name}</span></div>
+                                                <div><strong>Role:</strong> <br><span style="color:var(--text-secondary);">\${agent.role}</span></div>
+                                                <div><strong>Status:</strong> <br><span style="color:var(--text-secondary);">\${agent.status}</span></div>
+                                                <div><strong>Team:</strong> <br><span style="color:var(--text-secondary);">\${agent.team || 'N/A'}</span></div>
+                                                <div><strong>Last Heartbeat:</strong> <br><span style="color:var(--text-secondary);">\${agent.lastHeartbeat ? new Date(agent.lastHeartbeat).toLocaleTimeString() : 'N/A'}</span></div>
+                                            </div>
+                                            <h4 style="margin-top:20px; color:var(--text-primary);">Capabilities</h4>
+                                            <pre style="background:rgba(0,0,0,0.3); padding:10px; border-radius:4px; overflow:auto; color:var(--text-secondary); font-size:0.8rem;">\${JSON.stringify(agent.capabilities || {}, null, 2)}</pre>
+                                        </div>
+                                    \`;
+                                } else if (state.agentTab === 'logs') {
+                                    const logs = (state.logs || []).filter(l => l.from === agent.name || l.source === agent.name);
+                                    if (logs.length === 0) {
+                                        contentHtml = '<div style="text-align:center; padding:40px; color:var(--text-secondary);">Nenhum log encontrado para este agente.</div>';
+                                    } else {
+                                        contentHtml = logs.map(l => \`
+                                            <div style="padding:10px 20px; border-bottom:1px solid var(--border); font-family:monospace; font-size:0.8rem;">
+                                                <span style="color:var(--text-secondary); margin-right:10px;">[\${new Date(l.timestamp).toLocaleTimeString()}]</span>
+                                                <span style="color:\${l.level === 'ERROR' ? 'var(--danger)' : 'var(--text-primary)'}">\${l.message || l.content || JSON.stringify(l)}</span>
+                                            </div>
+                                        \`).join('');
+                                    }
+                                } else if (state.agentTab === 'msgs') {
+                                    const msgs = (state.comms || []).filter(m => m.from === agent.name || m.to === agent.name || m.from_agent === agent.name || m.to_agent === agent.name);
+                                    if (msgs.length === 0) {
+                                        contentHtml = '<div style="text-align:center; padding:40px; color:var(--text-secondary);">Nenhuma mensagem direta encontrada.</div>';
+                                    } else {
+                                        contentHtml = msgs.map(msg => {
+                                            const isFromAgent = msg.from === agent.name || msg.from_agent === agent.name;
+                                            return \`
+                                                <div style="padding:10px 20px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:center;">
+                                                    <span style="color:var(--text-secondary); font-size:0.75rem; min-width:60px;">\${new Date(msg.timestamp).toLocaleTimeString()}</span>
+                                                    <span style="font-weight:bold; font-size:0.8rem; padding:2px 6px; border-radius:4px; background:\${isFromAgent ? 'rgba(255,255,255,0.1)' : 'rgba(0,255,0,0.1)'}; color:\${isFromAgent ? 'var(--text-primary)' : 'var(--success)'}">\${isFromAgent ? 'OUT' : 'IN'}</span>
+                                                    <span style="flex:1; font-size:0.9rem;">\${msg.content}</span>
+                                                </div>
+                                            \`;
+                                        }).join('');
+                                    }
+                                }
 
-                        // Flex-direction: column-reverse means first child is at bottom.
-                        // state.comms has newest first (unshift).
-                        // So mapping state.comms directly puts newest at bottom. Correct.
-                        
-                        const html = messages.map(msg => {
-                            const isMe = msg.from === 'MOTHERSHIP' || msg.from === 'User' || msg.from === 'Admin'; 
-                            const direction = isMe ? 'out' : 'in';
-                            const time = new Date(msg.timestamp).toLocaleTimeString();
+                                container.innerHTML = \`
+                                    <div style="display:flex; flex-direction:column; height:100%;">
+                                        <!-- Header -->
+                                        <div style="padding:15px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--sidebar-bg);">
+                                            <div style="display:flex; align-items:center; gap:15px;">
+                                                <button onclick="clearAgentSelection()" style="background:none; border:none; color:var(--text-primary); cursor:pointer; font-size:1.2rem; padding:5px; border-radius:50%; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">←</button>
+                                                <div style="font-size:1.5rem;">\${getAvatarEmoji(agent.role)}</div>
+                                                <div>
+                                                    <div style="font-weight:bold; font-size:1.1rem;">\${agent.name}</div>
+                                                    <div style="font-size:0.8rem; color:var(--text-secondary);">\${agent.role}</div>
+                                                </div>
+                                            </div>
+                                            <div style="display:flex; align-items:center; gap:8px; padding-right:10px;">
+                                                <div style="width:8px; height:8px; border-radius:50%; background:\${isOnline ? 'var(--success)' : 'var(--danger)'}"></div>
+                                                <span style="font-size:0.8rem; color:var(--text-secondary);">\${agent.status}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tabs -->
+                                        <div style="display:flex; border-bottom:1px solid var(--border); background:rgba(0,0,0,0.1);">
+                                            <div onclick="setAgentTab('info')" style="padding:12px 20px; cursor:pointer; border-bottom:2px solid \${state.agentTab === 'info' ? 'var(--accent)' : 'transparent'}; color:\${state.agentTab === 'info' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight:500;">Info</div>
+                                            <div onclick="setAgentTab('logs')" style="padding:12px 20px; cursor:pointer; border-bottom:2px solid \${state.agentTab === 'logs' ? 'var(--accent)' : 'transparent'}; color:\${state.agentTab === 'logs' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight:500;">Boot/Logs</div>
+                                            <div onclick="setAgentTab('msgs')" style="padding:12px 20px; cursor:pointer; border-bottom:2px solid \${state.agentTab === 'msgs' ? 'var(--accent)' : 'transparent'}; color:\${state.agentTab === 'msgs' ? 'var(--accent)' : 'var(--text-secondary)'}; font-weight:500;">Mensagens</div>
+                                        </div>
+
+                                        <!-- Content -->
+                                        <div style="flex:1; overflow-y:auto; padding:0; background:var(--bg);">
+                                            \${contentHtml}
+                                        </div>
+                                    </div>
+                                \`;
+                                return;
+                            }
+
+                            const messages = state.comms || [];
+
+                            if (messages.length === 0) {
+                                container.innerHTML = \`
+                                    <div style="text-align:center; color:var(--text-secondary); margin-top:50px;">
+                                        <div style="font-size:3rem; opacity:0.3; margin-bottom:20px;">📡</div>
+                                        <div>Silêncio na rede...</div>
+                                        <div style="font-size:0.8rem; margin-top:10px;">Nenhuma mensagem registrada.</div>
+                                        <div style="font-size:0.7rem; opacity:0.5; margin-top:5px;">Last check: \${new Date().toLocaleTimeString()}</div>
+                                    </div>
+                                \`;
+                                return;
+                            }
+
+                            // Flex-direction: column-reverse means first child is at bottom.
+                            // state.comms has newest first (unshift).
+                            // So mapping state.comms directly puts newest at bottom. Correct.
                             
-                            // Markdown-ish
-                            let content = msg.content || '';
-                            content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                            content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                            // Fix for backticks
-                            content = content.replace(/\\x60(.*?)\\x60/g, '<code>$1</code>');
-                            content = content.replace(/\\x60/g, '');
-                            content = content.replace(/\\n/g, '<br>');
+                            const html = messages.map(msg => {
+                                const isMe = msg.from === 'MOTHERSHIP' || msg.from === 'User' || msg.from === 'Admin'; 
+                                const direction = isMe ? 'out' : 'in';
+                                const time = new Date(msg.timestamp).toLocaleTimeString();
+                                
+                                // Markdown-ish
+                                let content = msg.content || '';
+                                content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                                // Fix for backticks
+                                content = content.replace(/\\x60(.*?)\\x60/g, '<code>$1</code>');
+                                content = content.replace(/\\x60/g, '');
+                                content = content.replace(/\\n/g, '<br>');
 
-                            const color = isMe ? 'var(--accent)' : 'var(--card-bg)';
-                            const align = isMe ? 'flex-end' : 'flex-start';
-                            const sender = isMe ? 'MOTHERSHIP (Você)' : (msg.from_agent || msg.from);
-                            const borderColor = isMe ? 'transparent' : 'var(--border)';
+                                const color = isMe ? 'var(--accent)' : 'var(--card-bg)';
+                                const align = isMe ? 'flex-end' : 'flex-start';
+                                const sender = isMe ? 'MOTHERSHIP (Você)' : (msg.from_agent || msg.from || 'Desconhecido');
+                                const borderColor = isMe ? 'transparent' : 'var(--border)';
 
-                            return \`
-                                <div style="display:flex; flex-direction:column; align-items:\${align}; margin-bottom:15px; max-width:85%; align-self:\${align};">
-                                    <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px; padding:0 4px;">
-                                        \${sender} • \${time}
+                                return \`
+                                    <div class="msg-group" style="display:flex; flex-direction:column; align-items:\${align}; margin-bottom:15px; max-width:85%; align-self:\${align};">
+                                        <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px; padding:0 4px; display:flex; gap:10px;">
+                                            <span>\${sender} • \${time}</span>
+                                            <span style="cursor:pointer; text-decoration:underline; opacity:0.7;" onclick="showLogDetails('\${msg.id}', 'COMM')">Detalhes</span>
+                                        </div>
+                                        <div style="background:\${color}; color:\${isMe ? 'white' : 'var(--text-primary)'}; padding:12px 16px; border-radius:12px; border-\${isMe ? 'bottom-right' : 'bottom-left'}-radius:2px; box-shadow:0 2px 5px rgba(0,0,0,0.1); border:1px solid \${borderColor}; line-height:1.5; word-wrap: break-word;">
+                                            \${content}
+                                        </div>
                                     </div>
-                                    <div style="background:\${color}; color:\${isMe ? 'white' : 'var(--text-primary)'}; padding:12px 16px; border-radius:12px; border-\${isMe ? 'bottom-right' : 'bottom-left'}-radius:2px; box-shadow:0 2px 5px rgba(0,0,0,0.1); border:1px solid \${borderColor}; line-height:1.5; word-wrap: break-word;">
-                                        \${content}
-                                    </div>
-                                </div>
-                            \`;
-                        }).join('');
+                                \`;
+                            }).join('');
 
-                        if (container.innerHTML !== html) container.innerHTML = html;
+                            if (container.innerHTML !== html) container.innerHTML = html;
+                        } catch (e) {
+                            console.error('Render Comms Error:', e);
+                        }
                     }
 
                     function renderCommsSidebar() {
@@ -1079,7 +1273,7 @@ const startServer = async () => {
                         const html = state.agents.map(agent => {
                             const isOnline = agent.status !== 'OFFLINE';
                             return \`
-                                <div style="display:flex; align-items:center; padding:10px; border-bottom:1px solid var(--border); cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background='transparent'">
+                                <div style="display:flex; align-items:center; padding:10px; border-bottom:1px solid var(--border); cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--hover)'" onmouseout="this.style.background='transparent'" onclick="selectAgent('\${agent.name}')">
                                     <div style="position:relative; margin-right:10px;">
                                         <div style="width:32px; height:32px; background:var(--bg); border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); font-size: 1.2rem;">
                                             \${getAvatarEmoji(agent.role)}
@@ -1315,28 +1509,38 @@ const startServer = async () => {
 
                     async function updateData() {
                         try {
-                            const [mapRes, taskRes, netRes, secRes, commRes] = await Promise.all([
-                                fetch('/api/map'),
-                                fetch('/api/tasks'),
-                                fetch('/api/network'),
-                                fetch('/api/security/logs'),
-                                fetch('/api/comms/messages')
-                            ]);
+                            // Fetch all independently to prevent one failure from blocking others
+                            const safeFetch = (url, defaultVal) => fetch(url).then(res => res.json()).catch(err => {
+                                console.warn('Fetch failed for ' + url, err);
+                                return defaultVal;
+                            });
+
+                            const teams = await safeFetch('/api/map', {});
+                            const tasks = await safeFetch('/api/tasks', []);
+                            const logs = await safeFetch('/api/network', []);
+                            const secLogs = await safeFetch('/api/security/logs', []);
+                            const commData = await safeFetch('/api/comms/messages', { messages: [] });
                             
-                            const teams = await mapRes.json();
+                            // Process Agents
                             let flatAgents = [];
-                            for (const [team, agents] of Object.entries(teams)) {
-                                agents.forEach(a => {
-                                    a.team = team;
-                                    flatAgents.push(a);
-                                });
+                            if (teams && Object.keys(teams).length > 0) {
+                                for (const [team, agents] of Object.entries(teams)) {
+                                    agents.forEach(a => {
+                                        a.team = team;
+                                        flatAgents.push(a);
+                                    });
+                                }
+                                state.agents = flatAgents;
                             }
-                            state.agents = flatAgents;
-                            state.tasks = await taskRes.json();
-                            state.logs = await netRes.json();
-                            state.securityLogs = await secRes.json();
-                            const commData = await commRes.json();
-                            state.comms = commData.messages || [];
+                            
+                            state.tasks = tasks || [];
+                            state.logs = logs || [];
+                            state.securityLogs = secLogs || [];
+                            
+                            // Only update comms if we got valid data
+                            if (commData && commData.messages) {
+                                state.comms = commData.messages;
+                            }
 
                             renderAgentCards();
                             renderProtectionFeed();
@@ -1347,7 +1551,7 @@ const startServer = async () => {
                             renderFullCommsFeed();
                             renderCommsSidebar();
                         } catch (e) {
-                            console.error('Update failed', e);
+                            console.error('Update loop critical failure', e);
                         }
                     }
 
@@ -1460,9 +1664,14 @@ const startServer = async () => {
 
         if (pathname === '/api/comms/messages') {
             try {
-                // Sync first to get latest
-                await neuralLink.sync();
-                const messages = await dbManager.getMessages(50);
+                // Sync first to get latest (Safe Sync)
+                try {
+                    await neuralLink.sync();
+                } catch (syncErr) {
+                    console.warn('[Comms] Sync failed, serving local cache:', syncErr.message);
+                }
+
+                const messages = await dbManager.getMessages(100);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ messages }));
             } catch (e) {

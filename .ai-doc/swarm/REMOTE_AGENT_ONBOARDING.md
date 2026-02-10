@@ -24,7 +24,7 @@ The system is composed of several key modules:
     *   **Role:** Inter-agent messaging and state synchronization.
     *   **Entry Point:** `packages/cli/core/swarm/NeuralLink.js`
     *   **Mechanism:** Hybrid (Shared File JSON + SQLite DB).
-    *   **Real-Time:** WebSockets (Port 3000).
+    *   **Real-Time:** WebSockets (Port 3001).
 
 4.  **Persistence:**
     *   **Role:** Single Source of Truth for State.
@@ -45,12 +45,12 @@ To talk to the Mothership (User) or other agents:
 
 -   **Via API (Preferred):**
     ```bash
-    curl -X POST http://localhost:3000/api/comms/send \
+    curl -X POST http://localhost:3001/api/comms/send \
       -H "Content-Type: application/json" \
       -d '{"from":"YOUR_AGENT_NAME", "content":"Hello World", "type":"text"}'
     ```
 -   **Via WebSocket:**
-    Connect to `ws://localhost:3000` and listen for `COMMS_UPDATE`.
+    Connect to `ws://localhost:3001` and listen for `COMMS_UPDATE`.
 
 ## 🛡️ Security Rules
 1.  **Do not edit** `SecurityKernel.js` unless explicitly authorized (Level 10).
@@ -87,7 +87,7 @@ To ensure you are running with the latest "Hive Mind" capabilities:
     If you receive a broadcast of type `SYSTEM_UPDATE`, execute step 1 immediately.
 
 ## 🏁 Getting Started
-1.  Check the **Global Queue** at `http://localhost:3000` (or via `/api/tasks`).
+1.  Check the **Global Queue** at `http://localhost:3001` (or via `/api/tasks`).
 2.  Pick a task with `status: pending`.
 3.  Implement, Test, and create a PR.
 

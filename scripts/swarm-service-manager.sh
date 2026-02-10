@@ -16,7 +16,7 @@ PID_DIR="$PROJECT_ROOT/.ai-workspace/pids"
 CONFIG_FILE="$PROJECT_ROOT/.ai-workspace/swarm-config.env"
 
 # Portas e IPs
-WEBMAP_PORT=3000
+WEBMAP_PORT=3001
 MOTHERSHIP_IP=${MOTHERSHIP_IP:-"100.104.189.106"}
 AGENT_ID=${AGENT_ID:-"$(hostname)_$(date +%s)"}
 

@@ -6,7 +6,7 @@ const os = require('os');
 // Configuration
 // If running on VPS/Remote, use Tailscale IP. If local, use localhost.
 const MOTHERSHIP_IP = process.env.MOTHERSHIP_IP || '100.104.189.106'; 
-const PORT = process.env.SWARM_PORT || 3000;
+const PORT = process.env.SWARM_PORT || 3001;
 const AGENT_ID = process.env.AGENT_ID || `REMOTE_${os.hostname()}_${Math.random().toString(36).substr(2, 5)}`;
 const RECONNECT_INTERVAL = 5000;
 
