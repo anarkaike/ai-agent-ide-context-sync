@@ -1,0 +1,23 @@
+{
+  "name": "deploy-health-monitor",
+  "version": "1.0.0",
+  "description": "Skill de diagnóstico automatizado para ambientes de deploy",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node index.js --verbose --environments=https://httpbin.org/status/200,https://httpbin.org/status/502"
+  },
+  "keywords": [
+    "deploy",
+    "health-monitor",
+    "diagnosis",
+    "infrastructure",
+    "devops"
+  ],
+  "author": "AI Agent Network",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "name": "neural-link-communicator",
+  "version": "1.0.0",
+  "description": "Sistema de comunicação neural entre agentes com sincronização e persistência",
+  "category": "communication",
+  "author": "AI Agent Collective",
+  "license": "MIT",
+  "tags": ["communication", "neural", "sync", "swarm", "messaging"],
+  "capabilities": [
+    "send_message",
+    "receive_messages",
+    "sync_with_swarm",
+    "broadcast_message",
+    "get_conversation_history",
+    "register_agent",
+    "discover_agents"
+  ],
+  "dependencies": {
+    "nanobot": "^1.0.0",
+    "sqlite3": "^5.0.0"
+  },
+  "parameters": {
+    "action": {
+      "type": "string",
+      "enum": ["send", "receive", "sync", "broadcast", "history", "register", "discover"],
+      "default": "receive",
+      "description": "Ação de comunicação"
+    },
+    "message": {
+      "type": "object",
+      "properties": {
+        "content": {"type": "string"},
+        "to": {"type": "string", "default": "broadcast"},
+        "type": {"type": "string", "default": "text"},
+        "priority": {"type": "string", "enum": ["low", "medium", "high"], "default": "medium"}
+      }
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "agent_id": {"type": "string"},
+        "swarm_endpoint": {"type": "string", "default": "http://100.104.189.106:3456"},
+        "local_endpoint": {"type": "string", "default": "http://localhost:3456"},
+        "sync_interval": {"type": "number", "default": 30}
+      }
+    }
+  },
+  "outputs": {
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "from": {"type": "string"},
+          "to": {"type": "string"},
+          "content": {"type": "string"},
+          "timestamp": {"type": "string"},
+          "type": {"type": "string"}
+        }
+      }
+    },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "hostname": {"type": "string"},
+          "status": {"type": "string"},
+          "last_seen": {"type": "string"}
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "description": "Enviar mensagem para a rede",
+      "input": {
+        "action": "send",
+        "message": {
+          "content": "Olá rede! Estou online.",
+          "type": "status"
+        }
+      },
+      "output": {
+        "success": true,
+        "message_id": "msg_1234567890"
+      }
+    },
+    {
+      "description": "Receber mensagens pendentes",
+      "input": {"action": "receive"},
+      "output": {
+        "messages": [
+          {
+            "id": "msg_1234567890",
+            "from": "agent-001",
+            "content": "Saudações da rede!",
+            "timestamp": "2026-02-09T12:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,422 @@
+{
+  "name": "whatsapp-business-api-complete",
+  "version": "2.0.0",
+  "description": "Skill completa WhatsApp Business API - 100% dos recursos incluindo HSM templates, interactive messages, analytics e multi-account",
+  "category": "communication",
+  "author": "AI Agent Collective",
+  "license": "MIT",
+  "tags": ["whatsapp", "business-api", "hsm-templates", "interactive-messages", "analytics", "multi-account"],
+  "main": "index.js",
+  "capabilities": [
+    "whatsapp_business_api",
+    "hsm_template_management",
+    "interactive_messages",
+    "location_sharing",
+    "contact_management",
+    "group_operations",
+    "media_optimization",
+    "rate_limiting",
+    "quality_rating",
+    "business_profile",
+    "multi_account_support",
+    "message_analytics",
+    "compliance_monitoring",
+    "webhook_management",
+    "real_time_sync"
+  ],
+  "platforms": ["linux", "macos", "windows"],
+  "dependencies": {
+    "node": ">=14.0.0",
+    "axios": "^1.6.0",
+    "express": "^4.18.0",
+    "multer": "^1.4.0",
+    "sharp": "^0.32.0",
+    "ffmpeg": "^0.0.4",
+    "node-cron": "^3.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "crypto": "^1.0.1"
+  },
+  "api_endpoints": {
+    "base_url": "https://graph.facebook.com",
+    "version": "v18.0",
+    "authentication": "Bearer Token",
+    "endpoints": {
+      "messages": {
+        "send_text": "POST /{phone_number_id}/messages",
+        "send_media": "POST /{phone_number_id}/messages",
+        "send_document": "POST /{phone_number_id}/messages",
+        "send_audio": "POST /{phone_number_id}/messages",
+        "send_image": "POST /{phone_number_id}/messages",
+        "send_video": "POST /{phone_number_id}/messages",
+        "send_sticker": "POST /{phone_number_id}/messages",
+        "send_location": "POST /{phone_number_id}/messages",
+        "send_contact": "POST /{phone_number_id}/messages",
+        "send_poll": "POST /{phone_number_id}/messages",
+        "send_template": "POST /{phone_number_id}/messages",
+        "mark_read": "POST /{phone_number_id}/messages",
+        "react": "POST /{phone_number_id}/messages"
+      },
+      "templates": {
+        "list": "GET /{business_account_id}/message_templates",
+        "create": "POST /{business_account_id}/message_templates",
+        "update": "POST /{message_template_id}",
+        "delete": "DELETE /{message_template_id}",
+        "submit": "POST /{message_template_id}/submit",
+        "status": "GET /{message_template_id}"
+      },
+      "media": {
+        "upload": "POST /{phone_number_id}/media",
+        "retrieve": "GET /{media_id}",
+        "delete": "DELETE /{media_id}"
+      },
+      "business_profile": {
+        "get": "GET /{phone_number_id}/whatsapp_business_profile",
+        "update": "POST /{phone_number_id}/whatsapp_business_profile"
+      },
+      "quality_rating": {
+        "get": "GET /{phone_number_id}/quality_rating"
+      },
+      "analytics": {
+        "conversation_analytics": "GET /{phone_number_id}/conversation_analytics",
+        "message_analytics": "GET /{phone_number_id}/message_analytics",
+        "country_analytics": "GET /{phone_number_id}/country_analytics"
+      },
+      "contacts": {
+        "get": "GET /{phone_number_id}/contacts",
+        "update": "POST /{phone_number_id}/contacts"
+      },
+      "groups": {
+        "create": "POST /{phone_number_id}/groups",
+        "get": "GET /{phone_number_id}/groups/{group_id}",
+        "update": "POST /{phone_number_id}/groups/{group_id}",
+        "add_participants": "POST /{phone_number_id}/groups/{group_id}/participants",
+        "remove_participants": "POST /{phone_number_id}/groups/{group_id}/participants",
+        "leave": "POST /{phone_number_id}/groups/{group_id}/leave"
+      }
+    }
+  },
+  "message_types": {
+    "text": {
+      "type": "text",
+      "text": {
+        "body": "string",
+        "preview_url": "boolean"
+      }
+    },
+    "image": {
+      "type": "image",
+      "image": {
+        "link": "string",
+        "caption": "string",
+        "filename": "string"
+      }
+    },
+    "document": {
+      "type": "document",
+      "document": {
+        "link": "string",
+        "caption": "string",
+        "filename": "string"
+      }
+    },
+    "audio": {
+      "type": "audio",
+      "audio": {
+        "link": "string"
+      }
+    },
+    "video": {
+      "type": "video",
+      "video": {
+        "link": "string",
+        "caption": "string"
+      }
+    },
+    "sticker": {
+      "type": "sticker",
+      "sticker": {
+        "link": "string"
+      }
+    },
+    "location": {
+      "type": "location",
+      "location": {
+        "latitude": "string",
+        "longitude": "string",
+        "name": "string",
+        "address": "string"
+      }
+    },
+    "contacts": {
+      "type": "contacts",
+      "contacts": [
+        {
+          "addresses": [
+            {
+              "street": "string",
+              "city": "string",
+              "state": "string",
+              "zip": "string",
+              "country": "string",
+              "country_code": "string",
+              "type": "string"
+            }
+          ],
+          "birthday": "string",
+          "emails": [
+            {
+              "email": "string",
+              "type": "string"
+            }
+          ],
+          "name": {
+            "formatted_name": "string",
+            "first_name": "string",
+            "last_name": "string",
+            "middle_name": "string",
+            "suffix": "string",
+            "prefix": "string"
+          },
+          "org": {
+            "company": "string",
+            "department": "string",
+            "title": "string"
+          },
+          "phones": [
+            {
+              "phone": "string",
+              "wa_id": "string",
+              "type": "string"
+            }
+          ],
+          "urls": [
+            {
+              "url": "string",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    },
+    "interactive": {
+      "type": "interactive",
+      "interactive": {
+        "type": "button|list|product|product_list",
+        "header": {
+          "type": "text|image|video|document",
+          "text": "string"
+        },
+        "body": {
+          "text": "string"
+        },
+        "footer": {
+          "text": "string"
+        },
+        "action": {
+          "buttons": [
+            {
+              "type": "reply",
+              "title": "string",
+              "id": "string"
+            }
+          ],
+          "sections": [
+            {
+              "title": "string",
+              "rows": [
+                {
+                  "id": "string",
+                  "title": "string",
+                  "description": "string"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "template": {
+      "type": "template",
+      "template": {
+        "name": "string",
+        "language": {
+          "code": "string"
+        },
+        "components": [
+          {
+            "type": "header|body|button",
+            "format": "text|image|video|document|location",
+            "text": "string",
+            "buttons": [
+              {
+                "type": "quick_reply|url|phone_number",
+                "text": "string",
+                "url": "string",
+                "phone_number": "string"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "hsm_templates": {
+    "categories": [
+      "MARKETING",
+      "UTILITY", 
+      "AUTHENTICATION"
+    ],
+    "components": {
+      "header": {
+        "formats": ["TEXT", "IMAGE", "VIDEO", "DOCUMENT"],
+        "max_length": 60
+      },
+      "body": {
+        "max_length": 1024,
+        "variables": {
+          "max_count": 99,
+          "format": "{{1}}"
+        }
+      },
+      "footer": {
+        "max_length": 60
+      },
+      "buttons": {
+        "max_count": 10,
+        "types": [
+          "QUICK_REPLY",
+          "URL",
+          "PHONE_NUMBER",
+          "OTP",
+          "CATALOG",
+          "COPY_CODE"
+        ]
+      }
+    }
+  },
+  "rate_limits": {
+    "marketing": {
+      "tier_1": "1000/day",
+      "tier_2": "10000/day",
+      "tier_3": "100000/day"
+    },
+    "utility": {
+      "tier_1": "10000/day",
+      "tier_2": "100000/day", 
+      "tier_3": "1000000/day"
+    },
+    "authentication": {
+      "tier_1": "100/day",
+      "tier_2": "1000/day",
+      "tier_3": "10000/day"
+    },
+    "service": {
+      "tier_1": "25000/day",
+      "tier_2": "100000/day",
+      "tier_3": "1000000/day"
+    }
+  },
+  "webhook_events": [
+    "messages",
+    "message_reactions",
+    "message_edits",
+    "message_status",
+    "account_review_update",
+    "account_update",
+    "phone_number_name_update",
+    "phone_number_quality_update",
+    "business_capability_update",
+    "template_status_update",
+    "health_status"
+  ],
+  "workflows": [
+    {
+      "name": "setup_whatsapp_business",
+      "description": "Setup completo do WhatsApp Business API",
+      "steps": [
+        "verify_business_account",
+        "setup_phone_number",
+        "configure_webhooks",
+        "create_hsm_templates",
+        "setup_rate_limiting",
+        "configure_quality_monitoring",
+        "test_integration"
+      ]
+    },
+    {
+      "name": "create_hsm_templates",
+      "description": "Criação de HSM templates para diferentes categorias",
+      "steps": [
+        "design_marketing_templates",
+        "create_utility_templates", 
+        "setup_authentication_templates",
+        "submit_for_approval",
+        "monitor_template_status"
+      ]
+    },
+    {
+      "name": "implement_interactive_messages",
+      "description": "Implementação de mensagens interativas",
+      "steps": [
+        "create_button_messages",
+        "setup_list_messages",
+        "configure_product_messages",
+        "implement_quick_replies",
+        "test_interactions"
+      ]
+    }
+  ],
+  "monitoring": {
+    "metrics": [
+      "message_delivery_rate",
+      "message_read_rate", 
+      "template_approval_rate",
+      "quality_rating_score",
+      "conversation_analytics",
+      "rate_limit_usage",
+      "webhook_delivery_rate",
+      "api_response_time"
+    ],
+    "alerts": [
+      "quality_rating_drop",
+      "template_rejection",
+      "rate_limit_exceeded",
+      "webhook_failure",
+      "message_delivery_failure",
+      "api_error",
+      "compliance_violation"
+    ]
+  },
+  "security": {
+    "webhook_verification": "hmac_sha256",
+    "message_encryption": "end_to_end",
+    "api_authentication": "oauth_2.0",
+    "data_privacy": "gdpr_compliant",
+    "audit_logging": true
+  },
+  "compliance": {
+    "gdpr": true,
+    "ccpa": true,
+    "business_verification": "required",
+    "template_policies": "enforced",
+    "rate_limiting": "automatic"
+  },
+  "integrations": {
+    "chatwoot": {
+      "bi_directional_sync": true,
+      "template_mapping": true,
+      "message_routing": true,
+      "contact_sync": true
+    },
+    "crm": [
+      "salesforce",
+      "hubspot",
+      "pipedrive"
+    ],
+    "analytics": [
+      "google_analytics",
+      "mixpanel",
+      "segment"
+    ]
+  }
+}

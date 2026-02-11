@@ -1,0 +1,40 @@
+{
+  "sistema-clinica-new": {
+    "type": "laravel-inertia-vue",
+    "stack": [
+      "Laravel",
+      "Inertia.js",
+      "Vue.js",
+      "PostgreSQL",
+      "Redis"
+    ],
+    "chatwoot": true,
+    "domains": [
+      "alphaclinics.servinder.com.br",
+      "hmg.alphaclinics.servinder.com.br",
+      "dev.alphaclinics.servinder.com.br"
+    ],
+    "path": "/root/projects/dev/sistema-clinica-new",
+    "lastDeploy": "2026-02-10T04:34:32.897Z",
+    "status": "failed",
+    "health": "unknown"
+  },
+  "kanban-free": {
+    "type": "kanban-chatwoot",
+    "stack": [
+      "Node.js",
+      "React",
+      "PostgreSQL",
+      "Chatwoot Integration"
+    ],
+    "chatwoot": true,
+    "domains": [
+      "kanbanfrontchatwoot.servinder.com.br",
+      "kanbanbackchatwoot.servinder.com.br"
+    ],
+    "path": "/root/projects/dev/ai-agent-ide-context-sync/docs/Kanban Free",
+    "lastDeploy": "2026-02-10T04:14:37.212Z",
+    "status": "failed",
+    "health": "unknown"
+  }
+}

@@ -1,0 +1,272 @@
+{
+  "name": "ai-agent-swarm-skills",
+  "version": "1.0.0",
+  "description": "Pacote completo de skills Nanobot para gerenciamento do ecossistema AI Agent Swarm",
+  "category": "ecosystem",
+  "author": "AI Agent Collective",
+  "license": "MIT",
+  "tags": ["swarm", "ai-agent", "nanobot", "ecosystem", "orchestration"],
+  "main": "registry.js",
+  "skills": [
+    {
+      "name": "swarm-service-manager",
+      "path": "./swarm-service-manager",
+      "description": "Gerencia serviços SwarmClient e WebMap em qualquer plataforma",
+      "capabilities": ["start_services", "stop_services", "restart_services", "check_health", "install_service", "uninstall_service", "monitor_services", "auto_recovery"],
+      "platforms": ["macos", "linux", "windows", "wsl", "gitbash"],
+      "dependencies": ["node>=14.0.0"]
+    },
+    {
+      "name": "swarm-health-monitor",
+      "path": "./swarm-health-monitor",
+      "description": "Monitor avançado de saúde para serviços Swarm com alertas e métricas",
+      "capabilities": ["check_system_health", "monitor_resources", "generate_health_report", "send_alerts", "track_performance", "auto_heal"],
+      "dependencies": ["swarm-service-manager@^1.0.0"]
+    },
+    {
+      "name": "neural-link-communicator",
+      "path": "./neural-link-communicator",
+      "description": "Sistema de comunicação neural entre agentes com sincronização e persistência",
+      "capabilities": ["send_message", "receive_messages", "sync_with_swarm", "broadcast_message", "get_conversation_history", "register_agent", "discover_agents"],
+      "dependencies": ["sqlite3@^5.0.0"]
+    },
+    {
+      "name": "swarm-orchestrator",
+      "path": "./swarm-orchestrator",
+      "description": "Orquestrador master que coordena todas as skills do ecossistema Swarm",
+      "capabilities": ["coordinate_skills", "manage_ecosystem", "execute_workflow", "monitor_all_services", "auto_heal_ecosystem", "deploy_updates", "scale_resources"],
+      "dependencies": ["swarm-service-manager@^1.0.0", "swarm-health-monitor@^1.0.0", "neural-link-communicator@^1.0.0"]
+    },
+    {
+      "name": "chatwoot-cli-manager",
+      "path": "./chatwoot-cli-manager",
+      "description": "Skill completa para gerenciamento do Chatwoot CLI - 100% das funcionalidades cobertas",
+      "capabilities": ["conversation_management", "message_handling", "contact_management", "inbox_management", "agent_management", "sla_monitoring", "profile_management", "authentication", "configuration", "data_export"],
+      "platforms": ["linux", "macos", "windows"],
+      "dependencies": {
+        "node": ">=14.0.0",
+        "chatwoot-cli": ">=0.0.51"
+      },
+      "installation": {
+        "binary_required": true,
+        "binary_name": "chatwoot",
+        "install_command": "go install github.com/chatwoot/chatwoot-cli/cmd/chatwoot@latest"
+      }
+    },
+    {
+      "name": "whatsapp-web-multidevice-manager",
+      "path": "./whatsapp-web-multidevice-manager",
+      "description": "Skill completa para gerenciamento do WhatsApp Web Multidevice - API REST e MCP",
+      "capabilities": ["whatsapp_api_rest", "whatsapp_mcp_server", "message_sending", "message_receiving", "media_handling", "chatwoot_integration", "webhook_management", "authentication", "contact_management", "group_management", "call_management"],
+      "platforms": ["linux", "macos", "windows"],
+      "dependencies": {
+        "node": ">=14.0.0",
+        "go-whatsapp-web-multidevice": ">=1.0.0"
+      },
+      "installation": {
+        "binary_required": true,
+        "binary_name": "whatsapp",
+        "source_repo": "https://github.com/aldinokemal/go-whatsapp-web-multidevice",
+        "build_command": "go build -o whatsapp ./cmd/whatsapp/"
+      }
+    },
+    {
+      "name": "chatwoot-api-complete",
+      "path": "./chatwoot-api-complete",
+      "description": "Skill completa Chatwoot API - 100% dos recursos cobertos incluindo API REST, webhooks, automações e analytics",
+      "capabilities": ["api_rest_management", "webhook_management", "conversation_automation", "sla_monitoring", "contact_segmentation", "custom_attributes", "macros_management", "knowledge_base", "agent_performance", "multi_account_support", "reports_analytics", "integration_management", "security_compliance", "real_time_sync", "backup_restore"],
+      "platforms": ["linux", "macos", "windows"],
+      "dependencies": {
+        "node": ">=14.0.0",
+        "axios": "^1.6.0",
+        "express": "^4.18.0",
+        "socket.io": "^4.7.0",
+        "node-cron": "^3.0.0",
+        "jsonwebtoken": "^9.0.0"
+      }
+    },
+    {
+      "name": "whatsapp-business-api-complete",
+      "path": "./whatsapp-business-api-complete",
+      "description": "Skill completa WhatsApp Business API - 100% dos recursos incluindo HSM templates, interactive messages, analytics e multi-account",
+      "capabilities": ["whatsapp_business_api", "hsm_template_management", "interactive_messages", "location_sharing", "contact_management", "group_operations", "media_optimization", "rate_limiting", "quality_rating", "business_profile", "multi_account_support", "message_analytics", "compliance_monitoring", "webhook_management", "real_time_sync"],
+      "platforms": ["linux", "macos", "windows"],
+      "dependencies": {
+        "node": ">=14.0.0",
+        "axios": "^1.6.0",
+        "express": "^4.18.0",
+        "multer": "^1.4.0",
+        "sharp": "^0.32.0"
+      }
+    },
+    {
+      "name": "chatwoot-whatsapp-orchestrator",
+      "path": "./chatwoot-whatsapp-orchestrator",
+      "description": "Orquestrador Chatwoot + WhatsApp - Sistema completo de automação e gestão multicanal com IA",
+      "capabilities": ["multi_channel_orchestration", "ai_agent_integration", "intelligent_routing", "sentiment_analysis", "auto_categorization", "predictive_analytics", "real_time_monitoring", "crisis_management", "performance_optimization", "compliance_automation", "cross_platform_sync", "intelligent_escalation", "customer_journey_mapping", "omnichannel_analytics", "automated_quality_assurance"],
+      "platforms": ["linux", "macos", "windows"],
+      "dependencies": {
+        "node": ">=14.0.0",
+        "bull": "^4.11.0",
+        "redis": "^4.6.0",
+        "socket.io": "^4.7.0",
+        "natural": "^6.5.0",
+        "sentiment": "^5.0.0"
+      }
+    },
+    {
+      "name": "chatwoot-analytics-intelligence",
+      "path": "./chatwoot-analytics-intelligence",
+      "description": "Skill completa de Analytics e Inteligência para Chatwoot - Business Intelligence, Machine Learning e Insights Avançados",
+      "capabilities": ["business_intelligence", "predictive_analytics", "customer_behavior_analysis", "agent_performance_insights", "sentiment_trend_analysis", "operational_efficiency", "revenue_impact_analysis", "customer_journey_mapping", "real_time_dashboards", "automated_reports", "ml_model_training", "forecasting_models", "cohort_analysis", "churn_prediction", "satisfaction_scoring"],
+      "platforms": ["linux", "macos", "windows"],
+      "dependencies": {
+        "node": ">=14.0.0",
+        "tensorflow": "^4.10.0",
+        "ml-regression": "^6.0.0",
+        "chart.js": "^4.4.0",
+        "mongodb": "^6.1.0"
+      }
+    },
+    {
+      "name": "chatwoot-security-compliance",
+      "path": "./chatwoot-security-compliance",
+      "description": "Skill completa de Segurança e Compliance para Chatwoot - GDPR, LGPD, ISO 27001, SOC 2 e auditoria automatizada",
+      "capabilities": ["data_protection", "privacy_compliance", "security_monitoring", "audit_automation", "risk_assessment", "incident_response", "access_control", "encryption_management", "vulnerability_scanning", "compliance_reporting", "policy_enforcement", "data_governance", "security_analytics", "threat_detection", "breach_notification"],
+      "platforms": ["linux", "macos", "windows"],
+      "dependencies": {
+        "node": ">=14.0.0",
+        "bcrypt": "^5.1.0",
+        "jsonwebtoken": "^9.0.0",
+        "helmet": "^7.1.0",
+        "audit-log": "^2.1.0"
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "name": "full_ecosystem_startup",
+      "description": "Inicia todo o ecossistema Swarm do zero",
+      "steps": [
+        {
+          "name": "install_services",
+          "type": "service_action",
+          "skill": "swarm-service-manager",
+          "params": { "action": "install" }
+        },
+        {
+          "name": "start_services",
+          "type": "service_action",
+          "skill": "swarm-service-manager",
+          "params": { "action": "start" }
+        },
+        {
+          "name": "register_agent",
+          "type": "communication",
+          "skill": "neural-link-communicator",
+          "params": { "action": "register" }
+        },
+        {
+          "name": "health_check",
+          "type": "health_check",
+          "skill": "swarm-health-monitor",
+          "params": { "mode": "check" }
+        }
+      ]
+    },
+    {
+      "name": "emergency_recovery",
+      "description": "Recuperação de emergência do ecossistema",
+      "steps": [
+        {
+          "name": "emergency_mode",
+          "type": "orchestration",
+          "skill": "swarm-orchestrator",
+          "params": { "operation": "emergency" }
+        },
+        {
+          "name": "heal_ecosystem",
+          "type": "orchestration",
+          "skill": "swarm-orchestrator",
+          "params": { "operation": "heal" }
+        },
+        {
+          "name": "notify_recovery",
+          "type": "communication",
+          "skill": "neural-link-communicator",
+          "params": {
+            "action": "send",
+            "message": {
+              "content": "🚨 Recuperação de emergência concluída",
+              "type": "alert",
+              "priority": "high"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "installation": {
+    "npm": {
+      "package": "@ai-agent/swarm-skills",
+      "version": "1.0.0"
+    },
+    "nanobot": {
+      "registry_url": "https://registry.nanobot.ai",
+      "trust_network": "trust-network-ai-agent"
+    }
+  },
+  "usage_examples": {
+    "basic_startup": {
+      "description": "Iniciar ecossistema completo",
+      "code": "const SwarmOrchestrator = require('@ai-agent/swarm-skills');\nconst orchestrator = new SwarmOrchestrator();\n\nawait orchestrator.execute({\n  operation: 'workflow',\n  workflow: workflows.full_ecosystem_startup\n});"
+    },
+    "health_monitoring": {
+      "description": "Monitorar saúde contínua",
+      "code": "const SwarmHealthMonitor = require('@ai-agent/swarm-skills/health-monitor');\nconst monitor = new SwarmHealthMonitor();\n\nsetInterval(async () => {\n  const health = await monitor.execute({ mode: 'check' });\n  console.log('Health:', health.data.health.overall_status);\n}, 60000);"
+    },
+    "cross_platform_install": {
+      "description": "Instalação cross-platform",
+      "code": "const SwarmServiceManager = require('@ai-agent/swarm-skills/service-manager');\nconst manager = new SwarmServiceManager();\n\n// Detecta plataforma automaticamente\nawait manager.execute({ \n  action: 'install',\n  platform: 'auto' \n});"
+    }
+  },
+  "security": {
+    "trust_level": "high",
+    "required_permissions": [
+      "process_management",
+      "network_access",
+      "file_system_access",
+      "service_installation"
+    ],
+    "sandbox_requirements": {
+      "allow_network": true,
+      "allow_file_system": true,
+      "allow_process_spawn": true,
+      "restricted_paths": [".ai-workspace"]
+    }
+  },
+  "monitoring": {
+    "metrics": {
+      "service_uptime": "counter",
+      "message_throughput": "gauge",
+      "health_score": "histogram",
+      "error_rate": "counter"
+    },
+    "alerts": {
+      "service_down": "critical",
+      "high_cpu_usage": "warning",
+      "communication_lost": "critical",
+      "disk_space_low": "warning"
+    }
+  },
+  "compatibility": {
+    "node_versions": ">=14.0.0",
+    "platforms": {
+      "macos": ">=10.15",
+      "linux": ">=Ubuntu 18.04",
+      "windows": ">=10",
+      "wsl": ">=2.0"
+    },
+    "nanobot_version": ">=1.0.0"
+  }
+}

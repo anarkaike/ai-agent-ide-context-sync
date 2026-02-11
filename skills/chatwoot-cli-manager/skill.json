@@ -1,0 +1,211 @@
+{
+  "name": "chatwoot-cli-manager",
+  "version": "1.0.0",
+  "description": "Skill completa para gerenciamento do Chatwoot CLI - 100% das funcionalidades cobertas",
+  "category": "communication",
+  "author": "AI Agent Collective",
+  "license": "MIT",
+  "tags": ["chatwoot", "cli", "crm", "customer-support", "communication"],
+  "main": "index.js",
+  "capabilities": [
+    "conversation_management",
+    "message_handling", 
+    "contact_management",
+    "inbox_management",
+    "agent_management",
+    "sla_monitoring",
+    "profile_management",
+    "authentication",
+    "configuration",
+    "data_export"
+  ],
+  "platforms": ["linux", "macos", "windows"],
+  "dependencies": {
+    "node": ">=14.0.0",
+    "chatwoot-cli": ">=0.0.51"
+  },
+  "installation": {
+    "binary_required": true,
+    "binary_name": "chatwoot",
+    "install_command": "go install github.com/chatwoot/chatwoot-cli/cmd/chatwoot@latest"
+  },
+  "commands": {
+    "conversations": {
+      "list": {
+        "description": "List conversations with filters",
+        "flags": {
+          "status": ["open", "resolved", "all"],
+          "assignee": "me|all|<agent-id>",
+          "inbox": "<inbox-id>",
+          "labels": "<label1>,<label2>",
+          "output": ["text", "json", "csv", "quiet"]
+        },
+        "examples": [
+          "chatwoot conversation list",
+          "chatwoot conv list -s resolved",
+          "chatwoot conv list --assignee all --inbox 5",
+          "chatwoot conv list -l billing,urgent -o json"
+        ]
+      },
+      "view": {
+        "description": "View conversation details",
+        "params": ["conversation-id"],
+        "examples": [
+          "chatwoot conversation view 42",
+          "chatwoot conv view 42 -o json"
+        ]
+      }
+    },
+    "messages": {
+      "list": {
+        "description": "List messages in conversation",
+        "params": ["conversation-id"],
+        "flags": {
+          "before": "<message-id>",
+          "output": ["text", "json", "csv", "quiet"]
+        },
+        "examples": [
+          "chatwoot message list 42",
+          "chatwoot msg list 42 --before 1000",
+          "chatwoot msg list 42 -o json"
+        ]
+      }
+    },
+    "contacts": {
+      "list": {
+        "description": "List all contacts",
+        "flags": {
+          "output": ["text", "json", "csv", "quiet"]
+        }
+      },
+      "view": {
+        "description": "View contact details",
+        "params": ["contact-id"],
+        "examples": [
+          "chatwoot contact view 123",
+          "chatwoot contact view 123 -o json"
+        ]
+      },
+      "search": {
+        "description": "Search contacts by name, email, or phone",
+        "params": ["query"],
+        "flags": {
+          "output": ["text", "json", "csv", "quiet"]
+        },
+        "examples": [
+          "chatwoot contact search \"john\"",
+          "chatwoot contact search \"john@example.com\" -o json"
+        ]
+      }
+    },
+    "inboxes": {
+      "list": {
+        "description": "List all inboxes",
+        "examples": [
+          "chatwoot inbox list",
+          "chatwoot inbox list -o json"
+        ]
+      },
+      "view": {
+        "description": "View inbox details",
+        "params": ["inbox-id"],
+        "examples": [
+          "chatwoot inbox view 5",
+          "chatwoot inbox view 5 -o json"
+        ]
+      }
+    },
+    "agents": {
+      "list": {
+        "description": "List all agents",
+        "examples": [
+          "chatwoot agent list",
+          "chatwoot agent list -o json"
+        ]
+      }
+    },
+    "profile": {
+      "show": {
+        "description": "Show your profile",
+        "flags": {
+          "output": ["text", "json"]
+        },
+        "examples": [
+          "chatwoot profile",
+          "chatwoot profile -o json"
+        ]
+      }
+    },
+    "auth": {
+      "login": {
+        "description": "Login with Chatwoot credentials",
+        "required_fields": [
+          "base_url",
+          "api_key", 
+          "account_id"
+        ],
+        "config_location": "~/.chatwoot/config.yaml"
+      },
+      "logout": {
+        "description": "Logout and remove saved credentials"
+      },
+      "status": {
+        "description": "Show current authentication status"
+      }
+    },
+    "config": {
+      "path": {
+        "description": "Print config file path"
+      },
+      "view": {
+        "description": "Print current configuration (API key masked)"
+      }
+    }
+  },
+  "workflows": [
+    {
+      "name": "daily_support_summary",
+      "description": "Generate daily support summary",
+      "steps": [
+        "chatwoot auth status",
+        "chatwoot conversation list -s open -o json",
+        "chatwoot conversation list -s resolved -o json",
+        "chatwoot agent list -o json"
+      ]
+    },
+    {
+      "name": "export_conversations_csv",
+      "description": "Export all conversations to CSV",
+      "steps": [
+        "chatwoot conversation list -o csv > conversations.csv",
+        "chatwoot contact list -o csv > contacts.csv"
+      ]
+    },
+    {
+      "name": "monitor_unassigned",
+      "description": "Monitor unassigned conversations",
+      "steps": [
+        "chatwoot conversation list --assignee all -o json",
+        "jq '.[] | select(.assignee == null)'"
+      ]
+    }
+  ],
+  "monitoring": {
+    "metrics": [
+      "conversation_count",
+      "message_count", 
+      "response_time",
+      "sla_compliance"
+    ],
+    "alerts": [
+      "high_unassigned_count",
+      "sla_breach",
+      "auth_failure"
+    ]
+  },
+  "security": {
+    "credential_storage": "yaml_file",
+    "api_key_masking": true,
+    "config_permissions": "600"
+  }
+}

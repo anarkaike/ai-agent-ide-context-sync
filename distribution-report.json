@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-02-10T03:06:05.527Z",
+  "distribution": {
+    "total_skills": 5,
+    "platforms": [
+      "VPS",
+      "macOS"
+    ],
+    "targets": {
+      "vps": 3,
+      "macos": 3
+    }
+  },
+  "skills": [
+    {
+      "name": "chatwoot-api-complete",
+      "capabilities": 15,
+      "description": "API REST completa do Chatwoot"
+    },
+    {
+      "name": "whatsapp-business-api-complete",
+      "capabilities": 15,
+      "description": "WhatsApp Business API completa"
+    },
+    {
+      "name": "chatwoot-whatsapp-orchestrator",
+      "capabilities": 15,
+      "description": "Orquestrador multicanal com IA"
+    },
+    {
+      "name": "chatwoot-analytics-intelligence",
+      "capabilities": 15,
+      "description": "Analytics e Machine Learning"
+    },
+    {
+      "name": "chatwoot-security-compliance",
+      "capabilities": 15,
+      "description": "Segurança e compliance GDPR/LGPD"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+
+
+x-kanbancw-config: &kanbancw-config
+  KANBANCW_DOMAIN: kanbanfrontchatwoot.servinder.com.br
+  CHATWOOT_DOMAIN: chatwoot.servinder.com.br
+  KANBANCW_URL: https://kanbanfrontchatwoot.servinder.com.br
+  CHATWOOT_API_URL: https://chatwoot.servinder.com.br
+  CORS_ORIGIN: https://kanbanfrontchatwoot.servinder.com.br,https://chatwoot.servinder.com.br
+
+  # Opcionais (edite se usar Evolution API):
+  EVOLUTION_API_URL: https://evolutionapi.seudominio.com.br
+  EVOLUTION_API_KEY: key_global_evolution
+
+# ============================================
+
+services:
+  postgres-kanban:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: kanbancw
+      POSTGRES_USER: kanbancw
+      POSTGRES_PASSWORD: kanbancw_secret_2024
+    volumes:
+      - kanbancw-postgres:/var/lib/postgresql/data
+    networks:
+      - network_public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+
+  backend:
+    image: astraonline/kanbanback:0.0.2
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      LOG_LEVEL: info
+      DATABASE_URL: postgresql://kanbancw:kanbancw_secret_2024@postgres-kanban:5432/kanbancw?schema=public
+      UPLOAD_DIR: /app/uploads
+      <<: *kanbancw-config
+    volumes:
+      - kanbancw-uploads:/app/uploads
+    depends_on:
+      - postgres-kanban
+    networks:
+      - network_public
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.kanbancw-backend.rule=Host(`kanbanbackchatwoot.servinder.com.br`)"
+        - "traefik.http.routers.kanbancw-backend.entrypoints=websecure"
+        - "traefik.http.routers.kanbancw-backend.tls=true"
+        - "traefik.http.routers.kanbancw-backend.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.kanbancw-backend.loadbalancer.server.port=3000"
+        - "traefik.docker.network=network_public"
+
+  frontend:
+    image: astraonline/kanbanfront:0.0.2
+    networks:
+      - network_public
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.kanbancw-frontend.rule=Host(`kanbanfrontchatwoot.servinder.com.br`)"
+        - "traefik.http.routers.kanbancw-frontend.entrypoints=websecure"
+        - "traefik.http.routers.kanbancw-frontend.tls=true"
+        - "traefik.http.routers.kanbancw-frontend.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.kanbancw-frontend.loadbalancer.server.port=80"
+        - "traefik.docker.network=network_public"
+        - "traefik.http.routers.kanbancw-frontend.priority=1"
+
+volumes:
+  kanbancw-postgres:
+    external: true
+    name: kanbancw-postgres
+  kanbancw-uploads:
+    external: true
+    name: kanbancw-uploads
+
+networks:
+  network_public:
+    external: true
+    name: network_public

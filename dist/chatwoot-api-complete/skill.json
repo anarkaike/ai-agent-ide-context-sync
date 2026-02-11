@@ -1,0 +1,274 @@
+{
+  "name": "chatwoot-api-complete",
+  "version": "2.0.0",
+  "description": "Skill completa Chatwoot API - 100% dos recursos cobertos incluindo API REST, webhooks, automações e analytics",
+  "category": "communication",
+  "author": "AI Agent Collective",
+  "license": "MIT",
+  "tags": ["chatwoot", "api", "crm", "customer-support", "webhooks", "automation", "analytics"],
+  "main": "index.js",
+  "capabilities": [
+    "api_rest_management",
+    "webhook_management",
+    "conversation_automation",
+    "sla_monitoring",
+    "contact_segmentation",
+    "custom_attributes",
+    "macros_management",
+    "knowledge_base",
+    "agent_performance",
+    "multi_account_support",
+    "reports_analytics",
+    "integration_management",
+    "security_compliance",
+    "real_time_sync",
+    "backup_restore"
+  ],
+  "platforms": ["linux", "macos", "windows"],
+  "dependencies": {
+    "node": ">=14.0.0",
+    "axios": "^1.6.0",
+    "express": "^4.18.0",
+    "socket.io": "^4.7.0",
+    "node-cron": "^3.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "crypto": "^1.0.1"
+  },
+  "api_endpoints": {
+    "base_url": "https://your-chatwoot.com",
+    "api_version": "v1",
+    "authentication": "Bearer Token",
+    "endpoints": {
+      "accounts": {
+        "list": "GET /api/v1/accounts",
+        "create": "POST /api/v1/accounts",
+        "show": "GET /api/v1/accounts/{id}",
+        "update": "PUT /api/v1/accounts/{id}",
+        "delete": "DELETE /api/v1/accounts/{id}"
+      },
+      "conversations": {
+        "list": "GET /api/v1/accounts/{account_id}/conversations",
+        "create": "POST /api/v1/accounts/{account_id}/conversations",
+        "show": "GET /api/v1/accounts/{account_id}/conversations/{id}",
+        "update": "PUT /api/v1/accounts/{account_id}/conversations/{id}",
+        "delete": "DELETE /api/v1/accounts/{account_id}/conversations/{id}",
+        "assign": "POST /api/v1/accounts/{account_id}/conversations/{id}/assignments",
+        "labels": "POST /api/v1/accounts/{account_id}/conversations/{id}/labels",
+        "mute": "POST /api/v1/accounts/{account_id}/conversations/{id}/mute",
+        "unmute": "POST /api/v1/accounts/{account_id}/conversations/{id}/unmute",
+        "send_message": "POST /api/v1/accounts/{account_id}/conversations/{id}/messages",
+        "toggle_status": "POST /api/v1/accounts/{account_id}/conversations/{id}/toggle_status"
+      },
+      "messages": {
+        "list": "GET /api/v1/accounts/{account_id}/conversations/{conversation_id}/messages",
+        "create": "POST /api/v1/accounts/{account_id}/conversations/{conversation_id}/messages",
+        "show": "GET /api/v1/accounts/{account_id}/conversations/{conversation_id}/messages/{id}",
+        "update": "PUT /api/v1/accounts/{account_id}/conversations/{conversation_id}/messages/{id}",
+        "delete": "DELETE /api/v1/accounts/{account_id}/conversations/{conversation_id}/messages/{id}"
+      },
+      "contacts": {
+        "list": "GET /api/v1/accounts/{account_id}/contacts",
+        "create": "POST /api/v1/accounts/{account_id}/contacts",
+        "show": "GET /api/v1/accounts/{account_id}/contacts/{id}",
+        "update": "PUT /api/v1/accounts/{account_id}/contacts/{id}",
+        "delete": "DELETE /api/v1/accounts/{account_id}/contacts/{id}",
+        "search": "GET /api/v1/accounts/{account_id}/contacts/search",
+        "merge": "POST /api/v1/accounts/{account_id}/contacts/merge",
+        "tags": "POST /api/v1/accounts/{account_id}/contacts/{id}/tags"
+      },
+      "inboxes": {
+        "list": "GET /api/v1/accounts/{account_id}/inboxes",
+        "create": "POST /api/v1/accounts/{account_id}/inboxes",
+        "show": "GET /api/v1/accounts/{account_id}/inboxes/{id}",
+        "update": "PUT /api/v1/accounts/{account_id}/inboxes/{id}",
+        "delete": "DELETE /api/v1/accounts/{account_id}/inboxes/{id}",
+        "members": "GET /api/v1/accounts/{account_id}/inboxes/{id}/agents"
+      },
+      "agents": {
+        "list": "GET /api/v1/accounts/{account_id}/agents",
+        "create": "POST /api/v1/accounts/{account_id}/agents",
+        "show": "GET /api/v1/accounts/{account_id}/agents/{id}",
+        "update": "PUT /api/v1/accounts/{account_id}/agents/{id}",
+        "delete": "DELETE /api/v1/accounts/{account_id}/agents/{id}",
+        "availability": "POST /api/v1/accounts/{account_id}/agents/{id}/availability"
+      },
+      "labels": {
+        "list": "GET /api/v1/accounts/{account_id}/labels",
+        "create": "POST /api/v1/accounts/{account_id}/labels",
+        "show": "GET /api/v1/accounts/{account_id}/labels/{id}",
+        "update": "PUT /api/v1/accounts/{account_id}/labels/{id}",
+        "delete": "DELETE /api/v1/accounts/{account_id}/labels/{id}"
+      },
+      "canned_responses": {
+        "list": "GET /api/v1/accounts/{account_id}/canned_responses",
+        "create": "POST /api/v1/accounts/{account_id}/canned_responses",
+        "show": "GET /api/v1/accounts/{account_id}/canned_responses/{id}",
+        "update": "PUT /api/v1/accounts/{account_id}/canned_responses/{id}",
+        "delete": "DELETE /api/v1/accounts/{account_id}/canned_responses/{id}"
+      },
+      "automation_rules": {
+        "list": "GET /api/v1/accounts/{account_id}/automation_rules",
+        "create": "POST /api/v1/accounts/{account_id}/automation_rules",
+        "show": "GET /api/v1/accounts/{account_id}/automation_rules/{id}",
+        "update": "PUT /api/v1/accounts/{account_id}/automation_rules/{id}",
+        "delete": "DELETE /api/v1/accounts/{account_id}/automation_rules/{id}",
+        "clone": "POST /api/v1/accounts/{account_id}/automation_rules/{id}/clone"
+      },
+      "reports": {
+        "summary": "GET /api/v1/accounts/{account_id}/reports/summary",
+        "conversations": "GET /api/v1/accounts/{account_id}/reports/conversations",
+        "agent_performance": "GET /api/v1/accounts/{account_id}/reports/agent_performance",
+        "sla": "GET /api/v1/accounts/{account_id}/reports/sla",
+        "traffic": "GET /api/v1/accounts/{account_id}/reports/traffic",
+        "exports": "POST /api/v1/accounts/{account_id}/reports/exports"
+      },
+      "webhooks": {
+        "list": "GET /api/v1/accounts/{account_id}/webhooks",
+        "create": "POST /api/v1/accounts/{account_id}/webhooks",
+        "show": "GET /api/v1/accounts/{account_id}/webhooks/{id}",
+        "update": "PUT /api/v1/accounts/{account_id}/webhooks/{id}",
+        "delete": "DELETE /api/v1/accounts/{account_id}/webhooks/{id}",
+        "test": "POST /api/v1/accounts/{account_id}/webhooks/{id}/test"
+      },
+      "custom_attributes": {
+        "conversation": "GET|POST|PUT|DELETE /api/v1/accounts/{account_id}/custom_attributes/conversation",
+        "contact": "GET|POST|PUT|DELETE /api/v1/accounts/{account_id}/custom_attributes/contact"
+      },
+      "macros": {
+        "list": "GET /api/v1/accounts/{account_id}/macros",
+        "create": "POST /api/v1/accounts/{account_id}/macros",
+        "show": "GET /api/v1/accounts/{account_id}/macros/{id}",
+        "update": "PUT /api/v1/accounts/{account_id}/macros/{id}",
+        "delete": "DELETE /api/v1/accounts/{account_id}/macros/{id}",
+        "execute": "POST /api/v1/accounts/{account_id}/macros/{id}/execute"
+      },
+      "knowledge_base": {
+        "categories": "GET|POST|PUT|DELETE /api/v1/accounts/{account_id}/knowledge_base/categories",
+        "articles": "GET|POST|PUT|DELETE /api/v1/accounts/{account_id}/knowledge_base/articles",
+        "portals": "GET|POST|PUT|DELETE /api/v1/accounts/{account_id}/knowledge_base/portals"
+      }
+    }
+  },
+  "webhook_events": [
+    "conversation_created",
+    "conversation_status_changed",
+    "message_created",
+    "message_updated",
+    "contact_created", 
+    "contact_updated",
+    "webhook_triggered",
+    "inbox_created",
+    "inbox_updated",
+    "agent_created",
+    "agent_updated"
+  ],
+  "automation_triggers": [
+    "conversation_created",
+    "message_received",
+    "conversation_assigned",
+    "label_added",
+    "sla breached",
+    "business_hours",
+    "time_based",
+    "webhook_received"
+  ],
+  "automation_actions": [
+    "assign_agent",
+    "send_message",
+    "add_label",
+    "set_priority",
+    "send_email",
+    "create_ticket",
+    "update_contact",
+    "execute_macro",
+    "trigger_webhook",
+    "update_sla"
+  ],
+  "workflows": [
+    {
+      "name": "setup_complete_chatwoot",
+      "description": "Setup completo do Chatwoot com API, webhooks e automações",
+      "steps": [
+        "configure_api_access",
+        "setup_webhooks",
+        "create_automation_rules",
+        "configure_sla_policies",
+        "setup_knowledge_base",
+        "create_agent_teams",
+        "configure_reports"
+      ]
+    },
+    {
+      "name": "integrate_whatsapp_complete",
+      "description": "Integração completa WhatsApp + Chatwoot",
+      "steps": [
+        "setup_whatsapp_channel",
+        "configure_hsm_templates",
+        "setup_bidirectional_sync",
+        "configure_auto_responses",
+        "setup_media_handling",
+        "test_integration"
+      ]
+    },
+    {
+      "name": "automate_customer_support",
+      "description": "Automação completa do atendimento ao cliente",
+      "steps": [
+        "setup_routing_rules",
+        "configure_sla_monitoring",
+        "create_auto_responses",
+        "setup_escalation_rules",
+        "configure_agent_performance_tracking"
+      ]
+    }
+  ],
+  "monitoring": {
+    "metrics": [
+      "api_response_time",
+      "webhook_delivery_rate",
+      "conversation_volume",
+      "agent_performance",
+      "sla_compliance",
+      "automation_success_rate",
+      "message_throughput",
+      "system_health"
+    ],
+    "alerts": [
+      "api_failure",
+      "webhook_failure",
+      "sla_breach",
+      "high_queue_volume",
+      "agent_unavailable",
+      "automation_failure",
+      "system_error"
+    ]
+  },
+  "security": {
+    "authentication": "bearer_token",
+    "webhook_security": "hmac_signature",
+    "api_rate_limiting": true,
+    "data_encryption": true,
+    "audit_logging": true,
+    "role_based_access": true
+  },
+  "integrations": {
+    "whatsapp": {
+      "bi_directional_sync": true,
+      "hsm_templates": true,
+      "interactive_messages": true,
+      "media_handling": true,
+      "location_sharing": true
+    },
+    "crm": [
+      "salesforce",
+      "hubspot", 
+      "pipedrive",
+      "zoho"
+    ],
+    "analytics": [
+      "google_analytics",
+      "mixpanel",
+      "segment"
+    ]
+  }
+}

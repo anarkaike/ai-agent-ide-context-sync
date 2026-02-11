@@ -1,0 +1,214 @@
+{
+  "timestamp": "2026-02-10T03:05:07.414Z",
+  "summary": {
+    "total": 3,
+    "healthy": 0,
+    "warning": 0,
+    "degraded": 0,
+    "critical": 3,
+    "error": 0
+  },
+  "environments": [
+    {
+      "url": "https://alphaclinics.servinder.com.br",
+      "timestamp": "2026-02-10T03:05:00.414Z",
+      "status": "critical",
+      "checks": {
+        "dns": {
+          "status": "error",
+          "hostname": "alphaclinics.servinder.com.br",
+          "error": "Cannot read properties of undefined (reading 'match')"
+        },
+        "connectivity": {
+          "status": "error",
+          "reachable": false,
+          "error": "Cannot read properties of undefined (reading 'split')"
+        },
+        "http": {
+          "status": "success",
+          "statusCode": 502,
+          "statusMessage": "Bad Gateway",
+          "responseTime": 73,
+          "headers": {
+            "server": "nginx/1.29.5",
+            "date": "Tue, 10 Feb 2026 03:05:02 GMT",
+            "content-type": "text/html",
+            "content-length": "157",
+            "connection": "keep-alive"
+          },
+          "server": "nginx/1.29.5"
+        },
+        "ssl": {
+          "status": "error",
+          "valid": false,
+          "error": "Cannot read properties of undefined (reading 'match')"
+        },
+        "content": {
+          "status": "success",
+          "contentLength": 157,
+          "contentType": "text/html",
+          "isHTML": true,
+          "hasError": true,
+          "errorType": "502_bad_gateway",
+          "framework": null,
+          "title": "502 Bad Gateway"
+        },
+        "ports": {
+          "status": "success",
+          "ports": {
+            "80": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            },
+            "443": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            },
+            "3000": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            },
+            "8080": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            }
+          }
+        }
+      }
+    },
+    {
+      "url": "https://hmg.alphaclinics.servinder.com.br",
+      "timestamp": "2026-02-10T03:05:02.820Z",
+      "status": "critical",
+      "checks": {
+        "dns": {
+          "status": "error",
+          "hostname": "hmg.alphaclinics.servinder.com.br",
+          "error": "Cannot read properties of undefined (reading 'match')"
+        },
+        "connectivity": {
+          "status": "error",
+          "reachable": false,
+          "error": "Cannot read properties of undefined (reading 'split')"
+        },
+        "http": {
+          "status": "success",
+          "statusCode": 502,
+          "statusMessage": "Bad Gateway",
+          "responseTime": 11,
+          "headers": {
+            "server": "nginx/1.29.5",
+            "date": "Tue, 10 Feb 2026 03:05:04 GMT",
+            "content-type": "text/html",
+            "content-length": "157",
+            "connection": "keep-alive"
+          },
+          "server": "nginx/1.29.5"
+        },
+        "ssl": {
+          "status": "error",
+          "valid": false,
+          "error": "Cannot read properties of undefined (reading 'match')"
+        },
+        "content": {
+          "status": "success",
+          "contentLength": 157,
+          "contentType": "text/html",
+          "isHTML": true,
+          "hasError": true,
+          "errorType": "502_bad_gateway",
+          "framework": null,
+          "title": "502 Bad Gateway"
+        },
+        "ports": {
+          "status": "success",
+          "ports": {
+            "80": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            },
+            "443": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            },
+            "3000": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            },
+            "8080": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            }
+          }
+        }
+      }
+    },
+    {
+      "url": "https://dev.alphaclinics.servinder.com.br",
+      "timestamp": "2026-02-10T03:05:05.024Z",
+      "status": "critical",
+      "checks": {
+        "dns": {
+          "status": "error",
+          "hostname": "dev.alphaclinics.servinder.com.br",
+          "error": "Cannot read properties of undefined (reading 'match')"
+        },
+        "connectivity": {
+          "status": "error",
+          "reachable": false,
+          "error": "Cannot read properties of undefined (reading 'split')"
+        },
+        "http": {
+          "status": "success",
+          "statusCode": 502,
+          "statusMessage": "Bad Gateway",
+          "responseTime": 14,
+          "headers": {
+            "server": "nginx/1.29.5",
+            "date": "Tue, 10 Feb 2026 03:05:07 GMT",
+            "content-type": "text/html",
+            "content-length": "157",
+            "connection": "keep-alive"
+          },
+          "server": "nginx/1.29.5"
+        },
+        "ssl": {
+          "status": "error",
+          "valid": false,
+          "error": "Cannot read properties of undefined (reading 'match')"
+        },
+        "content": {
+          "status": "success",
+          "contentLength": 157,
+          "contentType": "text/html",
+          "isHTML": true,
+          "hasError": true,
+          "errorType": "502_bad_gateway",
+          "framework": null,
+          "title": "502 Bad Gateway"
+        },
+        "ports": {
+          "status": "success",
+          "ports": {
+            "80": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            },
+            "443": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            },
+            "3000": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            },
+            "8080": {
+              "open": false,
+              "details": "Cannot read properties of undefined (reading 'includes')"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

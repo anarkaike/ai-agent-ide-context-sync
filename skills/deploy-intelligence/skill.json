@@ -1,0 +1,96 @@
+{
+  "name": "deploy-intelligence",
+  "version": "1.0.0",
+  "description": "Deploy Intelligence Layer - Sistema inteligente de deploy e automação para projetos Laravel+Inertia+Vue+Chatwoot",
+  "main": "index.js",
+  "author": "AI Agent Context Sync",
+  "license": "MIT",
+  "keywords": [
+    "deploy",
+    "automation",
+    "laravel",
+    "inertia",
+    "vue",
+    "chatwoot",
+    "docker",
+    "ci-cd",
+    "rollback",
+    "health-check"
+  ],
+  "agentType": "deploy-intelligence",
+  "trustNetwork": "trust-network-ai-agent",
+  "knowledgeTopics": [
+    "deployment-strategies",
+    "container-orchestration",
+    "backup-automation",
+    "health-monitoring",
+    "rollback-procedures",
+    "laravel-deployment",
+    "vue-deployment",
+    "chatwoot-integration"
+  ],
+  "capabilities": [
+    "Automated deployment with rollback",
+    "Health monitoring and validation",
+    "Backup and recovery automation",
+    "Multi-environment support",
+    "Project discovery and management",
+    "Docker container orchestration",
+    "SSL certificate validation",
+    "Database migration automation"
+  ],
+  "dependencies": {
+    "node": ">=16.0.0",
+    "docker": ">=20.0.0",
+    "docker-compose": ">=2.0.0"
+  },
+  "config": {
+    "projectsPath": "/root/projects",
+    "backupPath": "/tmp/deploy-backups",
+    "logPath": "/var/log/deploy-intelligence",
+    "environments": ["dev", "hmg", "prod"],
+    "autoRollback": true,
+    "healthCheckTimeout": 30000,
+    "backupRetention": 7
+  },
+  "supportedProjects": {
+    "sistema-clinica-new": {
+      "type": "laravel-inertia-vue",
+      "stack": ["Laravel", "Inertia.js", "Vue.js", "PostgreSQL", "Redis"],
+      "chatwoot": true,
+      "domains": [
+        "alphaclinics.servinder.com.br",
+        "hmg.alphaclinics.servinder.com.br", 
+        "dev.alphaclinics.servinder.com.br"
+      ]
+    },
+    "kanban-free": {
+      "type": "kanban-chatwoot",
+      "stack": ["Node.js", "React", "PostgreSQL", "Chatwoot Integration"],
+      "chatwoot": true,
+      "domains": [
+        "kanbanfrontchatwoot.servinder.com.br",
+        "kanbanbackchatwoot.servinder.com.br"
+      ]
+    }
+  },
+  "endpoints": {
+    "deploy": "Automated project deployment",
+    "status": "Project status overview",
+    "health": "Health check validation",
+    "rollback": "Emergency rollback procedures",
+    "backup": "Backup creation and management"
+  },
+  "security": {
+    "requireAuthentication": true,
+    "allowedEnvironments": ["dev", "hmg", "prod"],
+    "auditLogging": true,
+    "roleBasedAccess": true
+  },
+  "monitoring": {
+    "metricsCollection": true,
+    "alerting": true,
+    "logAggregation": true,
+    "performanceTracking": true
+  }
+}

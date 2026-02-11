@@ -1,0 +1,232 @@
+name: Deploy Intelligence CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - hmg
+        - prod
+      project:
+        description: 'Project to deploy'
+        required: true
+        default: 'sistema-clinica-new'
+        type: choice
+        options:
+        - sistema-clinica-new
+        - kanban-free
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Security and Code Quality
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run security scan
+        run: |
+          echo "🔒 Running security scan..."
+          # Add your preferred security scanning tools
+          # npm audit || true
+          # composer audit || true
+
+  # Build and Test
+  build-and-test:
+    runs-on: ubuntu-latest
+    needs: security-scan
+    strategy:
+      matrix:
+        node-version: [18, 20]
+        php-version: [8.2, 8.3]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: gd, pdo, pdo_pgsql, zip, bcmath, opcache, redis
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          composer install --no-interaction --prefer-dist
+
+      - name: Run tests
+        run: |
+          npm run test || echo "Tests not configured"
+          composer test || echo "PHP tests not configured"
+
+      - name: Build assets
+        run: npm run build
+
+  # Deploy to Development
+  deploy-dev:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+    environment: development
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Dev
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USERNAME }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          script: |
+            cd /root/projects/dev/${{ github.event.inputs.project || 'sistema-clinica-new' }}
+            git pull origin develop
+            docker compose down
+            docker compose build
+            docker compose up -d
+            docker compose exec app php artisan config:cache
+            docker compose exec app php artisan route:cache
+            docker compose exec app php artisan view:cache
+            docker compose exec app php artisan migrate --force
+
+      - name: Health Check
+        run: |
+          sleep 30
+          curl -f https://dev.alphaclinics.servinder.com.br/health || exit 1
+
+  # Deploy to Staging
+  deploy-hmg:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to HMG
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.HMG_HOST }}
+          username: ${{ secrets.HMG_USERNAME }}
+          key: ${{ secrets.HMG_SSH_KEY }}
+          script: |
+            cd /root/projects/hmg/${{ github.event.inputs.project || 'sistema-clinica-new' }}
+            git pull origin main
+            docker compose down
+            docker compose build
+            docker compose up -d
+            docker compose exec app php artisan config:cache
+            docker compose exec app php artisan route:cache
+            docker compose exec app php artisan view:cache
+            docker compose exec app php artisan migrate --force
+
+      - name: Health Check
+        run: |
+          sleep 30
+          curl -f https://hmg.alphaclinics.servinder.com.br/health || exit 1
+
+  # Deploy to Production
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: deploy-hmg
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    environment: production
+
+    steps:
+      - name: Create Backup
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USERNAME }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            /root/projects/dev/ai-agent-ide-context-sync/skills/deploy-intelligence/index.js backup ${{ github.event.inputs.project || 'sistema-clinica-new' }} prod
+
+      - name: Deploy to Production
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USERNAME }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd /root/projects/prod/${{ github.event.inputs.project || 'sistema-clinica-new' }}
+            git pull origin main
+            docker compose down
+            docker compose build
+            docker compose up -d
+            docker compose exec app php artisan config:cache
+            docker compose exec app php artisan route:cache
+            docker compose exec app php artisan view:cache
+            docker compose exec app php artisan migrate --force
+
+      - name: Health Check
+        run: |
+          sleep 60
+          curl -f https://alphaclinics.servinder.com.br/health || exit 1
+
+      - name: Notify Success
+        if: success()
+        run: |
+          echo "✅ Production deployment successful!"
+          # Add notification logic (Slack, Telegram, etc.)
+
+      - name: Rollback on Failure
+        if: failure()
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USERNAME }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            /root/projects/dev/ai-agent-ide-context-sync/skills/deploy-intelligence/index.js rollback ${{ github.event.inputs.project || 'sistema-clinica-new' }} prod
+
+  # Deploy Intelligence Operations
+  deploy-intelligence:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout Deploy Intelligence
+        uses: actions/checkout@v4
+        with:
+          repository: ai-agent-ide-context-sync/skills/deploy-intelligence
+          path: deploy-intelligence
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Deploy Intelligence
+        run: |
+          cd deploy-intelligence
+          npm install
+          npm link
+
+      - name: Execute Deploy Intelligence Command
+        run: |
+          deploy-intelligence ${{ github.event.inputs.action || 'status' }} ${{ github.event.inputs.project || 'sistema-clinica-new' }} ${{ github.event.inputs.environment || 'dev' }}

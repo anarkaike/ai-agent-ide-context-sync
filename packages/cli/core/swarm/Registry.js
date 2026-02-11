@@ -40,7 +40,7 @@ class SwarmRegistry {
         const entry = {
             id: agentInfo.id,
             role: (agentInfo.roles || [])[0] || 'Generalist', // Use 'roles' from config or 'capabilities'
-            name: agentInfo.name || 'Anonymous Drone',
+            name: agentInfo.name || 'Worker Agent',
             security_level: agentInfo.security_level || 5,
             status: agentInfo.status || 'ACTIVE', // SwarmNode might send status
             last_heartbeat: new Date().toISOString(),

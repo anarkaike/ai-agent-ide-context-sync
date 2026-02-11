@@ -1,0 +1,50 @@
+{
+  "name": "deploy-intelligence",
+  "version": "1.0.0",
+  "description": "Deploy Intelligence Layer - Sistema inteligente de deploy e automação",
+  "main": "index.js",
+  "bin": {
+    "deploy-intelligence": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node test.js",
+    "install-global": "npm link"
+  },
+  "keywords": [
+    "deploy",
+    "automation",
+    "laravel",
+    "inertia",
+    "vue",
+    "chatwoot",
+    "docker",
+    "ci-cd"
+  ],
+  "author": "AI Agent Context Sync",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "winston": "^3.11.0",
+    "node-cron": "^3.0.3",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ai-agent-ide-context-sync/skills/deploy-intelligence"
+  },
+  "bugs": {
+    "url": "https://github.com/ai-agent-ide-context-sync/skills/deploy-intelligence/issues"
+  },
+  "homepage": "https://github.com/ai-agent-ide-context-sync/skills/deploy-intelligence#readme"
+}

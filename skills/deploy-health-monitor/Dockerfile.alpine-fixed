@@ -1,0 +1,98 @@
+# Multi-stage build for Laravel Application - Alpine Fixed
+FROM node:22-slim AS node-build
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+
+# Install dependencies with retry
+RUN npm ci --retry 3 --retry-delay 5 || npm install
+
+COPY resources ./resources
+COPY vite.config.js ./vite.config.js
+
+# Build assets
+RUN npm run build || echo "Build assets skipped - continuing"
+
+# PHP Stage - Alpine Fixed
+FROM php:8.4-fpm-alpine AS php-build
+
+# Install system dependencies with working mirrors
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.23/main" > /etc/apk/repositories && \
+    echo "http://dl-cdn.alpinelinux.org/alpine/v3.23/community" >> /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache \
+    postgresql16-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    libpng-dev \
+    libxml2-dev \
+    oniguruma-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install \
+    pdo_pgsql \
+    bcmath \
+    zip \
+    gd \
+    xml \
+    mbstring \
+    && pecl install redis && docker-php-ext-enable redis
+
+# Copy application files
+COPY app ./app
+COPY bootstrap ./bootstrap
+COPY config ./config
+COPY database ./database
+COPY routes ./routes
+COPY resources/lang ./resources/lang
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies
+RUN composer install --prefer-dist --no-interaction --optimize-autoloader --no-scripts
+
+# Application Stage - Alpine Fixed
+FROM php:8.4-fpm-alpine AS app
+
+# Environment variables
+ENV NPM_CONFIG_LEGACY_PEER_DEPS=true
+
+# Install runtime dependencies with correct package names
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.23/main" > /etc/apk/repositories && \
+    echo "http://dl-cdn.alpinelinux.org/alpine/v3.23/community" >> /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache \
+    postgresql16-client \
+    curl \
+    && docker-php-ext-install pdo_pgsql bcmath
+
+# Create app user
+RUN addgroup -g 1000 -S app && \
+    adduser -u 1000 -S app -G app
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy from build stages
+COPY --from=node-build /app/public/build ./public/build
+COPY --from=php-build --chown=app:app /var/www/html .
+
+# Set permissions
+RUN chown -R app:app /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
+
+# Switch to app user
+USER app
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080 || exit 1
+
+# Start PHP-FPM
+CMD ["php-fpm"]

@@ -1,0 +1,287 @@
+{
+  "name": "whatsapp-web-multidevice-manager",
+  "version": "1.0.0",
+  "description": "Skill completa para gerenciamento do WhatsApp Web Multidevice - API REST e MCP",
+  "category": "communication",
+  "author": "AI Agent Collective",
+  "license": "MIT",
+  "tags": ["whatsapp", "web-multidevice", "api", "mcp", "messaging", "chatwoot-integration"],
+  "main": "index.js",
+  "capabilities": [
+    "whatsapp_api_rest",
+    "whatsapp_mcp_server",
+    "message_sending",
+    "message_receiving",
+    "media_handling",
+    "chatwoot_integration",
+    "webhook_management",
+    "authentication",
+    "contact_management",
+    "group_management",
+    "call_management"
+  ],
+  "platforms": ["linux", "macos", "windows"],
+  "dependencies": {
+    "node": ">=14.0.0",
+    "go-whatsapp-web-multidevice": ">=1.0.0"
+  },
+  "installation": {
+    "binary_required": true,
+    "binary_name": "whatsapp",
+    "source_repo": "https://github.com/aldinokemal/go-whatsapp-web-multidevice",
+    "build_command": "go build -o whatsapp ./cmd/whatsapp/"
+  },
+  "modes": {
+    "rest_api": {
+      "description": "WhatsApp over HTTP REST API",
+      "command": "rest",
+      "default_port": 3000,
+      "default_host": "0.0.0.0"
+    },
+    "mcp_server": {
+      "description": "WhatsApp MCP Server using SSE",
+      "command": "mcp",
+      "transport": "Server-Sent Events"
+    }
+  },
+  "flags": {
+    "server": {
+      "host": {
+        "flag": "-H, --host",
+        "description": "Host to bind the server",
+        "default": "0.0.0.0",
+        "example": "--host=127.0.0.1"
+      },
+      "port": {
+        "flag": "-p, --port",
+        "description": "Change port number",
+        "default": "3000",
+        "example": "--port=8080"
+      },
+      "base_path": {
+        "flag": "--base-path",
+        "description": "Base path for subpath deployment",
+        "example": "--base-path=/gowa"
+      },
+      "basic_auth": {
+        "flag": "-b, --basic-auth",
+        "description": "Basic auth credential",
+        "example": "-b=yourUsername:yourPassword"
+      },
+      "trusted_proxies": {
+        "flag": "--trusted-proxies",
+        "description": "Trusted proxy IP ranges",
+        "example": "--trusted-proxies=0.0.0.0/0"
+      }
+    },
+    "authentication": {
+      "debug": {
+        "flag": "-d, --debug",
+        "description": "Hide or displaying log",
+        "example": "--debug=true"
+      }
+    },
+    "features": {
+      "account_validation": {
+        "flag": "--account-validation",
+        "description": "Enable/disable account validation",
+        "default": "true",
+        "example": "--account-validation=false"
+      },
+      "auto_download_media": {
+        "flag": "--auto-download-media",
+        "description": "Auto download media from incoming messages",
+        "default": "true",
+        "example": "--auto-download-media=false"
+      },
+      "auto_mark_read": {
+        "flag": "--auto-mark-read",
+        "description": "Auto mark incoming messages as read",
+        "example": "--auto-mark-read=true"
+      },
+      "auto_reject_call": {
+        "flag": "--auto-reject-call",
+        "description": "Auto reject incoming calls",
+        "example": "--auto-reject-call=true"
+      },
+      "autoreply": {
+        "flag": "--autoreply",
+        "description": "Auto reply when received message",
+        "example": "--autoreply=\"Don't reply this message\""
+      }
+    },
+    "database": {
+      "db_uri": {
+        "flag": "--db-uri",
+        "description": "Database URI to store connection data",
+        "default": "file:storages/whatsapp.db?_foreign_keys=on",
+        "example": "--db-uri=postgres://user:password@localhost:5432/whatsapp"
+      },
+      "db_keys_uri": {
+        "flag": "--db-keys-uri",
+        "description": "Database URI to store the keys",
+        "example": "--db-keys-uri=file::memory:?cache=shared&_foreign_keys=on"
+      }
+    },
+    "chatwoot_integration": {
+      "chatwoot_enabled": {
+        "flag": "--chatwoot-enabled",
+        "description": "Enable Chatwoot integration",
+        "example": "--chatwoot-enabled=true"
+      },
+      "chatwoot_device_id": {
+        "flag": "--chatwoot-device-id",
+        "description": "Device ID for Chatwoot outbound messages",
+        "example": "--chatwoot-device-id=\"my-device\""
+      },
+      "chatwoot_import_messages": {
+        "flag": "--chatwoot-import-messages",
+        "description": "Enable message history import to Chatwoot",
+        "example": "--chatwoot-import-messages=true"
+      },
+      "chatwoot_days_limit_import_messages": {
+        "flag": "--chatwoot-days-limit-import-messages",
+        "description": "Days of message history to import to Chatwoot",
+        "default": "3",
+        "example": "--chatwoot-days-limit-import-messages=7"
+      }
+    },
+    "webhooks": {
+      "webhook": {
+        "flag": "-w, --webhook",
+        "description": "Forward event to webhook",
+        "example": "--webhook=https://yourcallback.com/callback"
+      },
+      "webhook_events": {
+        "flag": "--webhook-events",
+        "description": "Whitelist of events to forward to webhook",
+        "example": "--webhook-events=message,message.ack,group.participants"
+      },
+      "webhook_secret": {
+        "flag": "--webhook-secret",
+        "description": "Secure webhook request",
+        "default": "secret",
+        "example": "--webhook-secret=super-secret-key"
+      },
+      "webhook_insecure_skip_verify": {
+        "flag": "--webhook-insecure-skip-verify",
+        "description": "Skip TLS certificate verification",
+        "example": "--webhook-insecure-skip-verify=true"
+      }
+    },
+    "system": {
+      "os": {
+        "flag": "--os",
+        "description": "OS name",
+        "default": "AldinoKemal",
+        "example": "--os=Chrome"
+      }
+    }
+  },
+  "api_endpoints": {
+    "rest": {
+      "base_url": "http://localhost:3000",
+      "authentication": "Basic Auth",
+      "endpoints": {
+        "send_message": "POST /sendMessage",
+        "send_media": "POST /sendMedia",
+        "send_location": "POST /sendLocation",
+        "send_contact": "POST /sendContact",
+        "send_poll": "POST /sendPoll",
+        "create_group": "POST /createGroup",
+        "add_participants": "POST /addParticipants",
+        "remove_participants": "POST /removeParticipants",
+        "promote_participants": "POST /promoteParticipants",
+        "demote_participants": "POST /demoteParticipants",
+        "group_info": "GET /groupInfo/{groupJid}",
+        "leave_group": "POST /leaveGroup",
+        "get_qr_code": "GET /qr",
+        "connection_status": "GET /status",
+        "logout": "POST /logout"
+      }
+    }
+  },
+  "workflows": [
+    {
+      "name": "start_whatsapp_rest_api",
+      "description": "Start WhatsApp REST API server",
+      "steps": [
+        {
+          "name": "start_server",
+          "command": "./whatsapp rest",
+          "flags": {
+            "host": "0.0.0.0",
+            "port": "3000",
+            "debug": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "start_whatsapp_with_chatwoot",
+      "description": "Start WhatsApp with Chatwoot integration",
+      "steps": [
+        {
+          "name": "start_server",
+          "command": "./whatsapp rest",
+          "flags": {
+            "chatwoot_enabled": "true",
+            "chatwoot_device_id": "whatsapp-device-01",
+            "chatwoot_import_messages": "true",
+            "chatwoot_days_limit_import_messages": "7",
+            "webhook": "https://your-chatwoot.com/webhook",
+            "debug": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "production_setup",
+      "description": "Production setup with security",
+      "steps": [
+        {
+          "name": "start_server",
+          "command": "./whatsapp rest",
+          "flags": {
+            "host": "127.0.0.1",
+            "port": "8080",
+            "basic_auth": "admin:securepassword",
+            "trusted_proxies": "127.0.0.1/32",
+            "webhook_secret": "production-secret-key",
+            "account_validation": "true",
+            "auto_download_media": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "monitoring": {
+    "metrics": [
+      "connection_status",
+      "message_count",
+      "media_downloads",
+      "webhook_deliveries",
+      "chatwoot_sync_status"
+    ],
+    "alerts": [
+      "connection_lost",
+      "webhook_failure",
+      "auth_failure",
+      "storage_full"
+    ]
+  },
+  "security": {
+    "authentication": "basic_auth",
+    "webhook_security": "secret_signature",
+    "database_encryption": "sqlite_encryption",
+    "proxy_support": true
+  },
+  "integration": {
+    "chatwoot": {
+      "bi_directional_sync": true,
+      "message_import": true,
+      "device_mapping": true,
+      "webhook_integration": true
+    }
+  }
+}

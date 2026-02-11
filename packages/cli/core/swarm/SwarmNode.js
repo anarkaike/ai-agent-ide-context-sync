@@ -15,7 +15,7 @@ class SwarmNode {
     constructor(config) {
         this.config = {
             id: config.id || `agent-${Date.now().toString(36)}`,
-            name: config.name || 'Anonymous Drone',
+            name: config.name || 'Worker Agent',
             path: config.path || process.cwd(),
             security_level: config.security_level || 5,
             roles: config.roles || ['Generalist'],

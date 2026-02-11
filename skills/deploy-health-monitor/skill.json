@@ -1,0 +1,61 @@
+{
+  "name": "deploy-health-monitor",
+  "version": "1.0.0",
+  "description": "Skill de diagnóstico automatizado para ambientes de deploy com verificação completa de saúde",
+  "main": "index.js",
+  "author": "AI Agent Network",
+  "license": "MIT",
+  "keywords": [
+    "deploy",
+    "health-monitor",
+    "diagnosis",
+    "infrastructure",
+    "devops"
+  ],
+  "category": "infrastructure",
+  "dependencies": {
+    "node": ">=14.0.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "node index.js --verbose --environments=https://httpbin.org/status/200,https://httpbin.org/status/502"
+  },
+  "capabilities": [
+    "dns-resolution",
+    "network-connectivity",
+    "http-status-check",
+    "ssl-certificate-validation",
+    "content-analysis",
+    "port-scanning",
+    "performance-metrics",
+    "error-detection",
+    "automated-recommendations"
+  ],
+  "usage": {
+    "basic": "node index.js",
+    "verbose": "node index.js --verbose",
+    "custom-env": "node index.js --environments=https://app1.com,https://app2.com",
+    "timeout": "node index.js --timeout=15000"
+  },
+  "output": {
+    "console": "Real-time status with emojis and recommendations",
+    "file": "Detailed JSON report with timestamp",
+    "format": "Structured health analysis"
+  },
+  "error-types": [
+    "502_bad_gateway",
+    "503_service_unavailable", 
+    "500_internal_error",
+    "404_not_found",
+    "dns_resolution_failure",
+    "ssl_certificate_error",
+    "network_timeout",
+    "port_unreachable"
+  ],
+  "integration": {
+    "nanobot": true,
+    "trust-network": true,
+    "monitoring": true,
+    "alerts": true
+  }
+}

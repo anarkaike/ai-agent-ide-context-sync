@@ -23,6 +23,7 @@
     "@nanobot-ai/nanobot": "github:nanobot-ai/nanobot",
     "aws-sdk": "^2.1693.0",
     "chokidar": "^5.0.0",
+    "dotenv": "^17.2.4",
     "fs-extra": "^11.3.3",
     "nanobot": "^0.0.1"
   }

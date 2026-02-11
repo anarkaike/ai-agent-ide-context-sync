@@ -1,0 +1,221 @@
+{
+  "name": "security-monitor",
+  "version": "1.0.0",
+  "description": "Skill completa para monitoramento de segurança do ecossistema AI Agent - Detecção de ameaças, vulnerabilidades e eventos suspeitos",
+  "category": "security",
+  "author": "AI Agent Security Collective",
+  "license": "MIT",
+  "tags": ["security", "monitoring", "threat-detection", "vulnerability", "nanobot"],
+  "main": "index.js",
+  "capabilities": [
+    "threat_detection",
+    "vulnerability_scanning", 
+    "security_event_monitoring",
+    "intrusion_detection",
+    "malware_analysis",
+    "security_audit",
+    "compliance_checking",
+    "security_alerting",
+    "log_analysis",
+    "system_hardening",
+    "security_dashboard",
+    "incident_response"
+  ],
+  "platforms": ["linux", "macos", "windows"],
+  "dependencies": {
+    "node": ">=14.0.0",
+    "axios": "^1.6.0",
+    "fs-extra": "^11.0.0",
+    "crypto": "built-in",
+    "child_process": "built-in"
+  },
+  "installation": {
+    "permissions_required": [
+      "system_logs",
+      "process_monitoring", 
+      "network_access",
+      "file_system_access"
+    ],
+    "setup_commands": [
+      "chmod +x install.sh",
+      "./install.sh"
+    ]
+  },
+  "security_features": {
+    "threat_intelligence": true,
+    "real_time_monitoring": true,
+    "anomaly_detection": true,
+    "security_scoring": true,
+    "compliance_frameworks": ["NIST", "ISO27001", "CIS"]
+  },
+  "monitoring_targets": {
+    "system_processes": {
+      "description": "Monitora processos suspeitos e consumo de recursos",
+      "metrics": ["cpu_usage", "memory_usage", "file_access", "network_connections"]
+    },
+    "network_activity": {
+      "description": "Detecta tráfego anômalo e conexões suspeitas",
+      "metrics": ["connections", "bandwidth", "ports", "protocols"]
+    },
+    "file_integrity": {
+      "description": "Monitora alterações em arquivos críticos",
+      "metrics": ["file_hashes", "permissions", "access_patterns"]
+    },
+    "authentication_events": {
+      "description": "Rastreia tentativas de login e autenticação",
+      "metrics": ["login_attempts", "failed_logins", "privilege_escalation"]
+    },
+    "security_logs": {
+      "description": "Analisa logs de segurança em busca de padrões",
+      "sources": ["auth.log", "security.log", "audit.log", "firewall.log"]
+    }
+  },
+  "threat_detection_rules": {
+    "process_anomalies": {
+      "high_cpu_usage": "Processos com CPU > 90% por mais de 5 minutos",
+      "suspicious_processes": "Processos com nomes suspeitos ou em locais incomuns",
+      "unauthorized_network": "Processos fazendo conexões não autorizadas"
+    },
+    "security_violations": {
+      "privilege_escalation": "Tentativas de escalonamento de privilégios",
+      "file_tampering": "Alterações em arquivos de sistema críticos",
+      "unauthorized_access": "Acesso a diretórios restritos"
+    },
+    "network_threats": {
+      "port_scanning": "Detecção de varredura de portas",
+      "ddos_patterns": "Padrões de ataque DDoS",
+      "malicious_connections": "Conexões com IPs maliciosos conhecidos"
+    }
+  },
+  "alerting_system": {
+    "severity_levels": ["low", "medium", "high", "critical"],
+    "notification_channels": [
+      "console",
+      "log_file", 
+      "webhook",
+      "email",
+      "slack",
+      "nanobot_network"
+    ],
+    "escalation_rules": {
+      "critical": "immediate_notification",
+      "high": "notification_within_5_minutes",
+      "medium": "notification_within_30_minutes",
+      "low": "daily_summary"
+    }
+  },
+  "compliance_frameworks": {
+    "nist_csf": {
+      "functions": ["identify", "protect", "detect", "respond", "recover"],
+      "implementation_status": "full"
+    },
+    "iso27001": {
+      "controls": ["A.12.4", "A.12.6", "A.16.1"],
+      "implementation_status": "partial"
+    },
+    "cis_benchmarks": {
+      "level": "Level 1",
+      "implementation_status": "in_progress"
+    }
+  },
+  "integration_points": {
+    "nanobot_trust_network": {
+      "enabled": true,
+      "knowledge_sharing": true,
+      "threat_intelligence_sync": true
+    },
+    "swarm_ecosystem": {
+      "health_monitor_integration": true,
+      "orchestrator_integration": true,
+      "service_manager_integration": true
+    },
+    "external_tools": {
+      "fail2ban": true,
+      "ufw/iptables": true,
+      "auditd": true,
+      "ossec": true
+    }
+  },
+  "performance_metrics": {
+    "monitoring_interval": "30_seconds",
+    "scan_frequency": "hourly",
+    "report_generation": "daily",
+    "retention_period": "90_days",
+    "max_memory_usage": "512MB"
+  },
+  "workflows": [
+    {
+      "name": "security_scan",
+      "description": "Executa varredura completa de segurança",
+      "steps": [
+        "system_vulnerability_scan",
+        "process_analysis", 
+        "network_security_check",
+        "file_integrity_verification",
+        "generate_security_report"
+      ]
+    },
+    {
+      "name": "incident_response",
+      "description": "Resposta automatizada a incidentes de segurança",
+      "steps": [
+        "detect_security_event",
+        "assess_threat_level",
+        "isolate_affected_systems",
+        "notify_security_team",
+        "initiate_recovery_procedures"
+      ]
+    },
+    {
+      "name": "compliance_audit",
+      "description": "Auditoria de conformidade de segurança",
+      "steps": [
+        "check_security_policies",
+        "verify_access_controls",
+        "audit_system_configurations",
+        "generate_compliance_report",
+        "recommend_improvements"
+      ]
+    }
+  ],
+  "api_endpoints": {
+    "health_check": "/api/security/health",
+    "scan_status": "/api/security/scan/status",
+    "threat_feed": "/api/security/threats",
+    "vulnerabilities": "/api/security/vulnerabilities",
+    "security_metrics": "/api/security/metrics",
+    "incidents": "/api/security/incidents"
+  },
+  "configuration": {
+    "default_settings": {
+      "monitoring_enabled": true,
+      "threat_detection_enabled": true,
+      "auto_response_enabled": false,
+      "log_level": "info",
+      "scan_interval": 30000
+    },
+    "security_policies": {
+      "max_failed_attempts": 3,
+      "lockout_duration": 900,
+      "password_complexity": true,
+      "session_timeout": 3600
+    }
+  },
+  "nanobot_integration": {
+    "agent_type": "security-monitor",
+    "trust_network": "trust-network-ai-agent",
+    "knowledge_topics": [
+      "security-events",
+      "threat-intelligence", 
+      "vulnerability-reports",
+      "security-policies",
+      "incident-reports"
+    ],
+    "capabilities_shared": [
+      "threat_detection",
+      "security_monitoring",
+      "vulnerability_analysis",
+      "incident_response"
+    ]
+  }
+}

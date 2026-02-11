@@ -1,0 +1,268 @@
+{
+  "name": "backup-manager",
+  "version": "1.0.0",
+  "description": "Skill completa para gerenciamento de backups do ecossistema AI Agent - Backups locais, S3, agendamento e recuperação",
+  "category": "backup",
+  "author": "AI Agent Backup Collective",
+  "license": "MIT",
+  "tags": ["backup", "storage", "s3", "recovery", "nanobot"],
+  "main": "index.js",
+  "capabilities": [
+    "local_backup",
+    "s3_backup",
+    "incremental_backup",
+    "full_backup",
+    "scheduled_backup",
+    "backup_restoration",
+    "backup_verification",
+    "backup_encryption",
+    "backup_compression",
+    "backup_retention",
+    "backup_monitoring",
+    "disaster_recovery",
+    "backup_reporting"
+  ],
+  "platforms": ["linux", "macos", "windows"],
+  "dependencies": {
+    "node": ">=14.0.0",
+    "aws-sdk": "^2.1500.0",
+    "fs-extra": "^11.0.0",
+    "archiver": "^6.0.0",
+    "tar": "^6.2.0",
+    "crypto": "built-in",
+    "child_process": "built-in"
+  },
+  "installation": {
+    "permissions_required": [
+      "file_system_access",
+      "network_access",
+      "process_execution",
+      "storage_management"
+    ],
+    "setup_commands": [
+      "chmod +x install.sh",
+      "./install.sh"
+    ]
+  },
+  "backup_types": {
+    "full": {
+      "description": "Backup completo de todos os dados",
+      "frequency": "weekly",
+      "retention": "4_weeks"
+    },
+    "incremental": {
+      "description": "Backup apenas das alterações desde o último backup",
+      "frequency": "daily",
+      "retention": "30_days"
+    },
+    "differential": {
+      "description": "Backup das alterações desde o último backup completo",
+      "frequency": "daily",
+      "retention": "7_days"
+    }
+  },
+  "storage_backends": {
+    "local": {
+      "description": "Armazenamento local em disco",
+      "path": "/var/backups/ai-agent",
+      "compression": true,
+      "encryption": true
+    },
+    "s3": {
+      "description": "Armazenamento em Amazon S3",
+      "bucket": "ai-agent-backups",
+      "region": "us-east-1",
+      "encryption": "AES256",
+      "lifecycle": {
+        "transition_ia": "30_days",
+        "transition_glacier": "90_days",
+        "delete": "365_days"
+      }
+    },
+    "network": {
+      "description": "Armazenamento em rede/NAS",
+      "path": "/mnt/backups/ai-agent",
+      "compression": true,
+      "encryption": true
+    }
+  },
+  "backup_sources": {
+    "agent_workspace": {
+      "path": "/root/projects/dev/ai-agent-ide-context-sync",
+      "description": "Workspace principal do agente",
+      "priority": "critical",
+      "exclude": [
+        "node_modules",
+        ".git",
+        "dist",
+        "coverage",
+        "*.tmp"
+      ]
+    },
+    "agent_config": {
+      "path": "/root/.ai-agent",
+      "description": "Configurações do agente",
+      "priority": "critical",
+      "exclude": []
+    },
+    "agent_logs": {
+      "path": "/var/log/ai-agent",
+      "description": "Logs do agente",
+      "priority": "high",
+      "exclude": []
+    },
+    "agent_memory": {
+      "path": "/root/.ai-workspace",
+      "description": "Memória e workspace do agente",
+      "priority": "critical",
+      "exclude": [
+        "cache",
+        "temp"
+      ]
+    },
+    "system_config": {
+      "path": "/etc/ai-agent",
+      "description": "Configurações do sistema",
+      "priority": "high",
+      "exclude": []
+    }
+  },
+  "encryption_settings": {
+    "algorithm": "AES-256-GCM",
+    "key_derivation": "PBKDF2",
+    "iterations": 100000,
+    "key_length": 32,
+    "iv_length": 16,
+    "tag_length": 16
+  },
+  "compression_settings": {
+    "algorithm": "gzip",
+    "level": 6,
+    "formats": ["tar.gz", "zip"]
+  },
+  "scheduling": {
+    "full_backup": "0 2 * * 0",     # Sunday 2 AM
+    "incremental_backup": "0 3 * * 1-6",  # Mon-Sat 3 AM
+    "backup_verification": "0 4 * * *",   # Daily 4 AM
+    "backup_cleanup": "0 5 * * 0"         # Sunday 5 AM
+  },
+  "monitoring": {
+    "backup_success_rate": "target_99%",
+    "backup_duration": "alert_if_2h",
+    "storage_usage": "alert_if_80%",
+    "backup_size_growth": "alert_if_50%"
+  },
+  "disaster_recovery": {
+    "rto": "4_hours",  # Recovery Time Objective
+    "rpo": "24_hours", # Recovery Point Objective
+    "hot_site": true,
+    "cold_site": true,
+    "procedures": [
+      "system_assessment",
+      "backup_restoration",
+      "service_recovery",
+      "data_verification",
+      "functionality_testing"
+    ]
+  },
+  "compliance": {
+    "data_retention": {
+      "financial": "7_years",
+      "operational": "3_years",
+      "logs": "1_year"
+    },
+    "audit_trail": true,
+    "backup_verification": "quarterly",
+    "dr_testing": "semi_annual"
+  },
+  "workflows": [
+    {
+      "name": "full_backup_workflow",
+      "description": "Executa backup completo com verificação",
+      "steps": [
+        "validate_backup_environment",
+        "create_full_backup",
+        "verify_backup_integrity",
+        "upload_to_storage",
+        "update_backup_catalog",
+        "cleanup_old_backups",
+        "send_backup_notification"
+      ]
+    },
+    {
+      "name": "restore_workflow",
+      "description": "Restaura sistema a partir de backup",
+      "steps": [
+        "identify_backup_source",
+        "download_backup",
+        "verify_backup_integrity",
+        "extract_backup",
+        "restore_files",
+        "verify_restoration",
+        "restart_services",
+        "validate_functionality"
+      ]
+    },
+    {
+      "name": "disaster_recovery_workflow",
+      "description": "Procedimento completo de recuperação de desastres",
+      "steps": [
+        "declare_disaster",
+        "activate_recovery_plan",
+        "assess_damage",
+        "restore_critical_systems",
+        "restore_data",
+        "validate_operations",
+        "notify_stakeholders",
+        "document_incident"
+      ]
+    }
+  ],
+  "api_endpoints": {
+    "backup_status": "/api/backup/status",
+    "create_backup": "/api/backup/create",
+    "restore_backup": "/api/backup/restore",
+    "backup_catalog": "/api/backup/catalog",
+    "backup_metrics": "/api/backup/metrics",
+    "disaster_recovery": "/api/backup/dr"
+  },
+  "integration_points": {
+    "nanobot_trust_network": {
+      "enabled": true,
+      "knowledge_sharing": true,
+      "backup_coordination": true
+    },
+    "swarm_ecosystem": {
+      "health_monitor_integration": true,
+      "orchestrator_integration": true,
+      "service_manager_integration": true
+    },
+    "cloud_providers": {
+      "aws_s3": true,
+      "google_cloud": true,
+      "azure_blob": true
+    },
+    "monitoring_tools": {
+      "prometheus": true,
+      "grafana": true,
+      "elasticsearch": true
+    }
+  },
+  "nanobot_integration": {
+    "agent_type": "backup-manager",
+    "trust_network": "trust-network-ai-agent",
+    "knowledge_topics": [
+      "backup-schedules",
+      "backup-policies",
+      "disaster-recovery-procedures",
+      "backup-metrics",
+      "recovery-points"
+    ],
+    "capabilities_shared": [
+      "backup_creation",
+      "backup_restoration",
+      "disaster_recovery",
+      "backup_monitoring"
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "enabled": true,
+  "channels": {
+    "whatsapp": {
+      "enabled": false,
+      "phoneNumber": "",
+      "apiKey": "",
+      "provider": "callmebot"
+    },
+    "telegram": {
+      "enabled": false,
+      "botToken": "",
+      "chatId": "",
+      "provider": "telegram-bot"
+    }
+  },
+  "alertLevels": {
+    "CRITICAL": {
+      "enabled": true,
+      "cooldown": 300
+    },
+    "HIGH": {
+      "enabled": true,
+      "cooldown": 900
+    },
+    "MEDIUM": {
+      "enabled": true,
+      "cooldown": 1800
+    },
+    "LOW": {
+      "enabled": false,
+      "cooldown": 3600
+    }
+  },
+  "filters": {
+    "minRiskLevel": "MEDIUM",
+    "quietHours": {
+      "enabled": true,
+      "start": "22:00",
+      "end": "08:00",
+      "timezone": "America/Sao_Paulo"
+    }
+  }
+}

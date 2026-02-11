@@ -1,0 +1,403 @@
+{
+  "name": "chatwoot-analytics-intelligence",
+  "version": "2.0.0",
+  "description": "Skill completa de Analytics e Inteligência para Chatwoot - Business Intelligence, Machine Learning e Insights Avançados",
+  "category": "analytics",
+  "author": "AI Agent Collective",
+  "license": "MIT",
+  "tags": ["analytics", "business-intelligence", "machine-learning", "insights", "chatwoot", "predictive"],
+  "main": "index.js",
+  "capabilities": [
+    "business_intelligence",
+    "predictive_analytics",
+    "customer_behavior_analysis",
+    "agent_performance_insights",
+    "sentiment_trend_analysis",
+    "operational_efficiency",
+    "revenue_impact_analysis",
+    "customer_journey_mapping",
+    "real_time_dashboards",
+    "automated_reports",
+    "ml_model_training",
+    "forecasting_models",
+    "cohort_analysis",
+    "churn_prediction",
+    "satisfaction_scoring"
+  ],
+  "platforms": ["linux", "macos", "windows"],
+  "dependencies": {
+    "node": ">=14.0.0",
+    "tensorflow": "^4.10.0",
+    "ml-regression": "^6.0.0",
+    "simple-statistics": "^7.8.0",
+    "chart.js": "^4.4.0",
+    "moment": "^2.29.0",
+    "lodash": "^4.17.0",
+    "mongodb": "^6.1.0",
+    "redis": "^4.6.0",
+    "csv-parser": "^3.0.0",
+    "exceljs": "^4.4.0"
+  },
+  "analytics_modules": {
+    "customer_analytics": {
+      "metrics": [
+        "customer_satisfaction_score",
+        "net_promoter_score",
+        "customer_effort_score",
+        "first_contact_resolution",
+        "customer_lifetime_value",
+        "churn_rate",
+        "retention_rate",
+        "engagement_score"
+      ],
+      "dimensions": [
+        "time_periods",
+        "customer_segments",
+        "interaction_channels",
+        "agent_assignments",
+        "issue_types",
+        "geographic_regions"
+      ]
+    },
+    "agent_performance": {
+      "productivity_metrics": [
+        "conversations_handled",
+        "average_response_time",
+        "average_handling_time",
+        "first_response_time",
+        "resolution_rate",
+        "customer_satisfaction_rating",
+        "message_count",
+        "utilization_rate"
+      ],
+      "quality_metrics": [
+        "quality_score",
+        "compliance_score",
+        "sentiment_handling",
+        "escalation_rate",
+        "knowledge_base_usage",
+        "template_usage",
+        "error_rate"
+      ]
+    },
+    "operational_analytics": {
+      "efficiency_metrics": [
+        "queue_length",
+        "abandonment_rate",
+        "service_level",
+        "occupancy_rate",
+        "shrinkage_rate",
+        "adherence_rate",
+        "cost_per_contact",
+        "revenue_per_agent"
+      ],
+      "capacity_metrics": [
+        "forecast_accuracy",
+        "staffing_levels",
+        "peak_hour_analysis",
+        "channel_utilization",
+        "system_performance",
+        "downtime_analysis"
+      ]
+    },
+    "business_impact": {
+      "revenue_metrics": [
+        "revenue_generated",
+        "cost_savings",
+        "upsell_conversion",
+        "cross_sell_success",
+        "customer_acquisition_cost",
+        "return_on_investment"
+      ],
+      "strategic_metrics": [
+        "market_penetration",
+        "competitive_positioning",
+        "brand_sentiment",
+        "market_share_growth",
+        "customer advocacy"
+      ]
+    }
+  },
+  "machine_learning_models": {
+    "predictive_models": {
+      "churn_prediction": {
+        "features": [
+          "interaction_frequency",
+          "sentiment_scores",
+          "resolution_times",
+          "issue_complexity",
+          "agent_assignments",
+          "channel_preferences"
+        ],
+        "algorithm": "random_forest",
+        "accuracy_target": ">85%"
+      },
+      "satisfaction_prediction": {
+        "features": [
+          "response_time",
+          "resolution_quality",
+          "agent_performance",
+          "issue_type",
+          "customer_history"
+        ],
+        "algorithm": "gradient_boosting",
+        "accuracy_target": ">80%"
+      },
+      "volume_forecasting": {
+        "features": [
+          "historical_volume",
+          "seasonal_patterns",
+          "marketing_campaigns",
+          "external_events",
+          "day_of_week",
+          "time_of_day"
+        ],
+        "algorithm": "lstm_neural_network",
+        "accuracy_target": ">90%"
+      },
+      "routing_optimization": {
+        "features": [
+          "agent_skills",
+          "customer_history",
+          "issue_complexity",
+          "language_preference",
+          "sentiment_analysis",
+          "workload_balance"
+        ],
+        "algorithm": "reinforcement_learning",
+        "accuracy_target": ">75%"
+      }
+    },
+    "classification_models": {
+      "sentiment_analysis": {
+        "categories": ["positive", "negative", "neutral"],
+        "confidence_threshold": 0.8,
+        "languages_supported": ["en", "es", "pt", "fr", "de"]
+      },
+      "intent_classification": {
+        "categories": [
+          "support_request",
+          "complaint",
+          "inquiry",
+          "feedback",
+          "purchase_intent",
+          "cancellation"
+        ],
+        "confidence_threshold": 0.85
+      },
+      "priority_prediction": {
+        "levels": ["low", "medium", "high", "urgent"],
+        "factors": [
+          "customer_tier",
+          "issue_urgency",
+          "business_impact",
+          "sentiment_level"
+        ]
+      }
+    }
+  },
+  "dashboard_widgets": {
+    "real_time_dashboards": {
+      "operations_center": [
+        "live_conversation_count",
+        "active_agents",
+        "queue_status",
+        "response_times",
+        "service_level",
+        "system_health"
+      ],
+      "customer_experience": [
+        "satisfaction_scores",
+        "sentiment_distribution",
+        "nps_trend",
+        "complaint_volume",
+        "escalation_rate"
+      ],
+      "business_metrics": [
+        "revenue_impact",
+        "cost_per_contact",
+        "conversion_rates",
+        "customer_lifetime_value",
+        "retention_metrics"
+      ]
+    },
+    "historical_analytics": {
+      "performance_trends": [
+        "agent_performance_over_time",
+        "customer_satisfaction_trends",
+        "resolution_rate_evolution",
+        "efficiency_improvements"
+      ],
+      "business_intelligence": [
+        "revenue_growth_analysis",
+        "cost_optimization_opportunities",
+        "market_expansion_impact",
+        "competitor_comparison"
+      ]
+    },
+    "predictive_insights": {
+      "forecasting_dashboards": [
+        "volume_predictions",
+        "staffing_requirements",
+        "capacity_planning",
+        "resource_optimization"
+      ],
+      "risk_monitoring": [
+        "churn_risk_alerts",
+        "satisfaction_decline_warnings",
+        "compliance_risks",
+        "performance_degradation"
+      ]
+    }
+  },
+  "reporting_system": {
+    "automated_reports": {
+      "daily_reports": [
+        "operations_summary",
+        "customer_experience_snapshot",
+        "agent_performance_digest",
+        "business_impact_brief"
+      ],
+      "weekly_reports": [
+        "performance_analysis",
+        "trend_identification",
+        "improvement_recommendations",
+        "resource_allocation"
+      ],
+      "monthly_reports": [
+        "strategic_insights",
+        "business_intelligence",
+        "roi_analysis",
+        "growth_opportunities"
+      ],
+      "quarterly_reports": [
+        "executive_summary",
+        "market_analysis",
+        "competitive_positioning",
+        "strategic_recommendations"
+      ]
+    },
+    "custom_reports": {
+      "builder_features": [
+        "drag_and_drop_interface",
+        "custom_metrics",
+        "advanced_filters",
+        "data_visualization",
+        "export_options"
+      ],
+      "scheduling": [
+        "automated_delivery",
+        "distribution_lists",
+        "format_options",
+        "personalization"
+      ]
+    }
+  },
+  "data_sources": {
+    "primary_sources": [
+      "chatwoot_api",
+      "whatsapp_business_api",
+      "agent_activity_logs",
+      "customer_interaction_data",
+      "system_performance_logs"
+    ],
+    "secondary_sources": [
+      "crm_systems",
+      "help_desk_platforms",
+      "analytics_tools",
+      "marketing_automation",
+      "social_media_platforms"
+    ],
+    "external_sources": [
+      "market_data",
+      "economic_indicators",
+      "competitor_intelligence",
+      "industry_benchmarks"
+    ]
+  },
+  "integration_capabilities": {
+    "bi_tools": [
+      "tableau",
+      "power_bi",
+      "looker",
+      "google_data_studio",
+      "qlik"
+    ],
+    "data_warehouses": [
+      "snowflake",
+      "bigquery",
+      "redshift",
+      "databricks"
+    ],
+    "ml_platforms": [
+      "aws_sagemaker",
+      "google_ml_engine",
+      "azure_ml",
+      "databricks_ml"
+    ]
+  },
+  "workflows": [
+    {
+      "name": "setup_analytics_intelligence",
+      "description": "Setup completo do sistema de analytics e inteligência",
+      "steps": [
+        "configure_data_sources",
+        "setup_ml_models",
+        "create_dashboards",
+        "configure_automated_reports",
+        "setup_alerts",
+        "train_predictive_models",
+        "validate_accuracy"
+      ]
+    },
+    {
+      "name": "generate_business_insights",
+      "description": "Geração de insights de negócio automatizados",
+      "steps": [
+        "collect_data",
+        "process_analytics",
+        "apply_ml_models",
+        "generate_insights",
+        "create_recommendations",
+        "format_reports",
+        "distribute_stakeholders"
+      ]
+    },
+    {
+      "name": "predictive_analysis_cycle",
+      "description": "Ciclo completo de análise preditiva",
+      "steps": [
+        "data_preprocessing",
+        "feature_engineering",
+        "model_training",
+        "validation_testing",
+        "prediction_generation",
+        "insight_extraction",
+        "action_recommendations"
+      ]
+    }
+  ],
+  "monitoring": {
+    "model_performance": [
+      "prediction_accuracy",
+      "model_drift_detection",
+      "feature_importance",
+      "training_time",
+      "inference_latency"
+    ],
+    "system_health": [
+      "data_pipeline_status",
+      "processing_latency",
+      "error_rates",
+      "resource_utilization",
+      "storage_capacity"
+    ]
+  },
+  "security": {
+    "data_privacy": true,
+    "gdpr_compliance": true,
+    "anonymization": true,
+    "access_control": true,
+    "audit_logging": true
+  }
+}

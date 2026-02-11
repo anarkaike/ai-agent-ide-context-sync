@@ -1,0 +1,99 @@
+# Multi-stage build for Laravel+Inertia+Vue production
+
+# Stage 1: Composer dependencies
+FROM composer:2.6 as vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Stage 2: Node.js dependencies and build
+FROM node:20-alpine as assets
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+COPY . .
+RUN npm run build
+
+# Stage 3: Production application
+FROM php:8.3-fpm-alpine as production
+
+# Install system dependencies
+RUN apk add --no-cache \
+    curl \
+    git \
+    nginx \
+    supervisor \
+    postgresql-client \
+    redis \
+    zip \
+    unzip \
+    libzip-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libfreetype6-dev \
+    libxml2-dev
+
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+    gd \
+    pdo \
+    pdo_pgsql \
+    zip \
+    bcmath \
+    opcache \
+    xml \
+    ctype \
+    iconv \
+    intl \
+    dom \
+    filter \
+    hash \
+    mbstring \
+    session \
+    simplexml \
+    tokenizer \
+    xmlwriter
+
+# Install and configure PECL extensions
+RUN pecl install redis && docker-php-ext-enable redis
+
+# Install Composer
+COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy application files
+COPY . .
+
+# Copy vendor dependencies
+COPY --from=vendor /app/vendor/ ./vendor/
+
+# Copy built assets
+COPY --from=assets /app/public/build/ ./public/build/
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
+
+# Copy PHP configuration
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
+COPY docker/php/php-fpm.conf /usr/local/etc/php-fpm.d/zz-custom.conf
+
+# Copy Nginx configuration
+COPY docker/nginx/app.conf /etc/nginx/conf.d/default.conf
+
+# Copy Supervisor configuration
+COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Expose port
+EXPOSE 9000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:9000/health || exit 1
+
+# Start services
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

@@ -1,0 +1,91 @@
+# Multi-stage build for Laravel Application
+FROM node:22-slim AS node-build
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install dependencies
+RUN [ -f package-lock.json ] && npm ci || npm install
+
+# Copy and build assets
+COPY resources ./resources
+COPY vite.config.js ./vite.config.js
+RUN npm run build
+
+# PHP Stage
+FROM php:8.4-fpm-alpine AS php-build
+
+# Install system dependencies with multiple mirrors
+RUN apk update && \
+    apk add --no-cache \
+    postgresql-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    libpng-dev \
+    libxml2-dev \
+    oniguruma-dev \
+    && docker-php-ext-install \
+    pdo_pgsql \
+    bcmath \
+    zip \
+    gd \
+    xml \
+    mbstring \
+    && pecl install redis && docker-php-ext-enable redis
+
+# Copy application files
+COPY app ./app
+COPY bootstrap ./bootstrap
+COPY config ./config
+COPY database ./database
+COPY routes ./routes
+COPY resources/lang ./resources/lang
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies
+RUN composer install --prefer-dist --no-interaction --optimize-autoloader --no-scripts
+
+# Application Stage
+FROM php:8.4-fpm-alpine AS app
+
+# Environment variables
+ENV NPM_CONFIG_LEGACY_PEER_DEPS=true
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    postgresql-client \
+    curl \
+    && docker-php-ext-install pdo_pgsql bcmath
+
+# Create app user
+RUN addgroup -g 1000 -S app && \
+    adduser -u 1000 -S app -G app
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy from build stages
+COPY --from=node-build /app/public/build ./public/build
+COPY --from=php-build --chown=app:app /var/www/html .
+
+# Set permissions
+RUN chown -R app:app /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
+
+# Switch to app user
+USER app
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080 || exit 1
+
+# Start PHP-FPM
+CMD ["php-fpm"]
