@@ -421,7 +421,7 @@ class DatabaseManager {
     }
 
     async getMessages(limit = 100) {
-        return this.all('SELECT * FROM communications ORDER BY timestamp DESC LIMIT ?', [limit]);
+        return this.all('SELECT id, from_agent as "from", to_agent as "to", content, type, timestamp, read FROM communications ORDER BY timestamp DESC LIMIT ?', [limit]);
     }
 }
 

@@ -10,7 +10,7 @@ class NeuralLink {
         this.dbManager = dbManager;
         // Use project-local path for Git synchronization
         this.filePath = path.join(process.cwd(), '.ai-workspace', 'communication', 'neural_link.json');
-        this.remoteBase = process.env.BORG_ENDPOINT || 'http://100.104.189.106:3000/api/comms';
+        this.remoteBase = process.env.BORG_ENDPOINT || 'http://100.104.189.106:3001/api/comms';
         this.init();
     }
 
