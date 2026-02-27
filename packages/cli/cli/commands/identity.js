@@ -41,7 +41,7 @@ const identityCommand = async (args = []) => {
       title: `${name} Avatar`,
       description: "Custom AI Persona",
       capabilities: ["general"],
-      mcp_tools: ["n:users"],
+      mcp_tools: ["nocobase:users"],
       tone: "neutral",
       created_at: new Date().toISOString()
     };
@@ -74,7 +74,7 @@ const identityCommand = async (args = []) => {
       const mcpCmd = require('./mcp');
       for (const tool of personaData.mcp_tools) {
           const [prefix, resource] = tool.split(':');
-          if (prefix === 'n' && resource) {
+          if (prefix === 'nocobase' && resource) {
               await mcpCmd(['curate', resource]);
           }
       }

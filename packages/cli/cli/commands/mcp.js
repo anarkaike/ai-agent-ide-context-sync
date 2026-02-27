@@ -20,7 +20,7 @@ const mcpCommand = async (args = []) => {
 
     const config = {
       mcpServers: {
-        "n": {
+        "nocobase": {
           "command": "npx",
           "args": [
             "-y",
@@ -56,18 +56,18 @@ const mcpCommand = async (args = []) => {
     }
 
     let mcpConfig = JSON.parse(fs.readFileSync(traeMcpPath, 'utf-8'));
-    if (!mcpConfig.mcpServers || !mcpConfig.mcpServers.n) {
-      console.error('❌ NocoBase MCP (server "n") not found in config. Run "mcp setup" first.');
+    if (!mcpConfig.mcpServers || !mcpConfig.mcpServers.nocobase) {
+      console.error('❌ NocoBase MCP (server "nocobase") not found in config. Run "mcp setup" first.');
       return;
     }
 
-    const currentArgs = mcpConfig.mcpServers.n.args;
+    const currentArgs = mcpConfig.mcpServers.nocobase.args;
     const newArgs = currentArgs.filter(a => !a.startsWith('--resource'));
     
     newArgs.push('--resource');
     newArgs.push(`/${filter}`);
 
-    mcpConfig.mcpServers.n.args = newArgs;
+    mcpConfig.mcpServers.nocobase.args = newArgs;
     fs.writeFileSync(traeMcpPath, JSON.stringify(mcpConfig, null, 2), 'utf-8');
     console.log(`✅ Tools curated! Trae will now only load tools for /${filter}`);
     return;
@@ -104,7 +104,7 @@ const mcpCommand = async (args = []) => {
         console.log(`🤖 Auto-curating tools for identity: ${identity.name}`);
         for (const tool of identity.mcp_tools) {
           const [prefix, resource] = tool.split(':');
-          if (prefix === 'n' && resource) {
+          if (prefix === 'nocobase' && resource) {
             await mcpCommand(['curate', resource]);
           }
         }
