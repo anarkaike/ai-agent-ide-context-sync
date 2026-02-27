@@ -969,6 +969,14 @@ const commands = {
     } catch (e) {
       log(`⚠️ Falha no sync do ClickUp: ${e.message}`, 'yellow');
     }
+    
+    log('\n🤖 Curadoria Dinâmica: Sincronizando MCP Tools...', 'cyan');
+    try {
+      await commands.mcp(['auto-curate']);
+    } catch (e) {
+      log(`⚠️ Falha na curadoria MCP: ${e.message}`, 'yellow');
+    }
+
     await commands.build();
 
     const stats = readJsonSafe(statsPath) || {};

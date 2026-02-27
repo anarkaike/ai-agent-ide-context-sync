@@ -1,0 +1,23 @@
+heuristics:
+  - id: mcp-tool-overload-prevention
+    title: MCP Tool Overload Prevention
+    description: Detects when the user is working with specific NocoBase collections and suggests curating MCP tools to prevent AI confusion.
+    confidence: 0.9
+    triggers:
+      - keywords: ["users", "contacts", "roles", "orders", "apiKeys"]
+        context: "working with database collections"
+    action:
+      type: suggestion
+      command: "ai-agent-sync mcp curate <collection>"
+      message: "Detected work on collection '<collection>'. Suggesting tool curation to improve AI focus and reduce token usage."
+  - id: mcp-tool-discovery
+    title: MCP Tool Discovery
+    description: Suggests using the tool searcher when the user is unsure about which MCP tool to use.
+    confidence: 0.85
+    triggers:
+      - keywords: ["how to", "como usar", "qual ferramenta", "which tool"]
+        context: "searching for capabilities"
+    action:
+      type: suggestion
+      command: "ai-agent-sync mcp search-tools <keyword>"
+      message: "Unsure which tool to use? Try searching the NocoBase MCP tools directly."

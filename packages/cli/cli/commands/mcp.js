@@ -95,6 +95,66 @@ const mcpCommand = async (args = []) => {
     return;
   }
 
+  if (subCommand === 'search-tools') {
+    const keyword = args[1];
+    if (!keyword) {
+      console.log('🔍 Usage: ai-agent-sync mcp search-tools <keyword>');
+      return;
+    }
+    if (!fs.existsSync(specPath)) {
+      console.error('❌ Spec not found');
+      return;
+    }
+    const spec = JSON.parse(fs.readFileSync(specPath, 'utf-8'));
+    console.log(`🔎 Searching for tools matching "${keyword}"...`);
+    const results = [];
+    if (spec.paths) {
+      Object.entries(spec.paths).forEach(([p, methods]) => {
+        if (p.toLowerCase().includes(keyword.toLowerCase())) {
+          Object.keys(methods).forEach(m => results.push(`${m.toUpperCase()} ${p}`));
+        }
+      });
+    }
+    if (results.length === 0) console.log('No tools found.');
+    else results.slice(0, 20).forEach(r => console.log(`- ${r}`));
+    if (results.length > 20) console.log(`... and ${results.length - 20} more.`);
+    return;
+  }
+
+  if (subCommand === 'auto-curate') {
+    const projectRoot = process.cwd();
+    const wsPath = path.join(projectRoot, '.ai-workspace');
+    const focusPath = path.join(wsPath, 'current-focus.json');
+    
+    if (fs.existsSync(focusPath)) {
+      const focus = JSON.parse(fs.readFileSync(focusPath, 'utf-8'));
+      if (focus.collection) {
+        console.log(`🤖 Auto-curating for focus: ${focus.collection}`);
+        return mcpCommand(['curate', focus.collection]);
+      }
+    }
+    // Default: Reset to all if no focus
+    console.log('🔄 No specific focus detected. Resetting MCP tools...');
+    return mcpCommand(['setup']);
+  }
+
+  if (subCommand === 'focus') {
+    const collection = args[1];
+    const projectRoot = process.cwd();
+    const wsPath = path.join(projectRoot, '.ai-workspace');
+    const focusPath = path.join(wsPath, 'current-focus.json');
+
+    if (!collection) {
+      if (fs.existsSync(focusPath)) fs.unlinkSync(focusPath);
+      console.log('🧹 Focus cleared.');
+    } else {
+      const focus = { collection, timestamp: new Date().toISOString() };
+      fs.writeFileSync(focusPath, JSON.stringify(focus, null, 2), 'utf-8');
+      console.log(`🎯 Focus set to: ${collection}`);
+    }
+    return mcpCommand(['auto-curate']);
+  }
+
   if (subCommand === 'status') {
     console.log('📡 MCP Status:');
     if (fs.existsSync(traeMcpPath)) {
