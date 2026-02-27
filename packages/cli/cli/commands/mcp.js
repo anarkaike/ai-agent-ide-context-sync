@@ -155,6 +155,27 @@ const mcpCommand = async (args = []) => {
     return mcpCommand(['auto-curate']);
   }
 
+  if (subCommand === 'optimize-spec') {
+    if (!fs.existsSync(specPath)) {
+      console.error('❌ Spec not found');
+      return;
+    }
+    console.log('⚡ Optimizing OpenAPI spec for MCP (shortening IDs)...');
+    const spec = JSON.parse(fs.readFileSync(specPath, 'utf-8'));
+    if (spec.paths) {
+      for (const [pathStr, methods] of Object.entries(spec.paths)) {
+        for (const [method, details] of Object.entries(methods)) {
+          // Shorten operationId
+          const p = pathStr.replace(/^\//, '').replace(/\{[a-zA-Z]+\}/g, 'X').replace(/[:/]/g, '_');
+          details.operationId = `${method.toUpperCase()}_${p}`.substring(0, 50).replace(/_+/g, '_');
+        }
+      }
+    }
+    fs.writeFileSync(specPath, JSON.stringify(spec, null, 2), 'utf-8');
+    console.log('✅ Spec optimized!');
+    return;
+  }
+
   if (subCommand === 'status') {
     console.log('📡 MCP Status:');
     if (fs.existsSync(traeMcpPath)) {

@@ -573,48 +573,7 @@ const commands = {
     log('⚠️ Comando "heuristics" foi migrado para "kernel heuristics".', 'yellow');
     await commands.kernel(['heuristics']);
   },
-  identity: async (args = []) => {
-    const projectRoot = process.cwd();
-    const wsPath = resolveWorkspaceRoot(projectRoot);
-    const personasPath = path.join(wsPath, 'personas');
-    const sub = (args[0] || 'list').toLowerCase();
-
-    if (sub === 'list') {
-      if (!fs.existsSync(personasPath)) {
-        log('⚠️ Nenhuma persona encontrada (pasta .ai-workspace/personas ausente).', 'yellow');
-        return;
-      }
-      const personas = fs.readdirSync(personasPath).filter(f => f.endsWith('.md'));
-      if (personas.length === 0) {
-        log('⚠️ Nenhuma persona cadastrada.', 'yellow');
-        return;
-      }
-      log('\n=== 👤 Personas ===\n', 'bright');
-      personas.forEach(file => log(`- ${file.replace('.md', '')}`));
-      return;
-    }
-
-    if (sub === 'create') {
-      const name = args.slice(1).join(' ').trim();
-      if (!name) {
-        log('❌ Informe o nome da persona. Ex: ai-doc identity create "AI-NOVA"', 'red');
-        return;
-      }
-      if (!fs.existsSync(personasPath)) fs.mkdirSync(personasPath, { recursive: true });
-      const filename = `${name}.md`;
-      const filePath = path.join(personasPath, filename);
-      if (fs.existsSync(filePath)) {
-        log('⚠️ Persona já existe.', 'yellow');
-        return;
-      }
-      const content = `---\ntitle: \"${name}\"\ndescription: AI Agent\ncreated: ${new Date().toISOString()}\nstatus: active\n---\n\n# ${name}\n\n`;
-      writeFileSafely(filePath, content);
-      log(`✅ Persona criada: ${path.relative(projectRoot, filePath)}`, 'green');
-      return;
-    }
-
-    log('❌ Subcomando inválido. Use: ai-doc identity list | ai-doc identity create <nome>', 'red');
-  },
+  identity: require('./commands/identity'),
   module: async (args = []) => {
     const sub = (args[0] || 'list').toLowerCase();
     if (sub !== 'list') {
