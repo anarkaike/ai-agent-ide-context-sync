@@ -497,6 +497,7 @@ const commands = {
   soul: require('./commands/soul'),
   swarm: require('./commands/swarm'),
   memory: require('./commands/memory'),
+  mcp: require('./commands/mcp'),
   pattern: async (args = []) => {
     const patternCmd = require('./commands/pattern');
     const subCmd = args[0];
