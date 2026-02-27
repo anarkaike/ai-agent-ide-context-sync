@@ -41,7 +41,7 @@ const identityCommand = async (args = []) => {
       title: `${name} Avatar`,
       description: "Custom AI Persona",
       capabilities: ["general"],
-      mcp_tools: ["n:users", "n:contacts"], // Default tools
+      mcp_tools: ["n:users"],
       tone: "neutral",
       created_at: new Date().toISOString()
     };
@@ -57,39 +57,30 @@ const identityCommand = async (args = []) => {
       return;
     }
     const yamlPath = path.join(personasPath, `${name}.yaml`);
-    const mdPath = path.join(personasPath, `${name}.md`);
     let personaData = null;
 
     if (fs.existsSync(yamlPath)) {
       personaData = yaml.load(fs.readFileSync(yamlPath, 'utf-8'));
-    } else if (fs.existsSync(mdPath)) {
-      personaData = { name, title: name }; // Basic fallback
     } else {
       console.error(`❌ Persona "${name}" not found.`);
       return;
     }
 
-    // Update identity.json
     const identityPath = path.join(wsPath, 'identity.json');
     fs.writeFileSync(identityPath, JSON.stringify(personaData, null, 2), 'utf-8');
-    
     console.log(`✨ Persona "${name}" selected!`);
     
-    // Associating MCP Tools
     if (personaData.mcp_tools) {
-      console.log(`🔗 Associating MCP tools: ${personaData.mcp_tools.join(', ')}`);
-      // Trigger curation based on persona's tools
-      // For now, let's just curate the first one
       const mcpCmd = require('./mcp');
-      const firstTool = personaData.mcp_tools[0].split(':')[1];
-      if (firstTool) {
-        await mcpCmd(['curate', firstTool]);
+      for (const tool of personaData.mcp_tools) {
+          const [prefix, resource] = tool.split(':');
+          if (prefix === 'n' && resource) {
+              await mcpCmd(['curate', resource]);
+          }
       }
     }
     return;
   }
-
-  console.log('❌ Unknown identity command. Use: list, create, select');
 };
 
 module.exports = identityCommand;

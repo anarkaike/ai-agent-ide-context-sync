@@ -6,7 +6,7 @@ const os = require('os');
  * MCP Command - Manage MCP Servers and Tool Curation
  */
 const mcpCommand = async (args = []) => {
-  const subCommand = args[0] || 'status';
+  const subCommand = (args[0] || 'status').toLowerCase();
   const traeMcpPath = path.join(os.homedir(), '.trae-server', 'data', 'Machine', 'mcp.json');
   const specPath = '/root/nocobase-spec.json';
 
@@ -44,14 +44,12 @@ const mcpCommand = async (args = []) => {
   }
 
   if (subCommand === 'curate') {
-    const filter = args[1]; // e.g., "users" or "contacts"
+    const filter = args[1];
     if (!filter) {
       console.log('🔍 Usage: ai-agent-sync mcp curate <filter_keyword>');
       return;
     }
 
-    console.log(`🎯 Curating tools for: ${filter}...`);
-    
     if (!fs.existsSync(traeMcpPath)) {
       console.error('❌ Trae MCP config not found.');
       return;
@@ -59,16 +57,13 @@ const mcpCommand = async (args = []) => {
 
     let mcpConfig = JSON.parse(fs.readFileSync(traeMcpPath, 'utf-8'));
     if (!mcpConfig.mcpServers || !mcpConfig.mcpServers.n) {
-      console.error('❌ NocoBase MCP (server "n") not found in config.');
+      console.error('❌ NocoBase MCP (server "n") not found in config. Run "mcp setup" first.');
       return;
     }
 
-    // Update args to include filter
-    // Note: openapi-mcp-server supports --tag or --resource
     const currentArgs = mcpConfig.mcpServers.n.args;
-    const newArgs = currentArgs.filter(a => !a.startsWith('--resource') && !a.includes(filter));
+    const newArgs = currentArgs.filter(a => !a.startsWith('--resource'));
     
-    // Simple curation: filter by resource path prefix
     newArgs.push('--resource');
     newArgs.push(`/${filter}`);
 
@@ -76,83 +71,6 @@ const mcpCommand = async (args = []) => {
     fs.writeFileSync(traeMcpPath, JSON.stringify(mcpConfig, null, 2), 'utf-8');
     console.log(`✅ Tools curated! Trae will now only load tools for /${filter}`);
     return;
-  }
-
-  if (subCommand === 'list-collections') {
-    if (!fs.existsSync(specPath)) {
-      console.error('❌ Spec not found');
-      return;
-    }
-    const spec = JSON.parse(fs.readFileSync(specPath, 'utf-8'));
-    const paths = Object.keys(spec.paths || {});
-    const collections = new Set();
-    paths.forEach(p => {
-      const match = p.match(/^\/([a-zA-Z0-9_-]+)/);
-      if (match && !match[1].startsWith('$')) collections.add(match[1]);
-    });
-    console.log('📦 NocoBase Collections available for curation:');
-    Array.from(collections).sort().forEach(c => console.log(`- ${c}`));
-    return;
-  }
-
-  if (subCommand === 'search-tools') {
-    const keyword = args[1];
-    if (!keyword) {
-      console.log('🔍 Usage: ai-agent-sync mcp search-tools <keyword>');
-      return;
-    }
-    if (!fs.existsSync(specPath)) {
-      console.error('❌ Spec not found');
-      return;
-    }
-    const spec = JSON.parse(fs.readFileSync(specPath, 'utf-8'));
-    console.log(`🔎 Searching for tools matching "${keyword}"...`);
-    const results = [];
-    if (spec.paths) {
-      Object.entries(spec.paths).forEach(([p, methods]) => {
-        if (p.toLowerCase().includes(keyword.toLowerCase())) {
-          Object.keys(methods).forEach(m => results.push(`${m.toUpperCase()} ${p}`));
-        }
-      });
-    }
-    if (results.length === 0) console.log('No tools found.');
-    else results.slice(0, 20).forEach(r => console.log(`- ${r}`));
-    if (results.length > 20) console.log(`... and ${results.length - 20} more.`);
-    return;
-  }
-
-  if (subCommand === 'auto-curate') {
-    const projectRoot = process.cwd();
-    const wsPath = path.join(projectRoot, '.ai-workspace');
-    const focusPath = path.join(wsPath, 'current-focus.json');
-    
-    if (fs.existsSync(focusPath)) {
-      const focus = JSON.parse(fs.readFileSync(focusPath, 'utf-8'));
-      if (focus.collection) {
-        console.log(`🤖 Auto-curating for focus: ${focus.collection}`);
-        return mcpCommand(['curate', focus.collection]);
-      }
-    }
-    // Default: Reset to all if no focus
-    console.log('🔄 No specific focus detected. Resetting MCP tools...');
-    return mcpCommand(['setup']);
-  }
-
-  if (subCommand === 'focus') {
-    const collection = args[1];
-    const projectRoot = process.cwd();
-    const wsPath = path.join(projectRoot, '.ai-workspace');
-    const focusPath = path.join(wsPath, 'current-focus.json');
-
-    if (!collection) {
-      if (fs.existsSync(focusPath)) fs.unlinkSync(focusPath);
-      console.log('🧹 Focus cleared.');
-    } else {
-      const focus = { collection, timestamp: new Date().toISOString() };
-      fs.writeFileSync(focusPath, JSON.stringify(focus, null, 2), 'utf-8');
-      console.log(`🎯 Focus set to: ${collection}`);
-    }
-    return mcpCommand(['auto-curate']);
   }
 
   if (subCommand === 'optimize-spec') {
@@ -165,7 +83,6 @@ const mcpCommand = async (args = []) => {
     if (spec.paths) {
       for (const [pathStr, methods] of Object.entries(spec.paths)) {
         for (const [method, details] of Object.entries(methods)) {
-          // Shorten operationId
           const p = pathStr.replace(/^\//, '').replace(/\{[a-zA-Z]+\}/g, 'X').replace(/[:/]/g, '_');
           details.operationId = `${method.toUpperCase()}_${p}`.substring(0, 50).replace(/_+/g, '_');
         }
@@ -174,6 +91,29 @@ const mcpCommand = async (args = []) => {
     fs.writeFileSync(specPath, JSON.stringify(spec, null, 2), 'utf-8');
     console.log('✅ Spec optimized!');
     return;
+  }
+
+  if (subCommand === 'auto-curate') {
+    const projectRoot = process.cwd();
+    const wsPath = path.join(projectRoot, '.ai-workspace');
+    const identityPath = path.join(wsPath, 'identity.json');
+    
+    if (fs.existsSync(identityPath)) {
+      const identity = JSON.parse(fs.readFileSync(identityPath, 'utf-8'));
+      if (identity.mcp_tools && Array.isArray(identity.mcp_tools)) {
+        console.log(`🤖 Auto-curating tools for identity: ${identity.name}`);
+        for (const tool of identity.mcp_tools) {
+          const [prefix, resource] = tool.split(':');
+          if (prefix === 'n' && resource) {
+            await mcpCommand(['curate', resource]);
+          }
+        }
+        return;
+      }
+    }
+    
+    console.log('🔄 No identity focus detected. Resetting MCP tools...');
+    return mcpCommand(['setup']);
   }
 
   if (subCommand === 'status') {
